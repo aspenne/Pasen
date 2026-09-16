@@ -1,3 +1,4 @@
+import string from '@adonisjs/core/helpers/string'
 import type { Platform } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
@@ -6,10 +7,13 @@ import RiotAccount from '#models/riot_account'
 import type { RiotClient } from '#riot/client'
 
 export type LinkRequest = {
-  memberId: number
   gameName: string
   tagLine: string
   platform: Platform
+  /** Attach the account to this member explicitly. */
+  memberId?: number
+  /** Name for a member created on the spot. Defaults to the Riot ID's name. */
+  memberName?: string
   /** How far back the backfill should reach. Defaults to the current split. */
   backfillTarget?: DateTime
 }
@@ -23,9 +27,7 @@ export class AccountLinker {
   constructor(private riot: RiotClient) {}
 
   async link(request: LinkRequest): Promise<RiotAccount> {
-    const member = await Member.findOrFail(request.memberId)
-
-    const account = await this.riot.account.byRiotId(
+    const identity = await this.riot.account.byRiotId(
       request.gameName,
       request.tagLine,
       request.platform
@@ -36,28 +38,56 @@ export class AccountLinker {
      * exists updates it rather than creating a duplicate, and moving an account
      * to a different member is a normal correction rather than a conflict.
      */
-    const existing = await RiotAccount.findBy('puuid', account.puuid)
+    const existing = await RiotAccount.findBy('puuid', identity.puuid)
+    const member = await this.#memberFor(request, existing, identity.gameName)
 
-    const row =
+    const account =
       existing ??
       new RiotAccount().merge({
-        puuid: account.puuid,
+        puuid: identity.puuid,
         backfillTarget: request.backfillTarget ?? null,
         backfillState: 'pending',
       })
 
-    row.merge({
+    account.merge({
       memberId: member.id,
       // Riot's casing is authoritative, whatever the admin typed.
-      gameName: account.gameName,
-      tagLine: account.tagLine,
+      gameName: identity.gameName,
+      tagLine: identity.tagLine,
       platform: request.platform,
     })
 
-    await row.save()
-    await this.refreshProfile(row)
+    await account.save()
+    await this.refreshProfile(account)
 
-    return row
+    return account
+  }
+
+  /**
+   * Re-adding an account already in the system must not invent a second member
+   * for the same person. Without an explicit choice, an existing account keeps
+   * whoever owns it - otherwise running the add command twice, once with a
+   * nickname and once without, silently splits one player into two and leaves
+   * the first with no accounts at all.
+   */
+  async #memberFor(
+    request: LinkRequest,
+    existing: RiotAccount | null,
+    gameName: string
+  ): Promise<Member> {
+    if (request.memberId) {
+      return Member.findOrFail(request.memberId)
+    }
+
+    if (existing) {
+      return Member.findOrFail(existing.memberId)
+    }
+
+    const displayName = request.memberName ?? gameName
+    return Member.updateOrCreate(
+      { slug: string.slug(displayName).toLowerCase() },
+      { displayName }
+    )
   }
 
   /**

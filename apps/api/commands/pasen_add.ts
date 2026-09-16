@@ -1,11 +1,9 @@
 import { BaseCommand, args, flags } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
-import string from '@adonisjs/core/helpers/string'
 import { isPlatform } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import Group from '#models/group'
-import Member from '#models/member'
 import { AccountLinker } from '#ingestion/account_linker'
 import { riot } from '#riot/service'
 
@@ -45,20 +43,16 @@ export default class PasenAdd extends BaseCommand {
 
     const group = await Group.findByOrFail('slug', this.group)
 
-    const displayName = this.member ?? gameName
-    const member = await Member.updateOrCreate(
-      { slug: string.slug(displayName).toLowerCase() },
-      { displayName }
-    )
-    await group.related('members').sync([member.id], false)
-
     const account = await new AccountLinker(riot()).link({
-      memberId: member.id,
       gameName,
       tagLine,
       platform: this.platform,
+      memberName: this.member,
       backfillTarget: this.since ? DateTime.fromISO(this.since, { zone: 'utc' }) : undefined,
     })
+
+    const member = await account.related('member').query().firstOrFail()
+    await group.related('members').sync([member.id], false)
 
     this.logger.success(
       `${account.riotId} (${account.platform}, level ${account.summonerLevel}) ` +
