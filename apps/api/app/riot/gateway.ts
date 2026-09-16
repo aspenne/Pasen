@@ -18,6 +18,11 @@ export type RiotRequest = {
   search?: Record<string, string | number | boolean | undefined>
   /** Identifies the Riot method, for logging and future per-method limits. */
   endpoint: string
+  /**
+   * 'background' work leaves part of the budget untouched so live polling is
+   * never left waiting for the next window. Defaults to 'interactive'.
+   */
+  priority?: 'interactive' | 'background'
   /** How long this call may wait for rate-limit capacity before failing. */
   maxWaitMs?: number
   signal?: AbortSignal
@@ -49,6 +54,14 @@ export type RiotGatewayOptions = {
 
 /** Enough attempts to ride out a blip, few enough to never look like a loop. */
 const MAX_ATTEMPTS = 3
+
+/**
+ * A fifth of every window is kept for interactive work. Measured, not guessed:
+ * with a backfill running flat out the live poll was landing twice every two
+ * minutes instead of once a minute, because it could only get tokens when the
+ * window rolled over.
+ */
+const BACKGROUND_RESERVE = 0.2
 
 /**
  * The only thing in the application that talks to Riot. Everything funnels
@@ -111,7 +124,11 @@ export class RiotGateway implements RiotRequester {
       const key = await this.#keyProvider.get()
       const limiter = await this.limiter()
 
-      await limiter.acquire({ maxWaitMs: request.maxWaitMs, signal: request.signal })
+      await limiter.acquire({
+        maxWaitMs: request.maxWaitMs,
+        signal: request.signal,
+        reserve: request.priority === 'background' ? BACKGROUND_RESERVE : 0,
+      })
 
       const url = this.#urlFor(request)
       const response = await this.#fetch(url, {

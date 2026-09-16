@@ -90,6 +90,37 @@ test.group('RiotRateLimiter', () => {
     assert.equal(await rl.tryAcquire(15_000), 0)
   })
 
+  test('holds a reserve that background work cannot touch', async ({ assert }) => {
+    const rl = limiter([{ limit: 10, seconds: 60 }])
+    const now = 10_000
+    const reserve = 0.2 // one fifth of ten is two
+
+    for (let i = 0; i < 8; i++) {
+      assert.equal(await rl.tryAcquire(now, reserve), 0, `background request ${i + 1}`)
+    }
+
+    assert.isAbove(
+      await rl.tryAcquire(now, reserve),
+      0,
+      'background work stops at the reserve, not at the limit'
+    )
+    assert.equal(
+      await rl.tryAcquire(now),
+      0,
+      'interactive work may still use what was held back'
+    )
+  })
+
+  test('a reserve rounds up, so a small window still keeps one slot', async ({ assert }) => {
+    const rl = limiter([{ limit: 3, seconds: 60 }])
+    const now = 10_000
+
+    assert.equal(await rl.tryAcquire(now, 0.2), 0)
+    assert.equal(await rl.tryAcquire(now, 0.2), 0)
+    assert.isAbove(await rl.tryAcquire(now, 0.2), 0, 'ceil(3 * 0.2) = 1 slot held back')
+    assert.equal(await rl.tryAcquire(now), 0)
+  })
+
   test('acquire resolves once capacity frees up', async ({ assert }) => {
     const rl = limiter([{ limit: 1, seconds: 1 }])
 

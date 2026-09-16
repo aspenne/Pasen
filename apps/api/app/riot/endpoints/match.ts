@@ -17,6 +17,8 @@ export type MatchIdQuery = {
   type?: 'ranked' | 'normal' | 'tourney' | 'tutorial'
 }
 
+export type FetchPriority = { priority?: 'interactive' | 'background' }
+
 export class MatchEndpoint {
   constructor(private gateway: RiotRequester) {}
 
@@ -25,11 +27,17 @@ export class MatchEndpoint {
    * a separate request, which is what makes a full backfill expensive: one call
    * per match, against a budget of 100 requests per two minutes.
    */
-  idsByPuuid(puuid: string, platform: Platform, query: MatchIdQuery = {}) {
+  idsByPuuid(
+    puuid: string,
+    platform: Platform,
+    query: MatchIdQuery = {},
+    options: FetchPriority = {}
+  ) {
     return this.gateway.request<string[]>({
       host: { kind: 'match', platform },
       path: `/lol/match/v5/matches/by-puuid/${puuid}/ids`,
       endpoint: 'match-v5.idsByPuuid',
+      priority: options.priority,
       search: {
         start: query.start ?? 0,
         count: Math.min(query.count ?? MATCH_IDS_PAGE_SIZE, MATCH_IDS_PAGE_SIZE),
@@ -41,11 +49,12 @@ export class MatchEndpoint {
     })
   }
 
-  byId(matchId: string, platform: Platform) {
+  byId(matchId: string, platform: Platform, options: FetchPriority = {}) {
     return this.gateway.request<MatchDto>({
       host: { kind: 'match', platform },
       path: `/lol/match/v5/matches/${matchId}`,
       endpoint: 'match-v5.byId',
+      priority: options.priority,
     })
   }
 

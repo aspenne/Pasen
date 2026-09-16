@@ -18,6 +18,8 @@ export type SyncOutcome = {
 }
 
 export type SyncOptions = {
+  /** Backfill passes 'background' so it leaves budget for live polling. */
+  priority?: 'interactive' | 'background'
   /**
    * Upper bound on match detail fetches per step. Each one is a Riot request
    * against a budget of 100 per two minutes, so a step stays small enough to
@@ -60,17 +62,24 @@ export class MatchSyncService {
    * backfill can be paused, resumed after a crash, and preempted by live work.
    */
   async backfillStep(account: RiotAccount, options: SyncOptions = {}): Promise<SyncOutcome> {
-    const ids = await this.riot.match.idsByPuuid(account.puuid, account.platform, {
-      count: MATCH_IDS_PAGE_SIZE,
-      // Riot's endTime is inclusive; stepping back a second stops the oldest
-      // match we already hold from heading every subsequent page forever.
-      endTime: account.syncedFrom ? Math.floor(account.syncedFrom.toSeconds()) - 1 : undefined,
-      startTime: account.backfillTarget
-        ? Math.floor(account.backfillTarget.toSeconds())
-        : undefined,
-    })
+    const background = { ...options, priority: 'background' as const }
 
-    const outcome = await this.#fetchAndStore(account, ids, options)
+    const ids = await this.riot.match.idsByPuuid(
+      account.puuid,
+      account.platform,
+      {
+        count: MATCH_IDS_PAGE_SIZE,
+        // Riot's endTime is inclusive; stepping back a second stops the oldest
+        // match we already hold from heading every subsequent page forever.
+        endTime: account.syncedFrom ? Math.floor(account.syncedFrom.toSeconds()) - 1 : undefined,
+        startTime: account.backfillTarget
+          ? Math.floor(account.backfillTarget.toSeconds())
+          : undefined,
+      },
+      background
+    )
+
+    const outcome = await this.#fetchAndStore(account, ids, background)
     await this.#advanceFrontiers(account)
 
     /*
@@ -112,7 +121,9 @@ export class MatchSyncService {
 
     let ingested = 0
     for (const id of toFetch) {
-      const match = await this.riot.match.byId(id, account.platform)
+      const match = await this.riot.match.byId(id, account.platform, {
+        priority: options.priority,
+      })
       await this.ingest.ingest(match)
       ingested++
     }

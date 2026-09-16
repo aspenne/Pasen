@@ -55,12 +55,18 @@ export class RiotRateLimiter {
       return penaltyUntil - now
     end
 
+    -- Fraction of every window that low-priority callers may not touch, so
+    -- background work can never spend the last of the budget that live polling
+    -- needs to stay live.
+    local reserve = tonumber(ARGV[3 + count * 2])
+
     local waits = {}
     for i = 1, count do
       local limit = tonumber(ARGV[2 + i])
       local windowEnd = tonumber(ARGV[2 + count + i])
       local used = tonumber(redis.call('GET', KEYS[1 + i]) or '0')
-      if used >= limit then
+      local usable = limit - math.ceil(limit * reserve)
+      if used >= usable then
         return windowEnd - now
       end
       waits[i] = windowEnd - now
@@ -103,14 +109,19 @@ export class RiotRateLimiter {
   /**
    * Returns 0 when the request may go out, otherwise the milliseconds to wait
    * before asking again. Never throws on contention — refusal is a normal result.
+   *
+   * `reserve` is the fraction of each window the caller agrees to leave alone.
+   * Background work passes a non-zero value so it cannot drain the budget that
+   * live polling needs; interactive work passes 0 and may use all of it.
    */
-  async tryAcquire(now: number = this.#now()): Promise<number> {
+  async tryAcquire(now: number = this.#now(), reserve = 0): Promise<number> {
     const keys = [this.#penaltyKey(), ...this.#windows.map((w) => this.#windowKey(w, now))]
     const args = [
       String(now),
       String(this.#windows.length),
       ...this.#windows.map((w) => String(w.limit)),
       ...this.#windows.map((w) => String(this.#windowEnd(w, now))),
+      String(reserve),
     ]
 
     const wait = await this.#redis.eval(RiotRateLimiter.#SCRIPT, keys.length, ...keys, ...args)
@@ -121,13 +132,15 @@ export class RiotRateLimiter {
    * Waits until the request may go out. `maxWaitMs` exists so a job can fail
    * fast and be requeued instead of pinning a worker slot for minutes.
    */
-  async acquire(options: { maxWaitMs?: number; signal?: AbortSignal } = {}): Promise<void> {
+  async acquire(
+    options: { maxWaitMs?: number; signal?: AbortSignal; reserve?: number } = {}
+  ): Promise<void> {
     const budget = options.maxWaitMs ?? Number.POSITIVE_INFINITY
 
     for (;;) {
       options.signal?.throwIfAborted()
 
-      const wait = await this.tryAcquire()
+      const wait = await this.tryAcquire(this.#now(), options.reserve ?? 0)
       if (wait === 0) {
         return
       }
