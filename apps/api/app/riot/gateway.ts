@@ -23,6 +23,14 @@ export type RiotRequest = {
   signal?: AbortSignal
 }
 
+/**
+ * What the endpoint wrappers depend on. Narrower than the gateway itself so a
+ * test can hand them a stub without standing up Redis and a key provider.
+ */
+export interface RiotRequester {
+  request<T>(request: RiotRequest): Promise<T>
+}
+
 export type RiotGatewayOptions = {
   keyProvider: RiotKeyProvider
   connection: RedisLike
@@ -48,7 +56,7 @@ const MAX_ATTEMPTS = 3
  * exist in exactly one place; a service that called fetch directly would spend
  * budget nobody accounted for and take the whole key down with it.
  */
-export class RiotGateway {
+export class RiotGateway implements RiotRequester {
   readonly #keyProvider: RiotKeyProvider
   readonly #connection: RedisLike
   readonly #windows: RateWindow[]
