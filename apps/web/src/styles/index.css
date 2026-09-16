@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+/*
+ * Direction A — "esport data": a near-black blue ground so champion art and
+ * chart colours carry, gold reserved for the single most important number on a
+ * surface, and one green / one red that never mean anything but win / loss.
+ */
+@theme {
+  --color-ground: #0a0d14;
+  --color-panel: #111725;
+  --color-panel-raised: #161d2e;
+  --color-line: #1a2030;
+  --color-line-strong: #243049;
+
+  --color-ink: #e8ecf4;
+  --color-ink-muted: #7a869e;
+  --color-ink-dim: #5a6580;
+
+  --color-gold: #d4af5a;
+  --color-win: #4ecda4;
+  --color-loss: #e24b4a;
+
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Stat numbers are read by shape as much as by value: tabular figures keep
+     columns of them from jittering as they refresh. */
+  .tnum {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}

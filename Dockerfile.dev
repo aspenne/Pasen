@@ -1,0 +1,22 @@
+# Shared dev image for the api, worker and web services.
+# Dependencies are installed inside the image; the compose file mounts the repo
+# over /app and keeps every node_modules directory on a named volume so the
+# Linux-built binaries here are never shadowed by the host's macOS ones.
+FROM node:24-alpine
+
+RUN corepack enable
+
+WORKDIR /app
+
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN pnpm install --frozen-lockfile=false
+
+COPY . .
+
+RUN pnpm --filter @pasen/shared build
+
+EXPOSE 3333 5173

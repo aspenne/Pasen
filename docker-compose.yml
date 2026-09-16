@@ -1,0 +1,132 @@
+name: pasen
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-pasen}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-pasen}
+      POSTGRES_DB: ${DB_DATABASE:-pasen}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-pasen} -d ${DB_DATABASE:-pasen}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # One-shot: compiles packages/shared to dist so the api and web containers
+  # resolve @pasen/shared the same way a local `pnpm install` does.
+  shared:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: pnpm --filter @pasen/shared build
+    volumes:
+      - .:/app
+      - root_modules:/app/node_modules
+      - api_modules:/app/apps/api/node_modules
+      - web_modules:/app/apps/web/node_modules
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    init: true
+    command: pnpm --filter @pasen/api dev
+    environment: &backend_env
+      NODE_ENV: development
+      TZ: UTC
+      HOST: 0.0.0.0
+      PORT: '3333'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_KEY: ${APP_KEY:?set APP_KEY in .env}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USER: ${DB_USER:-pasen}
+      DB_PASSWORD: ${DB_PASSWORD:-pasen}
+      DB_DATABASE: ${DB_DATABASE:-pasen}
+      SESSION_DRIVER: cookie
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: ''
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
+      RIOT_API_KEY: ${RIOT_API_KEY:-}
+      RIOT_RATE_PER_SECOND: ${RIOT_RATE_PER_SECOND:-18}
+      RIOT_RATE_PER_TWO_MINUTES: ${RIOT_RATE_PER_TWO_MINUTES:-95}
+      RIOT_FETCH_TIMELINES: ${RIOT_FETCH_TIMELINES:-false}
+    ports:
+      - '3333:3333'
+    volumes:
+      - .:/app
+      - root_modules:/app/node_modules
+      - api_modules:/app/apps/api/node_modules
+      - web_modules:/app/apps/web/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      shared:
+        condition: service_completed_successfully
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    init: true
+    command: pnpm --filter @pasen/api worker:dev
+    environment: *backend_env
+    volumes:
+      - .:/app
+      - root_modules:/app/node_modules
+      - api_modules:/app/apps/api/node_modules
+      - web_modules:/app/apps/web/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      shared:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    init: true
+    command: pnpm --filter @pasen/web dev --host 0.0.0.0
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3333}
+    ports:
+      - '5173:5173'
+    depends_on:
+      shared:
+        condition: service_completed_successfully
+    volumes:
+      - .:/app
+      - root_modules:/app/node_modules
+      - api_modules:/app/apps/api/node_modules
+      - web_modules:/app/apps/web/node_modules
+
+volumes:
+  pgdata:
+  redisdata:
+  root_modules:
+  api_modules:
+  web_modules:

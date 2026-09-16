@@ -1,0 +1,26 @@
+{
+  "name": "pasen",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "docker compose up",
+    "build:shared": "pnpm --filter @pasen/shared build",
+    "dev:api": "pnpm build:shared && pnpm --filter @pasen/api dev",
+    "dev:web": "pnpm build:shared && pnpm --filter @pasen/web dev",
+    "dev:worker": "pnpm build:shared && pnpm --filter @pasen/api worker:dev",
+    "test": "pnpm build:shared && pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm build:shared && pnpm -r typecheck",
+    "dev:reset": "docker compose down -v && docker compose up -d --build"
+  },
+  "pnpm": {
+    "overrides": {
+      "jsonschema": "1.4.1"
+    }
+  }
+}
