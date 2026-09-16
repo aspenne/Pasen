@@ -3,84 +3,9 @@ import redis from '@adonisjs/redis/services/main'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { DateTime } from 'luxon'
 
-import Group from '#models/group'
-import Match from '#models/match'
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
-
-async function seedGroup(timezone = 'Europe/Paris') {
-  const group = await Group.create({ slug: 'arigafion', name: 'ARIGAFION', timezone })
-  const member = await Member.create({ slug: 'patate', displayName: 'Patate' })
-  await group.related('members').attach([member.id])
-
-  const account = await RiotAccount.create({
-    memberId: member.id,
-    puuid: 'puuid-patate',
-    gameName: 'Patate',
-    tagLine: 'CCC',
-    platform: 'euw1',
-    backfillState: 'done',
-  })
-
-  return { group, member, account }
-}
-
-/** One stored match with one tracked participant, at a chosen instant. */
-async function seedMatch(matchId: string, at: DateTime, puuid: string, overrides = {}) {
-  const match = await Match.create({
-    matchId,
-    platform: 'EUW1',
-    queueId: 420,
-    queueGroup: 'ranked_solo',
-    gameMode: 'CLASSIC',
-    gameType: 'MATCHED_GAME',
-    gameVersion: '16.18.1',
-    gameCreation: at,
-    gameDuration: 1800,
-    gameEndedAt: at.plus({ seconds: 1800 }),
-    participantCount: 10,
-    statsEligible: true,
-    raw: {},
-    ingestedAt: DateTime.utc(),
-    ...overrides,
-  })
-
-  await match.related('participants').create({
-    matchId,
-    puuid,
-    teamId: 100,
-    championId: 266,
-    championName: 'Aatrox',
-    teamPosition: 'TOP',
-    individualPosition: 'TOP',
-    win: true,
-    kills: 5,
-    deaths: 2,
-    assists: 7,
-    goldEarned: 12000,
-    cs: 180,
-    damageDealt: 20000,
-    damageTaken: 18000,
-    visionScore: 20,
-    wardsPlaced: 8,
-    wardsKilled: 3,
-    champLevel: 16,
-    summoner1Id: 4,
-    summoner2Id: 12,
-    items: [1, 2, 3, 4, 5, 6, 7],
-    perks: null,
-    riotIdGameName: 'Patate',
-    riotIdTagLine: 'CCC',
-    doubleKills: 0,
-    tripleKills: 0,
-    quadraKills: 0,
-    pentaKills: 0,
-    firstBloodKill: false,
-    earlySurrender: false,
-  })
-
-  return match
-}
+import { addParticipant, seedGroup, seedMatch } from '#tests/helpers'
 
 test.group('Group API', (group) => {
   group.each.setup(() => testUtils.db().withGlobalTransaction())
@@ -137,38 +62,10 @@ test.group('Group API', (group) => {
 
     const at = DateTime.fromISO('2026-09-16T20:00:00', { zone: 'Europe/Paris' })
     const match = await seedMatch('EUW1_duo', at, seeded.account.puuid)
-    await match.related('participants').create({
-      matchId: 'EUW1_duo',
-      puuid: 'puuid-nono',
-      teamId: 100,
+    await addParticipant(match, 'puuid-nono', {
       championId: 103,
       championName: 'Ahri',
       teamPosition: 'MIDDLE',
-      individualPosition: 'MIDDLE',
-      win: true,
-      kills: 9,
-      deaths: 1,
-      assists: 4,
-      goldEarned: 14000,
-      cs: 220,
-      damageDealt: 30000,
-      damageTaken: 12000,
-      visionScore: 25,
-      wardsPlaced: 10,
-      wardsKilled: 2,
-      champLevel: 17,
-      summoner1Id: 4,
-      summoner2Id: 14,
-      items: [1, 2, 3, 4, 5, 6, 7],
-      perks: null,
-      riotIdGameName: 'Nono',
-      riotIdTagLine: 'EUW',
-      doubleKills: 0,
-      tripleKills: 0,
-      quadraKills: 0,
-      pentaKills: 0,
-      firstBloodKill: false,
-      earlySurrender: false,
     })
 
     const response = await client.get('/api/groups/arigafion/feed?date=2026-09-16')

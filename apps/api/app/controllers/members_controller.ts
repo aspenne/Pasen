@@ -1,0 +1,70 @@
+import type { HttpContext } from '@adonisjs/core/http'
+import vine from '@vinejs/vine'
+import { QUEUE_GROUPS } from '@pasen/shared'
+
+import Member from '#models/member'
+import { PlayerStatsService } from '#stats/player_stats_service'
+
+const historyQuery = vine.compile(
+  vine.object({
+    cursor: vine.string().optional(),
+    limit: vine.number().min(1).max(100).optional(),
+    queue: vine.enum(QUEUE_GROUPS).optional(),
+  })
+)
+
+const poolQuery = vine.compile(
+  vine.object({ queue: vine.enum(QUEUE_GROUPS).optional() })
+)
+
+const lpQuery = vine.compile(vine.object({ queueType: vine.string().optional() }))
+
+export default class MembersController {
+  async show({ params }: HttpContext) {
+    const member = await Member.query()
+      .where('slug', params.slug)
+      .preload('riotAccounts')
+      .firstOrFail()
+
+    return {
+      slug: member.slug,
+      displayName: member.displayName,
+      avatarUrl: member.avatarUrl,
+      accentColor: member.accentColor,
+      accounts: member.riotAccounts.map((account) => ({
+        riotId: account.riotId,
+        platform: account.platform,
+        profileIconId: account.profileIconId,
+        summonerLevel: account.summonerLevel,
+        backfillState: account.backfillState,
+        syncedFrom: account.syncedFrom?.toUTC().toISO() ?? null,
+        lastSyncedAt: account.lastSyncedAt?.toUTC().toISO() ?? null,
+      })),
+    }
+  }
+
+  async matches({ params, request }: HttpContext) {
+    const member = await Member.findByOrFail('slug', params.slug)
+    const query = await historyQuery.validate(request.qs())
+
+    return new PlayerStatsService().matches(member, {
+      cursor: query.cursor,
+      limit: query.limit,
+      queueGroup: query.queue,
+    })
+  }
+
+  async champions({ params, request }: HttpContext) {
+    const member = await Member.findByOrFail('slug', params.slug)
+    const query = await poolQuery.validate(request.qs())
+
+    return new PlayerStatsService().championPool(member, { queueGroup: query.queue })
+  }
+
+  async lpHistory({ params, request }: HttpContext) {
+    const member = await Member.findByOrFail('slug', params.slug)
+    const query = await lpQuery.validate(request.qs())
+
+    return { points: await new PlayerStatsService().lpHistory(member, query.queueType) }
+  }
+}
