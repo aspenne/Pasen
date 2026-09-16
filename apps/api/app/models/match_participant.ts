@@ -79,10 +79,15 @@ export default class MatchParticipant extends BaseModel {
   @column()
   declare champLevel: number
 
-  @column()
+  /*
+   * Lucid's naming strategy splits on the digit and produces summoner_1_id,
+   * which is not the column. Spelled out so a read through the model does not
+   * silently come back undefined.
+   */
+  @column({ columnName: 'summoner1_id' })
   declare summoner1Id: number
 
-  @column()
+  @column({ columnName: 'summoner2_id' })
   declare summoner2Id: number
 
   @column({
