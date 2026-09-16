@@ -44,13 +44,22 @@ describe('queue grouping', () => {
     expect(queueGroupFor(1700)).toBe('arena')
   })
 
-  it('degrades an unknown queue id instead of throwing', () => {
-    expect(queueGroupFor(99999)).toBe('other')
+  it('falls back to gameMode for a queue id Riot has not published', () => {
+    // 1750 is live on EUW and absent from Riot's own queues.json.
+    expect(queueGroupFor(1750, 'CHERRY')).toBe('arena')
+    expect(queueGroupFor(99999, 'CHERRY')).toBe('arena')
+    expect(queueGroupFor(99999, 'ARAM')).toBe('aram')
   })
 
-  it('excludes customs and bot games from stats', () => {
+  it('degrades an unknown queue id instead of throwing', () => {
+    expect(queueGroupFor(99999)).toBe('other')
+    expect(queueGroupFor(99999, 'SOMETHING_NEW')).toBe('other')
+  })
+
+  it('excludes customs, bot games and tutorials from stats', () => {
     expect(isStatsEligible(0)).toBe(false)
     expect(isStatsEligible(830)).toBe(false)
     expect(isStatsEligible(420)).toBe(true)
+    expect(isStatsEligible(1750, 'TUTORIAL')).toBe(false)
   })
 })

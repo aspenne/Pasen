@@ -246,3 +246,11 @@ _Spec validée le 2026-09-16. Écarts assumés depuis, consignés ici :_
 - Node pinné à 24.21.0 (`.nvmrc`) : AdonisJS 6 exige Node >= 24.
 - `packages/shared` est compilé vers `dist/` au lieu d'être consommé en TS brut, le build Adonis ne transpilant que son propre `app/`.
 - Override pnpm `jsonschema@1.4.1` : la 1.5.0 casse la validation des commandes ace ("Invalid URL" sur tout $ref).
+
+_Constaté sur données Riot réelles (clé live, EUW, 16/09/2026) :_
+
+- **Le nombre de participants n'est pas constant** : 10 en Faille de l'invocateur, **18** en Arena (`gameMode: CHERRY`). Tout ce qui suppose 10 casse sur l'Arena.
+- **`teamPosition` peut être vide** (`""`) hors Faille — la colonne doit être nullable, pas contrainte à un enum de rôles.
+- **La `queues.json` de Riot est en retard sur le jeu** : la queue 1750 est servie par l'API et absente du fichier statique. Les ids inconnus sont un cas normal ; le groupement retombe sur `gameMode`.
+- **`league-v4` renvoie plus que solo/flex** : `RANKED_PREMADE_5x5` apparaît aussi. `queue_type` doit rester une chaîne libre.
+- **Taille réelle d'un match brut : 79 Ko (SR) à 134 Ko (Arena)**, soit moins que les 150-300 Ko estimés. Le budget de stockage du plan est donc pessimiste d'environ moitié.
