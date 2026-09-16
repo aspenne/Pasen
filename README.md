@@ -67,3 +67,22 @@ packages/shared   Types and constants used by both (compiled to dist/)
 `packages/shared` is compiled rather than consumed as raw TypeScript, because the
 Adonis build only transpiles its own `app/` directory. Run `pnpm build:shared`
 after editing it (the compose stack does this automatically on start).
+
+## Commits
+
+[Conventional Commits](https://www.conventionalcommits.org): `type(scope): description`,
+imperative mood, lowercase, no trailing period.
+
+Types: `feat` `fix` `refactor` `perf` `test` `docs` `chore` `build` `ci`.
+
+Scopes follow the layout: `riot` `ingestion` `stats` `db` `api` `web` `worker`
+`shared` `docker` `repo`.
+
+```
+feat(riot): add redis token bucket shared across processes
+fix(ingestion): stop backfill cursor rewinding on a partial page
+test(riot): cover 429 retry-after handling
+```
+
+A change that breaks an existing API or schema adds `!` before the colon and a
+`BREAKING CHANGE:` footer.
