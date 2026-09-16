@@ -128,6 +128,39 @@ test.group('MatchIngestService', (group) => {
     assert.lengthOf(await Match.all(), 2)
   })
 
+  test('survives two syncs ingesting the same match at the same moment', async ({ assert }) => {
+    const match = await fixture('match_ranked_sr')
+    const service = new MatchIngestService()
+
+    // What the recent-sync and backfill queues actually do when a group shares a
+    // game: both list it, both find it missing, both write it.
+    await Promise.all([service.ingest(match), service.ingest(match)])
+
+    assert.lengthOf(await Match.all(), 1)
+    assert.lengthOf(await MatchParticipant.query().where('match_id', match.metadata.matchId), 10)
+  })
+
+  test('drops a participant that a corrected payload no longer lists', async ({ assert }) => {
+    const match = await fixture('match_ranked_sr')
+    const service = new MatchIngestService()
+    await service.ingest(match)
+
+    const trimmed = structuredClone(match)
+    const removed = trimmed.info.participants.pop()!
+    trimmed.metadata.participants = trimmed.metadata.participants.filter(
+      (puuid) => puuid !== removed.puuid
+    )
+
+    await service.ingest(trimmed)
+
+    const remaining = await MatchParticipant.query().where('match_id', match.metadata.matchId)
+    assert.lengthOf(remaining, 9)
+    assert.notInclude(
+      remaining.map((p) => p.puuid),
+      removed.puuid
+    )
+  })
+
   test('accepts an empty batch without touching the database', async ({ assert }) => {
     assert.isEmpty(await new MatchIngestService().ingestMany([]))
   })

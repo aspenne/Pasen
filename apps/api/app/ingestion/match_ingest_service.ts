@@ -3,7 +3,6 @@ import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { isStatsEligible, queueGroupFor } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
-import Match from '#models/match'
 import type { MatchDto, MatchParticipantDto } from '#riot/types'
 
 export type IngestResult = {
@@ -48,37 +47,63 @@ export class MatchIngestService {
     const gameCreation = DateTime.fromMillis(info.gameCreation, { zone: 'utc' })
     const durationSeconds = durationSecondsOf(info)
 
-    await Match.updateOrCreate(
-      { matchId: metadata.matchId },
-      {
+    /*
+     * A real upsert, not updateOrCreate. That does a SELECT then an INSERT, and
+     * the two are not atomic: with a group sharing games, the recent-sync and
+     * backfill queues reach the same match at the same moment, both find nothing,
+     * and the second insert dies on the primary key.
+     *
+     * Lucid's insert builder has no onConflict, so this drops to its knex query.
+     */
+    await trx
+      .insertQuery()
+      .table('matches')
+      .knexQuery.insert({
+        match_id: metadata.matchId,
         platform: info.platformId,
-        queueId: info.queueId,
-        queueGroup: queueGroupFor(info.queueId, info.gameMode),
-        gameMode: info.gameMode,
-        gameType: info.gameType,
-        gameVersion: info.gameVersion,
-        gameCreation,
-        gameDuration: durationSeconds,
-        gameEndedAt: info.gameEndTimestamp
-          ? DateTime.fromMillis(info.gameEndTimestamp, { zone: 'utc' })
+        queue_id: info.queueId,
+        queue_group: queueGroupFor(info.queueId, info.gameMode),
+        game_mode: info.gameMode,
+        game_type: info.gameType,
+        game_version: info.gameVersion,
+        game_creation: gameCreation.toISO()!,
+        game_duration: durationSeconds,
+        game_ended_at: info.gameEndTimestamp
+          ? DateTime.fromMillis(info.gameEndTimestamp, { zone: 'utc' }).toISO()
           : null,
-        participantCount: info.participants.length,
-        statsEligible: isStatsEligible(info.queueId, info.gameMode),
-        raw: match,
-        ingestedAt: DateTime.utc(),
-      },
-      { client: trx }
-    )
+        participant_count: info.participants.length,
+        stats_eligible: isStatsEligible(info.queueId, info.gameMode),
+        raw: JSON.stringify(match),
+        ingested_at: DateTime.utc().toISO()!,
+      })
+      .onConflict('match_id')
+      .merge()
 
     /*
-     * Participants are replaced rather than upserted. A re-ingest is either
-     * identical or a corrected payload, and a wholesale replace cannot leave a
-     * stale row behind if Riot ever returns a different roster for a match id.
+     * Upserted rather than deleted-then-inserted. Two concurrent ingests of the
+     * same match both delete nothing (there is nothing to lock), then both
+     * insert, and one dies on the composite key.
      */
-    await trx.from('match_participants').where('match_id', metadata.matchId).delete()
+    const rows = info.participants.map((p) => participantRow(metadata.matchId, p))
+
     await trx
+      .insertQuery()
       .table('match_participants')
-      .multiInsert(info.participants.map((p) => participantRow(metadata.matchId, p)))
+      .knexQuery.insert(rows)
+      .onConflict(['match_id', 'puuid'])
+      .merge()
+
+    // Anything no longer in the payload. Riot does not change a match's roster,
+    // so this normally deletes nothing - it exists so a corrected payload cannot
+    // leave a stale player behind.
+    await trx
+      .from('match_participants')
+      .where('match_id', metadata.matchId)
+      .whereNotIn(
+        'puuid',
+        rows.map((row) => row.puuid)
+      )
+      .delete()
 
     return {
       matchId: metadata.matchId,
