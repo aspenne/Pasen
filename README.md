@@ -46,6 +46,23 @@ keeps those volumes, so a lockfile change will not be picked up:
 pnpm dev:reset
 ```
 
+## Querying the database
+
+The Postgres container publishes on host port **5433**, not 5432. A Postgres
+installed on the host binds 127.0.0.1:5432 specifically, which wins over
+Docker's wildcard bind, so pointing a client at 5432 silently reaches the local
+server instead.
+
+| | |
+|---|---|
+| Host | `localhost` |
+| Port | `5433` |
+| Database | `pasen` (the suite uses `pasen_test`) |
+| User / password | `pasen` / `pasen` |
+
+`pasen_test` looks almost empty between runs by design: the suite migrates
+before and rolls back after, so only the migration bookkeeping tables persist.
+
 ## Riot API key
 
 Development keys expire every 24 hours. The `settings` table is the source of
