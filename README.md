@@ -63,6 +63,32 @@ server instead.
 `pasen_test` looks almost empty between runs by design: the suite migrates
 before and rolls back after, so only the migration bookkeeping tables persist.
 
+## Running ace commands
+
+Inside the container, which already has the right Node and environment:
+
+```bash
+docker compose exec api node ace list
+```
+
+Or natively from `apps/api`, after `nvm use` at the repo root — AdonisJS 6
+requires Node 24 and ace fails confusingly on an older one:
+
+```bash
+cd apps/api && node ace list
+```
+
+The project's own commands:
+
+| Command | What it does |
+|---|---|
+| `pasen:group "ARIGAFION"` | Create a group, or list existing ones |
+| `pasen:add <group> "Name#TAG" <platform>` | Link a Riot account, creating the member if needed |
+| `pasen:sync [--backfill]` | Pull recent matches, or walk history backwards |
+| `riot:key [status\|set\|check]` | Rotate or verify the Riot API key |
+| `static:sync [--force]` | Re-import Data Dragon |
+| `worker:run` | Run the background worker (what the worker container runs) |
+
 ## Riot API key
 
 Development keys expire every 24 hours. The `settings` table is the source of
