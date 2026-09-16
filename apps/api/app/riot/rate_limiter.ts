@@ -1,4 +1,4 @@
-import type { Redis } from 'ioredis'
+import type { RedisLike } from '#riot/redis'
 
 export type RateWindow = {
   /** Requests allowed inside the window. */
@@ -8,10 +8,13 @@ export type RateWindow = {
 }
 
 export type RateLimiterOptions = {
-  connection: Redis
+  connection: RedisLike
   windows: RateWindow[]
   /** Namespaces the counters. One prefix per API key, so keys never share a budget. */
   prefix: string
+  /** Injectable clock. Tests drive a virtual one so waits cost no wall time. */
+  now?: () => number
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>
 }
 
 export class RateLimitTimeoutError extends Error {
@@ -31,9 +34,11 @@ export class RateLimitTimeoutError extends Error {
  * than a sliding window that would let a burst straddle two of Riot's windows.
  */
 export class RiotRateLimiter {
-  readonly #redis: Redis
+  readonly #redis: RedisLike
   readonly #windows: RateWindow[]
   readonly #prefix: string
+  readonly #now: () => number
+  readonly #sleep: (ms: number, signal?: AbortSignal) => Promise<void>
 
   /**
    * Checking then incrementing from the client would race between processes, so
@@ -77,6 +82,8 @@ export class RiotRateLimiter {
     this.#redis = options.connection
     this.#windows = options.windows
     this.#prefix = options.prefix
+    this.#now = options.now ?? Date.now
+    this.#sleep = options.sleep ?? sleep
   }
 
   #penaltyKey() {
@@ -97,7 +104,7 @@ export class RiotRateLimiter {
    * Returns 0 when the request may go out, otherwise the milliseconds to wait
    * before asking again. Never throws on contention — refusal is a normal result.
    */
-  async tryAcquire(now: number = Date.now()): Promise<number> {
+  async tryAcquire(now: number = this.#now()): Promise<number> {
     const keys = [this.#penaltyKey(), ...this.#windows.map((w) => this.#windowKey(w, now))]
     const args = [
       String(now),
@@ -131,7 +138,7 @@ export class RiotRateLimiter {
 
       // A few extra milliseconds so we land inside the next window, not on its
       // boundary, where clock skew against Redis could deny us again.
-      await sleep(wait + 5, options.signal)
+      await this.#sleep(wait + 5, options.signal)
     }
   }
 
@@ -139,13 +146,13 @@ export class RiotRateLimiter {
    * Called after a 429. Riot's `Retry-After` is authoritative: until it passes,
    * nothing may go out, whatever our own counters believe.
    */
-  async penalize(durationMs: number, now: number = Date.now()): Promise<void> {
+  async penalize(durationMs: number, now: number = this.#now()): Promise<void> {
     const until = now + durationMs
     await this.#redis.set(this.#penaltyKey(), String(until), 'PX', durationMs)
   }
 
   /** Current usage per window, for the admin sync screen. */
-  async snapshot(now: number = Date.now()): Promise<{ window: RateWindow; used: number }[]> {
+  async snapshot(now: number = this.#now()): Promise<{ window: RateWindow; used: number }[]> {
     const keys = this.#windows.map((w) => this.#windowKey(w, now))
     const values = await this.#redis.mget(keys)
 

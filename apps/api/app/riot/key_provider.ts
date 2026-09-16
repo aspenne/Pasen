@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import type { Redis } from 'ioredis'
+import type { RedisLike } from '#riot/redis'
 
 import Setting from '#models/setting'
 import { RiotKeyMissingError } from '#riot/errors'
@@ -25,10 +25,10 @@ export type RiotKeyStatus = {
  * cache, and the environment is only a bootstrap fallback for a fresh install.
  */
 export class RiotKeyProvider {
-  readonly #redis: Redis
+  readonly #redis: RedisLike
   readonly #envKey?: string
 
-  constructor(options: { connection: Redis; envKey?: string }) {
+  constructor(options: { connection: RedisLike; envKey?: string }) {
     this.#redis = options.connection
     this.#envKey = options.envKey?.trim() || undefined
   }
