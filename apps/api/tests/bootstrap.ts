@@ -23,7 +23,14 @@ export const plugins: Config['plugins'] = [assert(), apiClient(), pluginAdonisJS
  * The teardown functions are executed after all the tests
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
+  setup: [
+    /**
+     * Unit tests here are not "pure": the rate limiter's whole job is to be
+     * correct across processes, which only Redis can prove. Tests run against
+     * the compose datastores and a dedicated `pasen_test` database.
+     */
+    () => testUtils.db().migrate(),
+  ],
   teardown: [],
 }
 
