@@ -56,6 +56,12 @@ describe('queue grouping', () => {
     expect(queueGroupFor(99999, 'SOMETHING_NEW')).toBe('other')
   })
 
+  it('refuses to guess a bucket for an unidentified summoner\'s rift queue', () => {
+    // CLASSIC covers ranked and normal alike; labelling a new ranked queue
+    // "normal" would be worse than admitting we do not know.
+    expect(queueGroupFor(99999, 'CLASSIC')).toBe('other')
+  })
+
   it('excludes customs, bot games and tutorials from stats', () => {
     expect(isStatsEligible(0)).toBe(false)
     expect(isStatsEligible(830)).toBe(false)

@@ -23,6 +23,10 @@ const QUEUE_GROUP_BY_ID: Record<number, QueueGroup> = {
   400: 'normal', // draft pick
   430: 'normal', // blind pick
   490: 'normal', // quickplay
+  // Absent from Riot's published list. Identified from a live payload: mapId 11,
+  // gameMode CLASSIC, gameType MATCHED_GAME, empty tournamentCode, ten players
+  // with full roles - a standard 5v5 that is neither ranked nor Clash.
+  710: 'normal',
   420: 'ranked_solo',
   440: 'ranked_flex',
   700: 'ranked_flex', // clash, played on summoner's rift
@@ -33,7 +37,14 @@ const QUEUE_GROUP_BY_ID: Record<number, QueueGroup> = {
   1750: 'arena',
 }
 
-/** Riot's per-match mode string. Stable across queue reshuffles. */
+/**
+ * Riot's per-match mode string, stable across queue reshuffles.
+ *
+ * CLASSIC is deliberately absent: it covers ranked and normal alike, so an
+ * unknown CLASSIC queue would be labelled "normal" even if Riot had just
+ * introduced a ranked one. Calling a ranked game a normal is worse than
+ * admitting we do not know, so it stays in `other` until identified.
+ */
 const QUEUE_GROUP_BY_MODE: Record<string, QueueGroup> = {
   CHERRY: 'arena',
   ARAM: 'aram',
