@@ -12,6 +12,10 @@ router
     router.get('/groups/:slug', [GroupsController, 'show'])
     router.get('/groups/:slug/feed', [GroupsController, 'feed'])
     router.get('/groups/:slug/live', [GroupsController, 'live'])
+    router.get('/groups/:slug/duos', [GroupsController, 'duos'])
+    router.get('/groups/:slug/leaderboards', [GroupsController, 'leaderboards'])
+    router.get('/groups/:slug/champions', [GroupsController, 'champions'])
+    router.get('/groups/:slug/activity', [GroupsController, 'activity'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])

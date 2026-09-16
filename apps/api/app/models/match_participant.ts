@@ -7,9 +7,13 @@ import Match from '#models/match'
  * One player in one match, stored for all participants and not just tracked
  * members.
  *
- * The real primary key is (match_id, puuid). Lucid has no composite key support,
- * so `primaryKey` below is a placeholder: never call find() on this model, query
- * it by both columns instead. Writes go through the query builder in bulk.
+ * The real primary key is (match_id, puuid), and Lucid has no composite key
+ * support. `primaryKey` below is therefore a placeholder with teeth: find() will
+ * return an arbitrary participant, and save() on a loaded row issues
+ * `UPDATE ... WHERE match_id = ?`, rewriting every player in that match.
+ *
+ * So treat this model as read-only and always query it by both columns. Writes
+ * go through the query builder in bulk - see MatchIngestService.
  */
 export default class MatchParticipant extends BaseModel {
   static table = 'match_participants'

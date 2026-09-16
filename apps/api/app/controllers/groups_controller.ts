@@ -5,11 +5,19 @@ import { QUEUE_GROUPS } from '@pasen/shared'
 
 import Group from '#models/group'
 import RiotAccount from '#models/riot_account'
+import { ActivityService } from '#stats/activity_service'
 import { DailyFeedService } from '#stats/daily_feed_service'
+import { DuoStatsService } from '#stats/duo_stats_service'
+import { GroupChampionService } from '#stats/group_champion_service'
 import { GroupService } from '#stats/group_service'
+import { LeaderboardService } from '#stats/leaderboard_service'
 import { LiveGameService } from '#ingestion/live_game_service'
 import { riot } from '#riot/service'
 import type { RedisLike } from '#riot/redis'
+
+const leaderboardQuery = vine.compile(
+  vine.object({ period: vine.enum(['week', 'month', 'all'] as const).optional() })
+)
 
 const feedQuery = vine.compile(
   vine.object({
@@ -32,6 +40,27 @@ export default class GroupsController {
       date: query.date,
       queueGroup: query.queue,
     })
+  }
+
+  async duos({ params }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    return new DuoStatsService().forGroup(group)
+  }
+
+  async leaderboards({ params, request }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    const query = await leaderboardQuery.validate(request.qs())
+    return new LeaderboardService().forGroup(group, query.period ?? 'week')
+  }
+
+  async champions({ params }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    return new GroupChampionService().forGroup(group)
+  }
+
+  async activity({ params }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    return { days: await new ActivityService().forGroup(group) }
   }
 
   /**

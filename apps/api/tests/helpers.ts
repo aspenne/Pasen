@@ -63,6 +63,7 @@ export type ParticipantOverrides = Partial<{
   cs: number
   teamPosition: string | null
   teamId: number
+  subteamId: number | null
 }>
 
 /** One stored match with one tracked participant, at a chosen instant. */
@@ -104,6 +105,7 @@ export async function addParticipant(
     matchId: match.matchId,
     puuid,
     teamId: overrides.teamId ?? 100,
+    subteamId: overrides.subteamId ?? null,
     championId: overrides.championId ?? 266,
     championName: overrides.championName ?? 'Aatrox',
     teamPosition: overrides.teamPosition === undefined ? 'TOP' : overrides.teamPosition,
