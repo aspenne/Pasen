@@ -5,6 +5,8 @@ import { DateTime } from 'luxon'
 
 import Group from '#models/group'
 import { AccountLinker } from '#ingestion/account_linker'
+import logger from '@adonisjs/core/services/logger'
+
 import { riot } from '#riot/service'
 
 export default class PasenAdd extends BaseCommand {
@@ -43,7 +45,7 @@ export default class PasenAdd extends BaseCommand {
 
     const group = await Group.findByOrFail('slug', this.group)
 
-    const account = await new AccountLinker(riot()).link({
+    const account = await new AccountLinker(riot(), logger).link({
       gameName,
       tagLine,
       platform: this.platform,

@@ -1,9 +1,11 @@
 import string from '@adonisjs/core/helpers/string'
+import type { Logger } from '@adonisjs/core/logger'
 import type { Platform } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
+import { RankService } from '#ingestion/rank_service'
 import type { RiotClient } from '#riot/client'
 
 export type LinkRequest = {
@@ -24,7 +26,10 @@ export type LinkRequest = {
  * so a name is resolved to a puuid once and never trusted again.
  */
 export class AccountLinker {
-  constructor(private riot: RiotClient) {}
+  constructor(
+    private riot: RiotClient,
+    private logger?: Logger
+  ) {}
 
   async link(request: LinkRequest): Promise<RiotAccount> {
     const identity = await this.riot.account.byRiotId(
@@ -59,6 +64,25 @@ export class AccountLinker {
 
     await account.save()
     await this.refreshProfile(account)
+
+    /*
+     * Snapshot the rank now rather than waiting for the hourly job. Without it a
+     * member added at 14:05 reads "Unranked" on the roster until 15:00, which
+     * looks like a bug rather than a schedule.
+     *
+     * Never fatal, though: the account is linked either way, and the hourly job
+     * will fill the rank in. Losing the whole add because a secondary call
+     * hiccuped would be a much worse outcome than a roster row reading
+     * "Unranked" for an hour.
+     */
+    try {
+      await new RankService(this.riot).snapshot(account)
+    } catch (error) {
+      this.logger?.warn(
+        { account: account.riotId, err: error instanceof Error ? error.message : String(error) },
+        'could not snapshot rank at link time; the hourly job will pick it up'
+      )
+    }
 
     return account
   }

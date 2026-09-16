@@ -1,16 +1,39 @@
 import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 
+import LeagueEntry from '#models/league_entry'
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
 import { AccountLinker } from '#ingestion/account_linker'
 import { RiotClient } from '#riot/client'
 import type { RiotRequest, RiotRequester } from '#riot/gateway'
 
-/** Answers account-v1 and summoner-v4 for a fixed identity. */
-function fakeRiot(identity: { puuid: string; gameName: string; tagLine: string }) {
+/** Answers account-v1, summoner-v4 and league-v4 for a fixed identity. */
+function fakeRiot(
+  identity: { puuid: string; gameName: string; tagLine: string },
+  league: unknown[] = []
+) {
   const requester: RiotRequester = {
     async request<T>(request: RiotRequest): Promise<T> {
+      if (request.endpoint.startsWith('account-v1')) {
+        return identity as T
+      }
+      if (request.endpoint.startsWith('league-v4')) {
+        return league as T
+      }
+      return { puuid: identity.puuid, profileIconId: 1, summonerLevel: 42, revisionDate: 0 } as T
+    },
+  }
+  return new RiotClient(requester)
+}
+
+/** Fails every league call, to prove linking survives it. */
+function riotWithBrokenLeague(identity: { puuid: string; gameName: string; tagLine: string }) {
+  const requester: RiotRequester = {
+    async request<T>(request: RiotRequest): Promise<T> {
+      if (request.endpoint.startsWith('league-v4')) {
+        throw new Error('riot is having a moment')
+      }
       if (request.endpoint.startsWith('account-v1')) {
         return identity as T
       }
@@ -117,6 +140,48 @@ test.group('AccountLinker', (group) => {
 
     assert.equal(smurf.memberId, main.memberId)
     assert.lengthOf(await RiotAccount.query().where('member_id', main.memberId), 2)
+  })
+
+  test('links the account even when the rank snapshot fails', async ({ assert }) => {
+    // The snapshot is a convenience so a new member does not read "Unranked"
+    // until the hourly job runs. Losing the whole add over it would be worse.
+    const account = await new AccountLinker(riotWithBrokenLeague(IDENTITY)).link({
+      gameName: IDENTITY.gameName,
+      tagLine: IDENTITY.tagLine,
+      platform: 'euw1',
+    })
+
+    assert.equal(account.puuid, 'puuid-1')
+    assert.isNotNull(await RiotAccount.findBy('puuid', 'puuid-1'))
+  })
+
+  test('captures the rank at link time so the roster is complete at once', async ({ assert }) => {
+    const riot = fakeRiot(IDENTITY, [
+      {
+        leagueId: 'l1',
+        queueType: 'RANKED_SOLO_5x5',
+        tier: 'MASTER',
+        rank: 'I',
+        puuid: IDENTITY.puuid,
+        leaguePoints: 137,
+        wins: 121,
+        losses: 99,
+        hotStreak: false,
+        veteran: false,
+        freshBlood: false,
+        inactive: false,
+      },
+    ])
+
+    const account = await new AccountLinker(riot).link({
+      gameName: IDENTITY.gameName,
+      tagLine: IDENTITY.tagLine,
+      platform: 'euw1',
+    })
+
+    const entries = await LeagueEntry.query().where('riot_account_id', account.id)
+    assert.lengthOf(entries, 1)
+    assert.equal(entries[0].tier, 'MASTER')
   })
 
   test('adopts riot\'s casing over whatever was typed', async ({ assert }) => {

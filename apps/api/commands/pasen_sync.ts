@@ -3,6 +3,7 @@ import type { CommandOptions } from '@adonisjs/core/types/ace'
 
 import RiotAccount from '#models/riot_account'
 import { MatchSyncService } from '#ingestion/match_sync_service'
+import { RankService } from '#ingestion/rank_service'
 import { riot } from '#riot/service'
 
 /**
@@ -16,6 +17,9 @@ export default class PasenSync extends BaseCommand {
 
   @flags.boolean({ description: 'Walk history backwards instead of pulling recent games' })
   declare backfill: boolean
+
+  @flags.boolean({ description: 'Snapshot ranked standings instead of syncing matches' })
+  declare ranks: boolean
 
   @flags.string({ description: 'Limit to one Riot ID, e.g. "Name#TAG"' })
   declare account?: string
@@ -39,6 +43,17 @@ export default class PasenSync extends BaseCommand {
     const accounts = await query
     if (accounts.length === 0) {
       this.logger.info('no accounts to sync')
+      return
+    }
+
+    if (this.ranks) {
+      const rankService = new RankService(riot())
+      for (const account of accounts) {
+        const result = await rankService.snapshot(account)
+        this.logger.info(
+          `${account.riotId}: ${result.recorded.length} recorded, ${result.unchanged} unchanged`
+        )
+      }
       return
     }
 

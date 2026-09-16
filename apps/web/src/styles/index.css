@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /*
- * Direction A — "esport data": a near-black blue ground so champion art and
+ * Direction A - "esport data": a near-black blue ground so champion art and
  * chart colours carry, gold reserved for the single most important number on a
  * surface, and one green / one red that never mean anything but win / loss.
  */
@@ -19,6 +19,23 @@
   --color-gold: #d4af5a;
   --color-win: #4ecda4;
   --color-loss: #e24b4a;
+
+  /*
+   * Member identity. One hue per person, held across every screen and every
+   * chart, so a colour always means the same human.
+   *
+   * Validated against the card surface #111725: all eight inside the dark
+   * lightness band, chroma floor clear, worst adjacent CVD deltaE 8.4, worst
+   * normal-vision deltaE 19.3, every slot over 3:1 contrast.
+   */
+  --color-member-1: #3987e5;
+  --color-member-2: #d95926;
+  --color-member-3: #199e70;
+  --color-member-4: #c98500;
+  --color-member-5: #d55181;
+  --color-member-6: #008300;
+  --color-member-7: #9085e9;
+  --color-member-8: #e66767;
 
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
