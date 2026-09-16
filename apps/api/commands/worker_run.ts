@@ -1,6 +1,9 @@
 import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 
+import { closeQueues } from '#queues/main'
+import { startWorkers, stopWorkers } from '#queues/worker'
+
 /**
  * Long-running process that owns every background job: Riot polling, match
  * ingestion, backfill. It is deliberately a separate process from the HTTP
@@ -19,33 +22,31 @@ export default class WorkerRun extends BaseCommand {
   async run() {
     this.logger.info('worker starting')
 
-    // Queues and schedulers are registered here from phase 2 onwards. Until
-    // they hold the event loop open themselves, the signal wait below does.
+    const workers = await startWorkers()
 
-    this.logger.info('worker ready')
+    this.logger.info(`worker ready, listening on ${workers.map((w) => w.name).join(', ')}`)
 
     await this.#waitForShutdownSignal()
 
     this.logger.info('worker shutting down')
+    // Close the workers first so an in-flight job finishes before the queues
+    // they would write follow-up jobs to disappear.
+    await stopWorkers(workers)
+    await closeQueues()
     await this.terminate()
   }
 
   /**
    * Resolves on SIGTERM (what `docker compose stop` sends) or SIGINT (Ctrl-C),
-   * so the process exits deliberately instead of dying mid-job.
+   * so the process exits deliberately instead of dying mid-job. The BullMQ
+   * workers hold the event loop open in the meantime.
    */
   #waitForShutdownSignal() {
     return new Promise<void>((resolve) => {
       const signals = ['SIGTERM', 'SIGINT'] as const
 
-      // Signal listeners are not ref'd handles, so on their own they do not stop
-      // Node from exiting once the event loop drains. This timer is what keeps
-      // the process up; drop it once BullMQ workers hold their own connections.
-      const keepAlive = setInterval(() => {}, 60_000)
-
       const onSignal = (signal: NodeJS.Signals) => {
         this.logger.info(`received ${signal}`)
-        clearInterval(keepAlive)
         for (const each of signals) {
           process.removeListener(each, onSignal)
         }
