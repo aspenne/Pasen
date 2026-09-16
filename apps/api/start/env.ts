@@ -18,6 +18,13 @@ export default await Env.create(new URL('../', import.meta.url), {
   REDIS_HOST: Env.schema.string({ format: 'host' }),
   REDIS_PORT: Env.schema.number(),
   REDIS_PASSWORD: Env.schema.string.optional(),
+  /**
+   * Redis database index. Tests use a different one from the application: a test
+   * that writes a cache key is not rolled back the way a database transaction
+   * is, so sharing an index lets a fake value from the suite leak into the
+   * running app until its TTL expires.
+   */
+  REDIS_DB: Env.schema.number(),
 
   /*
   |----------------------------------------------------------

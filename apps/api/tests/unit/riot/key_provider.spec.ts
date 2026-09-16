@@ -59,6 +59,35 @@ test.group('RiotKeyProvider', (group) => {
     assert.isNull(status.invalidSince, 'a new key clears the expired banner')
   })
 
+  test('clears the invalid flag once a call succeeds again', async ({ assert }) => {
+    const provider = await freshProvider()
+    await provider.set('RGAPI-live')
+
+    await provider.markInvalid()
+    assert.isNotNull((await provider.status()).invalidSince)
+
+    await provider.markValid()
+    assert.isNull(
+      (await provider.status()).invalidSince,
+      'a transient rejection must not leave a permanent expired banner'
+    )
+  })
+
+  test('marking valid is free for a process that saw no rejection', async ({ assert }) => {
+    const provider = await freshProvider()
+    await provider.set('RGAPI-live')
+
+    // Another process recorded the rejection; this one never saw it, so it has
+    // nothing to undo and must not pay a write on every successful call.
+    await Setting.updateOrCreate(
+      { key: 'riot.key_invalid_since' },
+      { value: '2026-01-01T00:00:00.000Z' }
+    )
+
+    await provider.markValid()
+    assert.isNotNull((await provider.status()).invalidSince)
+  })
+
   test('never exposes the key itself in its status', async ({ assert }) => {
     const provider = await freshProvider()
     await provider.set('RGAPI-0123456789-secret-tail')

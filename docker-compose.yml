@@ -65,6 +65,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: '6379'
       REDIS_PASSWORD: ''
+      REDIS_DB: '0'
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
       RIOT_API_KEY: ${RIOT_API_KEY:-}
       RIOT_RATE_PER_SECOND: ${RIOT_RATE_PER_SECOND:-18}

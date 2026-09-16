@@ -27,6 +27,7 @@ export type RiotKeyStatus = {
 export class RiotKeyProvider {
   readonly #redis: RedisLike
   readonly #envKey?: string
+  #sawRejection = false
 
   constructor(options: { connection: RedisLike; envKey?: string }) {
     this.#redis = options.connection
@@ -73,7 +74,23 @@ export class RiotKeyProvider {
    * retries, and the public site can show that data has stopped refreshing.
    */
   async markInvalid(now: Date = new Date()): Promise<void> {
+    this.#sawRejection = true
     await Setting.updateOrCreate({ key: INVALID_SETTING }, { value: now.toISOString() })
+  }
+
+  /**
+   * Clears the flag after a call succeeds again, so a transient rejection does
+   * not leave a permanent "key expired" banner. Guarded by an in-process flag so
+   * the overwhelming majority of successful calls cost nothing: a process that
+   * never saw a rejection has nothing to undo.
+   */
+  async markValid(): Promise<void> {
+    if (!this.#sawRejection) {
+      return
+    }
+
+    this.#sawRejection = false
+    await Setting.query().where('key', INVALID_SETTING).delete()
   }
 
   async fingerprint(): Promise<string | null> {

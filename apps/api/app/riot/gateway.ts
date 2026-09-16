@@ -121,6 +121,7 @@ export class RiotGateway implements RiotRequester {
       })
 
       if (response.ok) {
+        await this.#keyProvider.markValid()
         return (await response.json()) as T
       }
 
