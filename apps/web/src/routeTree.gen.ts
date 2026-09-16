@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupRouteImport } from './routes/$group'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
+import { Route as GroupInsightsRouteImport } from './routes/$group/insights'
 import { Route as GroupPlayersMemberRouteImport } from './routes/$group/players/$member'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const GroupIndexRoute = GroupIndexRouteImport.update({
   path: '/',
   getParentRoute: () => GroupRoute,
 } as any)
+const GroupInsightsRoute = GroupInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => GroupRoute,
+} as any)
 const GroupPlayersMemberRoute = GroupPlayersMemberRouteImport.update({
   id: '/players/$member',
   path: '/players/$member',
@@ -38,11 +44,13 @@ const GroupPlayersMemberRoute = GroupPlayersMemberRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
+  '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$group/insights': typeof GroupInsightsRoute
   '/$group': typeof GroupIndexRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
 }
@@ -50,15 +58,27 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
+  '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$group' | '/$group/' | '/$group/players/$member'
+  fullPaths:
+    | '/'
+    | '/$group'
+    | '/$group/insights'
+    | '/$group/'
+    | '/$group/players/$member'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$group' | '/$group/players/$member'
-  id: '__root__' | '/' | '/$group' | '/$group/' | '/$group/players/$member'
+  to: '/' | '/$group/insights' | '/$group' | '/$group/players/$member'
+  id:
+    | '__root__'
+    | '/'
+    | '/$group'
+    | '/$group/insights'
+    | '/$group/'
+    | '/$group/players/$member'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupIndexRouteImport
       parentRoute: typeof GroupRoute
     }
+    '/$group/insights': {
+      id: '/$group/insights'
+      path: '/insights'
+      fullPath: '/$group/insights'
+      preLoaderRoute: typeof GroupInsightsRouteImport
+      parentRoute: typeof GroupRoute
+    }
     '/$group/players/$member': {
       id: '/$group/players/$member'
       path: '/players/$member'
@@ -100,11 +127,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface GroupRouteChildren {
+  GroupInsightsRoute: typeof GroupInsightsRoute
   GroupIndexRoute: typeof GroupIndexRoute
   GroupPlayersMemberRoute: typeof GroupPlayersMemberRoute
 }
 
 const GroupRouteChildren: GroupRouteChildren = {
+  GroupInsightsRoute: GroupInsightsRoute,
   GroupIndexRoute: GroupIndexRoute,
   GroupPlayersMemberRoute: GroupPlayersMemberRoute,
 }

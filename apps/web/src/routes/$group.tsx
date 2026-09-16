@@ -33,6 +33,14 @@ function GroupLayout() {
             >
               Today
             </Link>
+            <Link
+              to="/$group/insights"
+              params={{ group }}
+              activeProps={{ className: 'text-ink' }}
+              inactiveProps={{ className: 'text-ink-muted hover:text-ink' }}
+            >
+              Insights
+            </Link>
             {data?.members.map((member) => (
               <Link
                 key={member.slug}

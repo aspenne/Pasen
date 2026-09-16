@@ -190,6 +190,94 @@ export type MemberProfile = {
   accounts: (MemberAccount & { lastSyncedAt: string | null })[]
 }
 
+export type DuoPair = {
+  a: string
+  b: string
+  games: number
+  wins: number
+  winRate: number
+  soloWinRateA: number
+  soloWinRateB: number
+}
+
+export type DuoStats = {
+  pairs: DuoPair[]
+  against: { a: string; b: string; games: number }[]
+}
+
+export type MemberTotals = {
+  memberSlug: string
+  displayName: string
+  games: number
+  wins: number
+  winRate: number
+  kda: number
+  csPerMinute: number
+  visionPerGame: number
+  deathsPerGame: number
+  pentaKills: number
+  lateNightGames: number
+  championsPlayed: number
+}
+
+export type Board = {
+  key: string
+  label: string
+  unit: string
+  entries: { memberSlug: string; displayName: string; value: number }[]
+}
+
+export type Title = {
+  key: string
+  label: string
+  description: string
+  memberSlug: string
+  displayName: string
+  detail: string
+}
+
+export type Leaderboards = {
+  period: 'week' | 'month' | 'all'
+  from: string | null
+  to: string
+  minimumGames: number
+  totals: MemberTotals[]
+  boards: Board[]
+  titles: Title[]
+}
+
+export type GroupChampion = {
+  championId: number
+  championName: string
+  games: number
+  wins: number
+  winRate: number
+  players: { memberSlug: string; displayName: string; games: number }[]
+}
+
+export type GroupChampionPool = {
+  played: number
+  available: number
+  champions: GroupChampion[]
+  untouched: { championId: number; championName: string }[]
+}
+
+export type ActivityDay = {
+  date: string
+  games: number
+  memberGames: number
+  wins: number
+}
+
+export type LpPoint = {
+  capturedAt: string
+  tier: string | null
+  rank: string | null
+  leaguePoints: number
+  wins: number
+  losses: number
+}
+
 export type StaticData = {
   version: string | null
   champions: Record<string, { slug: string; name: string; title: string; tags: string[] }>
@@ -209,6 +297,14 @@ export const api = {
     apiFetch<ChampionPool>(`/api/members/${slug}/champions${searchOf(params)}`),
   matches: (slug: string, params: { cursor?: string; limit?: number; queue?: QueueGroup } = {}) =>
     apiFetch<MatchHistory>(`/api/members/${slug}/matches${searchOf(params)}`),
+  lpHistory: (slug: string, params: { queueType?: string } = {}) =>
+    apiFetch<{ points: LpPoint[] }>(`/api/members/${slug}/lp-history${searchOf(params)}`),
+  duos: (slug: string) => apiFetch<DuoStats>(`/api/groups/${slug}/duos`),
+  leaderboards: (slug: string, params: { period?: 'week' | 'month' | 'all' } = {}) =>
+    apiFetch<Leaderboards>(`/api/groups/${slug}/leaderboards${searchOf(params)}`),
+  groupChampions: (slug: string) =>
+    apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions`),
+  activity: (slug: string) => apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity`),
 }
 
 function searchOf(params: Record<string, string | number | undefined>): string {

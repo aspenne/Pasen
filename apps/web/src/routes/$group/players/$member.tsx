@@ -4,9 +4,12 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
 import { StatTile } from '@/components/StatTile'
+import { ChampionBars } from '@/components/charts/ChampionBars'
+import { LpCurve } from '@/components/charts/LpCurve'
+import { ProfileRadar } from '@/components/charts/ProfileRadar'
 import { api } from '@/lib/api'
 import { profileIcon, useStaticData } from '@/lib/ddragon'
-import { duration, kda, positionLabel, queueLabel, timeAgo } from '@/lib/format'
+import { duration, kda, memberColor, positionLabel, queueLabel, timeAgo } from '@/lib/format'
 
 export const Route = createFileRoute('/$group/players/$member')({ component: MemberPage })
 
@@ -27,6 +30,15 @@ function MemberPage() {
     queryFn: () => api.group(group),
   })
 
+  const { data: lp } = useQuery({
+    queryKey: ['lp', memberSlug],
+    queryFn: () => api.lpHistory(memberSlug),
+  })
+  const { data: boards } = useQuery({
+    queryKey: ['leaderboards', group, 'all'],
+    queryFn: () => api.leaderboards(group, { period: 'all' }),
+  })
+
   const history = useInfiniteQuery({
     queryKey: ['history', memberSlug],
     queryFn: ({ pageParam }) => api.matches(memberSlug, { cursor: pageParam, limit: 20 }),
@@ -35,6 +47,9 @@ function MemberPage() {
   })
 
   const rosterEntry = overview?.members.find((entry) => entry.slug === memberSlug)
+  const rosterIndex = overview?.members.findIndex((entry) => entry.slug === memberSlug) ?? 0
+  const totals = boards?.totals.find((entry) => entry.memberSlug === memberSlug)
+  const accent = memberColor(rosterEntry?.accentColor ?? null, rosterIndex)
   const account = profile?.accounts[0]
   const avatar = profileIcon(staticData?.version ?? null, account?.profileIconId ?? null)
   const syncing = profile?.accounts.some((entry) => entry.backfillState !== 'done')
@@ -100,6 +115,34 @@ function MemberPage() {
           </div>
         </section>
       )}
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div>
+          <h2 className="mb-2 text-[13px] text-ink">Ranked solo over time</h2>
+          <div className="bg-panel p-2">
+            <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" />
+          </div>
+        </div>
+        <div>
+          <h2 className="mb-2 text-[13px] text-ink">Shape against the group</h2>
+          <div className="bg-panel p-2">
+            {totals && boards ? (
+              <ProfileRadar member={totals} roster={boards.totals} color={accent} />
+            ) : (
+              <p className="px-4 py-6 text-center text-[12px] text-ink-muted">
+                Not enough games yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-[13px] text-ink">Most played</h2>
+        <div className="bg-panel p-2">
+          {pool && pool.entries.length > 0 && <ChampionBars entries={pool.entries} />}
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-2 text-[13px] text-ink">Champions</h2>
