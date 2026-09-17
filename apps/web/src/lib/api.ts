@@ -1,5 +1,11 @@
 import type { QueueGroup } from '@pasen/shared'
 
+/*
+ * Empty in production: the site and the API share one origin behind the reverse
+ * proxy, so requests go out relative. That removes CORS entirely and keeps the
+ * admin session cookie first-party. In development the two run on separate
+ * ports, hence the fallback.
+ */
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3333'
 
 export class ApiError extends Error {

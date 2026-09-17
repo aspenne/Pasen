@@ -9,6 +9,11 @@ const StaticController = () => import('#controllers/static_controller')
 const SessionController = () => import('#controllers/admin/session_controller')
 const AdminController = () => import('#controllers/admin/admin_controller')
 
+/*
+ * Registered twice on purpose. The bare path is what a container health check
+ * hits; the /api one means a reverse proxy only has to be told about a single
+ * prefix, which is one less thing to get wrong in a routing table.
+ */
 router.get('/health', [HealthController, 'show'])
 
 router
@@ -26,6 +31,7 @@ router
     router.get('/members/:slug/champions', [MembersController, 'champions'])
     router.get('/members/:slug/lp-history', [MembersController, 'lpHistory'])
 
+    router.get('/health', [HealthController, 'show'])
     router.get('/static', [StaticController, 'index'])
 
     /*

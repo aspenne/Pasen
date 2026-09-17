@@ -126,34 +126,62 @@ after editing it (the compose stack does this automatically on start).
 
 ## Deploying
 
-One origin serves the site and the API, so the admin session cookie is
-first-party and no CORS preflight sits between them. Caddy terminates TLS and
-gets its own certificate; nothing else is reachable from outside.
+The server runs [Dokploy](https://dokploy.com), which provides Traefik, TLS and
+git-triggered deploys. `docker-compose.dokploy.yml` is the stack it deploys:
+no reverse proxy and no published ports of its own, because Dokploy attaches the
+services to `dokploy-network` and writes the Traefik labels itself from the
+domains set in its UI.
+
+Two domains on the **same host**, so the site and its API share one origin —
+no CORS, and the admin session cookie stays first-party:
+
+| Service | Path |
+|---|---|
+| `web` | `/` |
+| `api` | `/api` |
+
+`/health` is served under `/api` as well, so only one prefix has to be routed.
+
+### The admin panel is not on the public internet
+
+Dokploy publishes its UI on port 3000. An admin panel reachable by anyone is a
+way into the whole server, so port 3000 is dropped for non-local traffic in the
+`DOCKER-USER` iptables chain — UFW cannot do this, since Docker writes its own
+rules and traffic reaches the container before UFW sees it.
+
+Reach it through an SSH tunnel:
 
 ```bash
-cp .env.prod.example .env    # fill in PUBLIC_DOMAIN, PUBLIC_URL, APP_KEY, DB_PASSWORD
-docker compose -f docker-compose.prod.yml up -d --build
+ssh -L 3000:localhost:3000 root@your-server
 ```
 
-Then, once:
+Then open <http://localhost:3000>.
+
+### After the first deploy
 
 ```bash
-docker compose -f docker-compose.prod.yml exec api node ace migration:run --force
-```
-
-```bash
-docker compose -f docker-compose.prod.yml exec -e ADMIN_PASSWORD='…' api node ace admin:create you@example.com
+docker compose exec api node ace migration:run --force
 ```
 
 ```bash
-docker compose -f docker-compose.prod.yml exec api node ace static:sync
+docker compose exec -e ADMIN_PASSWORD='…' api node ace admin:create you@example.com
 ```
 
-Paste the Riot key at `/admin` rather than into `.env`: the database is the
-source of truth, so a rotation needs no redeploy and no restart.
+```bash
+docker compose exec api node ace static:sync
+```
+
+Paste the Riot key at `/admin` rather than into the environment: the database is
+the source of truth, so a rotation needs no redeploy and no restart.
 
 `VITE_API_URL` and `VITE_DEFAULT_GROUP` are inlined into the frontend at build
 time, so changing either means rebuilding the `web` image, not restarting it.
+
+### A note on the box
+
+A one-vCPU server builds these images slowly and, without swap, can run out of
+memory partway through. The server has a 4 GB swapfile and `vm.swappiness=10`
+for that reason: a build that would have been killed gets slow instead.
 
 ## Commits
 

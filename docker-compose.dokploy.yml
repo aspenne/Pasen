@@ -1,0 +1,94 @@
+name: pasen
+
+# Deployment through Dokploy.
+#
+# No reverse proxy here and no published ports: Dokploy runs Traefik, attaches
+# these services to dokploy-network and writes the routing labels itself from
+# the domains configured in its UI. Adding Caddy back, or binding 80/443, would
+# collide with it.
+#
+# Configure two domains on the same host, so the site and its API share one
+# origin - no CORS, and a first-party session cookie:
+#
+#   web  ->  path /       (the SPA)
+#   api  ->  path /api    (everything the browser calls, health check included)
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+      POSTGRES_DB: ${DB_DATABASE:?}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_DATABASE}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api: &backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment: &backend_env
+      NODE_ENV: production
+      TZ: UTC
+      HOST: 0.0.0.0
+      PORT: '3333'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_KEY: ${APP_KEY:?}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      DB_DATABASE: ${DB_DATABASE:?}
+      SESSION_DRIVER: cookie
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: ''
+      REDIS_DB: '0'
+      # Same origin as the site, so this only matters if the two are ever split.
+      WEB_ORIGIN: ${PUBLIC_URL:?}
+      RIOT_API_KEY: ${RIOT_API_KEY:-}
+      RIOT_RATE_PER_SECOND: ${RIOT_RATE_PER_SECOND:-18}
+      RIOT_RATE_PER_TWO_MINUTES: ${RIOT_RATE_PER_TWO_MINUTES:-95}
+      RIOT_FETCH_TIMELINES: ${RIOT_FETCH_TIMELINES:-false}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    <<: *backend
+    environment: *backend_env
+    command: ['node', 'ace', 'worker:run']
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Empty on purpose: the browser calls /api on the origin it is already
+        # on. Vite inlines this at build time, so changing it means a rebuild.
+        VITE_API_URL: ''
+        VITE_DEFAULT_GROUP: ${DEFAULT_GROUP:-arigafion}
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
