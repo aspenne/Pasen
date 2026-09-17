@@ -7,7 +7,7 @@ import { RiotGateway } from '#riot/gateway'
 import { RiotKeyProvider } from '#riot/key_provider'
 import type { RedisLike } from '#riot/redis'
 
-let cached: { client: RiotClient; keyProvider: RiotKeyProvider } | undefined
+let cached: { client: RiotClient; keyProvider: RiotKeyProvider; gateway: RiotGateway } | undefined
 
 /**
  * Built once per process. The HTTP server and the worker each get their own
@@ -32,7 +32,7 @@ function build() {
     logger,
   })
 
-  return { client: new RiotClient(gateway), keyProvider }
+  return { client: new RiotClient(gateway), keyProvider, gateway }
 }
 
 export function riot(): RiotClient {
@@ -43,4 +43,13 @@ export function riot(): RiotClient {
 export function riotKeyProvider(): RiotKeyProvider {
   cached ??= build()
   return cached.keyProvider
+}
+
+/**
+ * The gateway itself, for the admin screen's budget read-out. Services take the
+ * narrower RiotClient so they cannot bypass the typed endpoints.
+ */
+export function riotGateway(): RiotGateway {
+  cached ??= build()
+  return cached.gateway
 }

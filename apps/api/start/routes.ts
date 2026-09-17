@@ -1,9 +1,13 @@
 import router from '@adonisjs/core/services/router'
 
+import { middleware } from '#start/kernel'
+
 const HealthController = () => import('#controllers/health_controller')
 const GroupsController = () => import('#controllers/groups_controller')
 const MembersController = () => import('#controllers/members_controller')
 const StaticController = () => import('#controllers/static_controller')
+const SessionController = () => import('#controllers/admin/session_controller')
+const AdminController = () => import('#controllers/admin/admin_controller')
 
 router.get('/health', [HealthController, 'show'])
 
@@ -23,5 +27,26 @@ router
     router.get('/members/:slug/lp-history', [MembersController, 'lpHistory'])
 
     router.get('/static', [StaticController, 'index'])
+
+    /*
+     * Signing in is public by necessity; everything else that writes is behind
+     * the session. The read endpoints above stay open - the site is meant to be
+     * shared.
+     */
+    router.get('/admin/session', [SessionController, 'show'])
+    router.post('/admin/session', [SessionController, 'store'])
+    router.delete('/admin/session', [SessionController, 'destroy'])
+
+    router
+      .group(() => {
+        router.get('/admin/status', [AdminController, 'status'])
+        router.post('/admin/riot-key', [AdminController, 'setRiotKey'])
+        router.post('/admin/groups', [AdminController, 'createGroup'])
+        router.post('/admin/groups/:slug/accounts', [AdminController, 'addAccount'])
+        router.delete('/admin/accounts/:id', [AdminController, 'removeAccount'])
+        router.post('/admin/accounts/:id/resync', [AdminController, 'resync'])
+        router.patch('/admin/members/:slug', [AdminController, 'updateMember'])
+      })
+      .use(middleware.auth())
   })
   .prefix('/api')
