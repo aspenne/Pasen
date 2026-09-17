@@ -1,9 +1,16 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
 
 /*
  * Direction A - "esport data": a near-black blue ground so champion art and
  * chart colours carry, gold reserved for the single most important number on a
  * surface, and one green / one red that never mean anything but win / loss.
+ *
+ * These are the names the app writes against. The shadcn tokens below are
+ * mapped onto them, so a component dropped in from the registry inherits this
+ * palette instead of bringing its own.
  */
 @theme {
   --color-ground: #0a0d14;
@@ -40,14 +47,102 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* What shadcn components read. Every value points back at direction A. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+}
+
+:root {
+  /*
+   * Very nearly square. Direction A calls for sharp corners; a hair of radius
+   * keeps buttons and inputs from looking like they were cut with scissors,
+   * without turning the site into a rounded-card product.
+   */
+  --radius: 0.125rem;
+
+  --background: var(--color-ground);
+  --foreground: var(--color-ink);
+  --card: var(--color-panel);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-panel-raised);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-gold);
+  /* Gold is a light hue; text on it has to be the dark ground, not white. */
+  --primary-foreground: var(--color-ground);
+  --secondary: var(--color-panel-raised);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-panel-raised);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-line-strong);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-loss);
+  --destructive-foreground: var(--color-ink);
+  --border: var(--color-line);
+  --input: var(--color-line-strong);
+  --ring: var(--color-gold);
+}
+
+/*
+ * The site is dark-only, so the two scopes carry the same values. shadcn
+ * components still branch on `.dark`, and leaving it undefined would give them
+ * the registry's own palette rather than this one.
+ */
+.dark {
+  --background: var(--color-ground);
+  --foreground: var(--color-ink);
+  --card: var(--color-panel);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-panel-raised);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-gold);
+  --primary-foreground: var(--color-ground);
+  --secondary: var(--color-panel-raised);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-panel-raised);
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--color-line-strong);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-loss);
+  --destructive-foreground: var(--color-ink);
+  --border: var(--color-line);
+  --input: var(--color-line-strong);
+  --ring: var(--color-gold);
+}
+
 @layer base {
   html {
     color-scheme: dark;
   }
 
+  * {
+    @apply border-border;
+  }
+
   body {
-    background-color: var(--color-ground);
-    color: var(--color-ink);
+    @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
   }
 
