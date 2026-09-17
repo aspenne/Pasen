@@ -4,6 +4,9 @@ import { useMemo, useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ActivityCalendar } from '@/components/charts/ActivityCalendar'
+import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { api, type Leaderboards } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor } from '@/lib/format'
@@ -55,26 +58,25 @@ function Insights() {
   return (
     <div className="space-y-8">
       {/* Filters sit in one row above what they filter. */}
-      <div className="flex items-center gap-1 text-[11px]">
-        {PERIODS.map((entry) => (
-          <button
-            key={entry.key}
-            type="button"
-            onClick={() => setPeriod(entry.key)}
-            className={`px-2.5 py-1 ${
-              period === entry.key
-                ? 'bg-panel-raised text-ink'
-                : 'text-ink-muted hover:text-ink'
-            }`}
-          >
-            {entry.label}
-          </button>
-        ))}
-      </div>
+      <Tabs value={period} onValueChange={(value) => setPeriod(value as Leaderboards['period'])}>
+        <TabsList>
+          {PERIODS.map((entry) => (
+            <TabsTrigger key={entry.key} value={entry.key}>
+              {entry.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       <section>
         <h2 className="mb-2 text-[13px] text-ink">Titles</h2>
-        {boards?.titles.length === 0 ? (
+        {!boards ? (
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i} className="h-[88px]" />
+            ))}
+          </div>
+        ) : boards.titles.length === 0 ? (
           <p className="border-l-2 border-line-strong bg-panel px-4 py-3 text-[12px] text-ink-muted">
             Nobody has played {boards.minimumGames} games in this window yet.
           </p>
@@ -207,9 +209,15 @@ function Insights() {
 
       <section>
         <h2 className="mb-2 text-[13px] text-ink">Activity</h2>
-        <div className="bg-panel p-2">
-          {activity && <ActivityCalendar days={activity.days} year={year} />}
-        </div>
+        <Card>
+          <CardContent className="p-2">
+            {activity ? (
+              <ActivityCalendar days={activity.days} year={year} />
+            ) : (
+              <Skeleton className="h-[185px]" />
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {pool && (

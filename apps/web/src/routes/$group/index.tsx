@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react'
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { StatTile } from '@/components/StatTile'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor } from '@/lib/format'
@@ -100,29 +102,25 @@ function Dashboard() {
             {selected === today ? 'Today' : selected}
           </h2>
           <div className="flex items-center gap-1 text-[11px]">
-            <button
-              type="button"
-              onClick={() => setDate(shiftDate(selected, -1))}
-              className="px-2 py-1 text-ink-muted hover:text-ink"
-            >
+            <Button variant="ghost" size="sm" onClick={() => setDate(shiftDate(selected, -1))}>
               ← Previous
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setDate(null)}
               disabled={selected === today}
-              className="px-2 py-1 text-ink-muted hover:text-ink disabled:opacity-40"
             >
               Today
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setDate(shiftDate(selected, 1))}
               disabled={selected >= today}
-              className="px-2 py-1 text-ink-muted hover:text-ink disabled:opacity-40"
             >
               Next →
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -145,7 +143,12 @@ function Dashboard() {
       </section>
 
       <section className="space-y-2">
-        {feedPending && <p className="text-[13px] text-ink-muted">Loading…</p>}
+        {feedPending && (
+          <>
+            <Skeleton className="h-[120px]" />
+            <Skeleton className="h-[120px]" />
+          </>
+        )}
 
         {feed?.matches.length === 0 && (
           <p className="border-l-2 border-line-strong bg-panel px-4 py-3 text-[13px] text-ink-muted">
