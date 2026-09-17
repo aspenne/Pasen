@@ -1,0 +1,17 @@
+# One origin for the site and its API, so the admin session cookie is
+# first-party and no CORS preflight stands between the two.
+{$PUBLIC_DOMAIN} {
+	encode zstd gzip
+
+	handle /api/* {
+		reverse_proxy api:3333
+	}
+
+	handle /health {
+		reverse_proxy api:3333
+	}
+
+	handle {
+		reverse_proxy web:80
+	}
+}

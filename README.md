@@ -111,6 +111,37 @@ packages/shared   Types and constants used by both (compiled to dist/)
 Adonis build only transpiles its own `app/` directory. Run `pnpm build:shared`
 after editing it (the compose stack does this automatically on start).
 
+## Deploying
+
+One origin serves the site and the API, so the admin session cookie is
+first-party and no CORS preflight sits between them. Caddy terminates TLS and
+gets its own certificate; nothing else is reachable from outside.
+
+```bash
+cp .env.prod.example .env    # fill in PUBLIC_DOMAIN, PUBLIC_URL, APP_KEY, DB_PASSWORD
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+Then, once:
+
+```bash
+docker compose -f docker-compose.prod.yml exec api node ace migration:run --force
+```
+
+```bash
+docker compose -f docker-compose.prod.yml exec -e ADMIN_PASSWORD='…' api node ace admin:create you@example.com
+```
+
+```bash
+docker compose -f docker-compose.prod.yml exec api node ace static:sync
+```
+
+Paste the Riot key at `/admin` rather than into `.env`: the database is the
+source of truth, so a rotation needs no redeploy and no restart.
+
+`VITE_API_URL` and `VITE_DEFAULT_GROUP` are inlined into the frontend at build
+time, so changing either means rebuilding the `web` image, not restarting it.
+
 ## Commits
 
 [Conventional Commits](https://www.conventionalcommits.org): `type(scope): description`,

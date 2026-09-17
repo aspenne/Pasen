@@ -1,0 +1,98 @@
+name: pasen
+
+# Production stack. Datastores keep to the internal network - only the reverse
+# proxy is reachable from outside.
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
+      POSTGRES_DB: ${DB_DATABASE:?}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_DATABASE}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api: &backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    environment: &backend_env
+      NODE_ENV: production
+      TZ: UTC
+      HOST: 0.0.0.0
+      PORT: '3333'
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_KEY: ${APP_KEY:?}
+      DB_HOST: postgres
+      DB_PORT: '5432'
+      DB_USER: ${DB_USER:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+      DB_DATABASE: ${DB_DATABASE:?}
+      SESSION_DRIVER: cookie
+      REDIS_HOST: redis
+      REDIS_PORT: '6379'
+      REDIS_PASSWORD: ''
+      REDIS_DB: '0'
+      WEB_ORIGIN: ${PUBLIC_URL:?}
+      RIOT_API_KEY: ${RIOT_API_KEY:-}
+      RIOT_RATE_PER_SECOND: ${RIOT_RATE_PER_SECOND:-18}
+      RIOT_RATE_PER_TWO_MINUTES: ${RIOT_RATE_PER_TWO_MINUTES:-95}
+      RIOT_FETCH_TIMELINES: ${RIOT_FETCH_TIMELINES:-false}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    <<: *backend
+    environment: *backend_env
+    command: ['node', 'ace', 'worker:run']
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Vite inlines these at build time, so changing them means rebuilding.
+        VITE_API_URL: ${PUBLIC_URL:?}
+        VITE_DEFAULT_GROUP: ${DEFAULT_GROUP:-arigafion}
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on: [api, web]
+
+volumes:
+  pgdata:
+  redisdata:
+  caddydata:
+  caddyconfig:
