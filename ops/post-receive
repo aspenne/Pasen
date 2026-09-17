@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 # Bare-repo hook: checks the pushed branch out into the working tree and
-# deploys it. This is why deploying needs no platform and no CI - `git push
-# production main` from a laptop is the whole pipeline.
+# deploys it. `git push production main` is the whole pipeline - no platform, no
+# webhook, no CI account.
 set -euo pipefail
 
+# A hook runs with GIT_DIR pointing at the bare repo and a minimal PATH. Left
+# alone, the first git command in the worktree would target the bare repo and
+# docker would not be found at all.
+unset GIT_DIR GIT_WORK_TREE
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+BARE=/srv/pasen.git
 WORKTREE=/srv/pasen
 BRANCH=main
 
@@ -14,7 +21,7 @@ while read -r _old _new ref; do
 	fi
 
 	echo "==> checking out $BRANCH"
-	git --work-tree="$WORKTREE" --git-dir=/srv/pasen.git checkout -f "$BRANCH"
+	git --git-dir="$BARE" --work-tree="$WORKTREE" checkout -f "$BRANCH"
 
 	cd "$WORKTREE"
 	./deploy.sh
