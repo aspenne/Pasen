@@ -73,19 +73,21 @@ test.group('RiotKeyProvider', (group) => {
     )
   })
 
-  test('marking valid is free for a process that saw no rejection', async ({ assert }) => {
+  test('clears a rejection recorded by a process that is long gone', async ({ assert }) => {
     const provider = await freshProvider()
     await provider.set('RGAPI-live')
 
-    // Another process recorded the rejection; this one never saw it, so it has
-    // nothing to undo and must not pay a write on every successful call.
+    // The worker that hit the 401 has since been restarted. A fresh process must
+    // still be able to take the banner down once Riot answers again.
     await Setting.updateOrCreate(
       { key: 'riot.key_invalid_since' },
       { value: '2026-01-01T00:00:00.000Z' }
     )
 
-    await provider.markValid()
-    assert.isNotNull((await provider.status()).invalidSince)
+    const restarted = new RiotKeyProvider({ connection: redis.connection() })
+    await restarted.markValid()
+
+    assert.isNull((await provider.status()).invalidSince)
   })
 
   test('never exposes the key itself in its status', async ({ assert }) => {

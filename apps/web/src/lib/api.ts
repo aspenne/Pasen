@@ -33,6 +33,11 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     throw new ApiError(response.status, body || response.statusText)
   }
 
+  // 204 and friends carry no body; calling .json() on them throws.
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return undefined as T
+  }
+
   return response.json() as Promise<T>
 }
 
@@ -278,6 +283,31 @@ export type LpPoint = {
   losses: number
 }
 
+export type AdminAccount = {
+  id: number
+  riotId: string
+  platform: string
+  memberSlug: string
+  displayName: string
+  summonerLevel: number | null
+  backfillState: 'pending' | 'running' | 'done' | 'failed'
+  backfillError: string | null
+  syncedFrom: string | null
+  syncedTo: string | null
+  lastSyncedAt: string | null
+}
+
+export type AdminStatus = {
+  riotKey: {
+    hasKey: boolean
+    source: 'database' | 'env' | 'none'
+    invalidSince: string | null
+    fingerprint: string | null
+  }
+  budget: { windowSeconds: number; limit: number; used: number }[]
+  accounts: AdminAccount[]
+}
+
 export type StaticData = {
   version: string | null
   champions: Record<string, { slug: string; name: string; title: string; tags: string[] }>
@@ -305,6 +335,38 @@ export const api = {
   groupChampions: (slug: string) =>
     apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions`),
   activity: (slug: string) => apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity`),
+
+  session: () => apiFetch<{ authenticated: boolean; email: string | null }>('/api/admin/session'),
+  signIn: (email: string, password: string) =>
+    apiFetch<{ email: string }>('/api/admin/session', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+  signOut: () => apiFetch<void>('/api/admin/session', { method: 'DELETE' }),
+
+  adminStatus: () => apiFetch<AdminStatus>('/api/admin/status'),
+  setRiotKey: (key: string) =>
+    apiFetch<AdminStatus['riotKey']>('/api/admin/riot-key', {
+      method: 'POST',
+      body: JSON.stringify({ key }),
+    }),
+  addAccount: (
+    group: string,
+    payload: { riotId: string; platform: string; memberSlug?: string; memberName?: string }
+  ) =>
+    apiFetch<{ id: number; riotId: string; displayName: string }>(
+      `/api/admin/groups/${group}/accounts`,
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
+  removeAccount: (id: number) =>
+    apiFetch<void>(`/api/admin/accounts/${id}`, { method: 'DELETE' }),
+  resyncAccount: (id: number) =>
+    apiFetch<{ id: number }>(`/api/admin/accounts/${id}/resync`, { method: 'POST' }),
+  updateMember: (slug: string, payload: { displayName?: string; accentColor?: string | null }) =>
+    apiFetch<{ slug: string }>(`/api/admin/members/${slug}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    }),
 }
 
 function searchOf(params: Record<string, string | number | undefined>): string {

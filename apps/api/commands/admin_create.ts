@@ -17,9 +17,24 @@ export default class AdminCreate extends BaseCommand {
   declare email: string
 
   async run() {
-    const password = await this.prompt.secure('Password (at least 12 characters)', {
-      validate: (value) => (value ?? '').length >= 12 || 'Use at least 12 characters',
-    })
+    /*
+     * ADMIN_PASSWORD covers provisioning, where there is no terminal to prompt
+     * on. An env var rather than a flag, so the password does not end up in the
+     * shell history of whoever set the server up.
+     */
+    const fromEnv = process.env.ADMIN_PASSWORD
+
+    const password =
+      fromEnv ??
+      (await this.prompt.secure('Password (at least 12 characters)', {
+        validate: (value) => (value ?? '').length >= 12 || 'Use at least 12 characters',
+      }))
+
+    if (!password || password.length < 12) {
+      this.logger.error('Password must be at least 12 characters')
+      this.exitCode = 1
+      return
+    }
 
     const user = await User.updateOrCreate({ email: this.email }, { password })
 

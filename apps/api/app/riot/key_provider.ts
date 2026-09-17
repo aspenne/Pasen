@@ -27,7 +27,12 @@ export type RiotKeyStatus = {
 export class RiotKeyProvider {
   readonly #redis: RedisLike
   readonly #envKey?: string
-  #sawRejection = false
+  /**
+   * undefined until the first successful call asks. A process that starts up
+   * after another one recorded a rejection has to learn about it somehow, or
+   * the "key expired" banner stays on screen for a key that works again.
+   */
+  #rejected?: boolean
 
   constructor(options: { connection: RedisLike; envKey?: string }) {
     this.#redis = options.connection
@@ -74,22 +79,28 @@ export class RiotKeyProvider {
    * retries, and the public site can show that data has stopped refreshing.
    */
   async markInvalid(now: Date = new Date()): Promise<void> {
-    this.#sawRejection = true
+    this.#rejected = true
     await Setting.updateOrCreate({ key: INVALID_SETTING }, { value: now.toISOString() })
   }
 
   /**
-   * Clears the flag after a call succeeds again, so a transient rejection does
-   * not leave a permanent "key expired" banner. Guarded by an in-process flag so
-   * the overwhelming majority of successful calls cost nothing: a process that
-   * never saw a rejection has nothing to undo.
+   * Clears the flag after a call succeeds again, so a rejection - transient, or
+   * from a key that has since been replaced - does not leave a permanent "key
+   * expired" banner.
+   *
+   * The flag is read from the database once per process and cached, so the
+   * overwhelming majority of successful calls cost nothing. Reading it lazily
+   * rather than trusting an in-process boolean matters: the process that saw
+   * the rejection is usually long gone by the time one succeeds again.
    */
   async markValid(): Promise<void> {
-    if (!this.#sawRejection) {
+    this.#rejected ??= (await Setting.find(INVALID_SETTING)) !== null
+
+    if (!this.#rejected) {
       return
     }
 
-    this.#sawRejection = false
+    this.#rejected = false
     await Setting.query().where('key', INVALID_SETTING).delete()
   }
 
