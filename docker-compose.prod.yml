@@ -72,8 +72,12 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        # Vite inlines these at build time, so changing them means rebuilding.
-        VITE_API_URL: ${PUBLIC_URL:?}
+        # Empty on purpose: Caddy serves the site and the API on one origin, so
+        # the browser calls /api on the host it is already on. That removes CORS
+        # entirely and keeps the admin session cookie first-party.
+        #
+        # Vite inlines this at build time, so changing it means rebuilding.
+        VITE_API_URL: ''
         VITE_DEFAULT_GROUP: ${DEFAULT_GROUP:-arigafion}
     restart: unless-stopped
 

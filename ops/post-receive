@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Bare-repo hook: checks the pushed branch out into the working tree and
+# deploys it. This is why deploying needs no platform and no CI - `git push
+# production main` from a laptop is the whole pipeline.
+set -euo pipefail
+
+WORKTREE=/srv/pasen
+BRANCH=main
+
+while read -r _old _new ref; do
+	if [ "$ref" != "refs/heads/$BRANCH" ]; then
+		echo "ignoring $ref; only $BRANCH deploys"
+		continue
+	fi
+
+	echo "==> checking out $BRANCH"
+	git --work-tree="$WORKTREE" --git-dir=/srv/pasen.git checkout -f "$BRANCH"
+
+	cd "$WORKTREE"
+	./deploy.sh
+done

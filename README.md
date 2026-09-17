@@ -126,56 +126,55 @@ after editing it (the compose stack does this automatically on start).
 
 ## Deploying
 
-The server runs [Dokploy](https://dokploy.com), which provides Traefik, TLS and
-git-triggered deploys. `docker-compose.dokploy.yml` is the stack it deploys:
-no reverse proxy and no published ports of its own, because Dokploy attaches the
-services to `dokploy-network` and writes the Traefik labels itself from the
-domains set in its UI.
-
-Two domains on the **same host**, so the site and its API share one origin —
-no CORS, and the admin session cookie stays first-party:
-
-| Service | Path |
-|---|---|
-| `web` | `/` |
-| `api` | `/api` |
-
-`/health` is served under `/api` as well, so only one prefix has to be routed.
-
-### The admin panel is not on the public internet
-
-Dokploy publishes its UI on port 3000. An admin panel reachable by anyone is a
-way into the whole server, so port 3000 is dropped for non-local traffic in the
-`DOCKER-USER` iptables chain — UFW cannot do this, since Docker writes its own
-rules and traffic reaches the container before UFW sees it.
-
-Reach it through an SSH tunnel:
+No platform. A bare git repository on the server has a `post-receive` hook that
+checks the branch out and runs `deploy.sh`, so the whole pipeline is:
 
 ```bash
-ssh -L 3000:localhost:3000 root@your-server
+git push production main
 ```
 
-Then open <http://localhost:3000>.
+Caddy terminates TLS and serves the site and the API on **one origin** — `/api`
+goes to the API, everything else to the SPA. That removes CORS entirely and
+keeps the admin session cookie first-party, which is why `VITE_API_URL` is empty
+in the production build: the browser calls the host it is already on.
 
-### After the first deploy
+`deploy.sh` builds, brings the datastores up, runs migrations *before* the app
+starts serving, then starts everything and waits for `/health`. A request never
+meets a half-migrated schema.
+
+### First time on a new server
 
 ```bash
-docker compose exec api node ace migration:run --force
+ssh root@server 'mkdir -p /srv/pasen.git /srv/pasen && git init --bare /srv/pasen.git'
 ```
 
+Copy `ops/post-receive` to `/srv/pasen.git/hooks/`, put a filled-in `.env`
+(from `.env.prod.example`) in `/srv/pasen`, then add the remote and push:
+
 ```bash
-docker compose exec -e ADMIN_PASSWORD='…' api node ace admin:create you@example.com
+git remote add production root@server:/srv/pasen.git && git push production main
+```
+
+Afterwards, once:
+
+```bash
+ssh root@server 'cd /srv/pasen && docker compose -f docker-compose.prod.yml exec -e ADMIN_PASSWORD=… api node ace admin:create you@example.com'
 ```
 
 ```bash
-docker compose exec api node ace static:sync
+ssh root@server 'cd /srv/pasen && docker compose -f docker-compose.prod.yml exec api node ace static:sync'
 ```
 
 Paste the Riot key at `/admin` rather than into the environment: the database is
 the source of truth, so a rotation needs no redeploy and no restart.
 
-`VITE_API_URL` and `VITE_DEFAULT_GROUP` are inlined into the frontend at build
-time, so changing either means rebuilding the `web` image, not restarting it.
+### Boot and backups
+
+`ops/pasen.service` brings the stack up after a reboot; compose's own restart
+policies cover a crashed container. `ops/backup.sh` dumps Postgres nightly and
+keeps a fortnight — a full backfill of eleven accounts is tens of thousands of
+Riot requests and hours of waiting, so the history is worth far more than the
+disk a dump costs.
 
 ### A note on the box
 

@@ -1,0 +1,18 @@
+# Brings the stack up at boot. Compose's own restart policies handle a crashed
+# container; this handles a rebooted machine.
+[Unit]
+Description=Pasen
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/pasen
+ExecStart=/usr/bin/docker compose -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.prod.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
