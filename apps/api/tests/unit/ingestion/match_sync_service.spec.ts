@@ -186,6 +186,19 @@ test.group('MatchSyncService', (group) => {
     assert.equal(account.backfillState, 'done')
   })
 
+  test('a successful step clears the previous failure', async ({ assert }) => {
+    const account = await makeAccount('alice', {
+      backfillState: 'failed',
+      backfillError: 'riot was having a moment',
+    })
+    const riot = fakeRiot([matchAt('EUW1_1', '2026-09-10T10:00:00Z', ['alice'])])
+
+    await new MatchSyncService(riot.client).backfillStep(account)
+
+    await account.refresh()
+    assert.isNull(account.backfillError, 'an error next to a finished backfill reads as broken')
+  })
+
   test('marks the backfill done when a short page comes back', async ({ assert }) => {
     const account = await makeAccount('alice')
     const riot = fakeRiot([matchAt('EUW1_1', '2026-09-10T10:00:00Z', ['alice'])])

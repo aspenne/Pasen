@@ -89,6 +89,9 @@ export class MatchSyncService {
      */
     const complete = ids.length < MATCH_IDS_PAGE_SIZE
     account.backfillState = complete ? 'done' : 'running'
+    // A step that got through clears whatever the last failure was. Leaving it
+    // behind shows an error next to a finished backfill, which reads as broken.
+    account.backfillError = null
     account.lastSyncedAt = DateTime.utc()
     await account.save()
 

@@ -40,11 +40,24 @@ Prefer running the apps natively against the containerised datastores? Start onl
 
 `node_modules` lives on named Docker volumes so the Linux-built binaries in the
 image are not shadowed by the host's macOS ones. A plain `docker compose down`
-keeps those volumes, so a lockfile change will not be picked up:
+keeps those volumes, so a lockfile change is not picked up on its own.
+
+Cheapest first — installs inside the running containers, touches nothing else:
+
+```bash
+pnpm dev:deps
+```
+
+If that is not enough, rebuild the images and recreate **only** the module
+volumes. The database and Redis survive:
 
 ```bash
 pnpm dev:reset
 ```
+
+`pnpm dev:nuke` also drops `pgdata`. That means re-running every backfill, which
+is tens of thousands of Riot requests and hours of waiting — so it is a separate
+command you have to mean.
 
 ## Querying the database
 

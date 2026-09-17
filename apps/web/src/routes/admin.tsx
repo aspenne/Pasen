@@ -1,7 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
+import { KeyRoundIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { api, ApiError, type AdminAccount } from '@/lib/api'
 import { timeAgo } from '@/lib/format'
 
@@ -23,7 +46,7 @@ function Admin() {
 
       <main className="mx-auto max-w-4xl px-4 py-6">
         {session.isPending ? (
-          <p className="text-[13px] text-ink-muted">Checking…</p>
+          <Skeleton className="h-32 w-full" />
         ) : session.data?.authenticated ? (
           <Console />
         ) : (
@@ -44,13 +67,9 @@ function SignOut({ email }: { email: string | null }) {
   return (
     <div className="flex items-center gap-3 text-[12px]">
       <span className="text-ink-muted">{email}</span>
-      <button
-        type="button"
-        onClick={() => signOut.mutate()}
-        className="border border-line-strong px-2 py-1 text-ink-muted hover:text-ink"
-      >
+      <Button variant="outline" size="sm" onClick={() => signOut.mutate()}>
         Sign out
-      </button>
+      </Button>
     </div>
   )
 }
@@ -63,52 +82,52 @@ function SignIn() {
   const signIn = useMutation({
     mutationFn: () => api.signIn(email, password),
     onSuccess: () => queryClient.invalidateQueries(),
+    onError: () => toast.error('That email and password do not match.'),
   })
 
   return (
-    <form
-      className="max-w-sm space-y-3"
-      onSubmit={(event: FormEvent) => {
-        event.preventDefault()
-        signIn.mutate()
-      }}
-    >
-      <h1 className="text-[15px]">Sign in</h1>
+    <Card className="max-w-sm">
+      <CardHeader>
+        <CardTitle className="text-[15px]">Sign in</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="space-y-3"
+          onSubmit={(event: FormEvent) => {
+            event.preventDefault()
+            signIn.mutate()
+          }}
+        >
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="username"
+              required
+            />
+          </div>
 
-      <Field label="Email">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="username"
-          required
-          className="w-full bg-panel px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
-        />
-      </Field>
+          <div className="space-y-1.5">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
 
-      <Field label="Password">
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-          className="w-full bg-panel px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
-        />
-      </Field>
-
-      {signIn.isError && (
-        <p className="text-[12px] text-loss">That email and password do not match.</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={signIn.isPending}
-        className="border border-line-strong px-3 py-2 text-[13px] text-ink hover:border-gold disabled:opacity-50"
-      >
-        {signIn.isPending ? 'Signing in…' : 'Sign in'}
-      </button>
-    </form>
+          <Button type="submit" disabled={signIn.isPending} className="w-full">
+            {signIn.isPending ? 'Signing in…' : 'Sign in'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
 
@@ -120,19 +139,19 @@ function Console() {
     refetchInterval: 15_000,
   })
 
-  if (status.isPending) return <p className="text-[13px] text-ink-muted">Loading…</p>
+  if (status.isPending) return <Skeleton className="h-64 w-full" />
   if (!status.data) return <p className="text-[13px] text-loss">Could not load status.</p>
 
   return (
-    <div className="space-y-8">
-      <RiotKeyPanel status={status.data.riotKey} budget={status.data.budget} />
-      <AddAccountPanel accounts={status.data.accounts} />
-      <AccountsPanel accounts={status.data.accounts} />
+    <div className="space-y-6">
+      <RiotKeyCard status={status.data.riotKey} budget={status.data.budget} />
+      <AddAccountCard accounts={status.data.accounts} />
+      <AccountsCard accounts={status.data.accounts} />
     </div>
   )
 }
 
-function RiotKeyPanel({
+function RiotKeyCard({
   status,
   budget,
 }: {
@@ -147,22 +166,33 @@ function RiotKeyPanel({
     onSuccess: () => {
       setKey('')
       queryClient.invalidateQueries({ queryKey: ['admin-status'] })
+      toast.success('Key rotated. Every process picks it up on its next call.')
     },
+    onError: () => toast.error('Riot would not take that key.'),
   })
 
   return (
-    <section>
-      <h2 className="mb-2 text-[13px]">Riot API key</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-[14px]">
+          <KeyRoundIcon className="size-4 text-gold" aria-hidden />
+          Riot API key
+        </CardTitle>
+        <CardDescription>
+          Stored in the database, so a rotation needs no redeploy and no restart. It is never
+          shown again.
+        </CardDescription>
+      </CardHeader>
 
-      {status.invalidSince && (
-        <p className="mb-2 border-l-2 border-loss bg-panel px-3 py-2 text-[12px] text-ink-muted">
-          Riot rejected this key {timeAgo(status.invalidSince)}. Development keys expire every
-          24 hours — paste a fresh one below.
-        </p>
-      )}
+      <CardContent className="space-y-3">
+        {status.invalidSince && (
+          <p className="border-l-2 border-loss bg-panel-raised px-3 py-2 text-[12px] text-ink-muted">
+            Riot rejected this key {timeAgo(status.invalidSince)}. Development keys expire every
+            24 hours — paste a fresh one below.
+          </p>
+        )}
 
-      <div className="bg-panel px-4 py-3">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-[12px]">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-[12px]">
           <span className="text-ink-muted">
             {status.hasKey ? `Set, from the ${status.source}` : 'No key configured'}
           </span>
@@ -177,42 +207,33 @@ function RiotKeyPanel({
         </div>
 
         <form
-          className="mt-3 flex gap-2"
+          className="flex gap-2"
           onSubmit={(event: FormEvent) => {
             event.preventDefault()
             save.mutate()
           }}
         >
-          <input
+          <Input
             type="password"
             value={key}
             onChange={(e) => setKey(e.target.value)}
             placeholder="RGAPI-…"
             autoComplete="off"
-            className="min-w-0 flex-1 bg-panel-raised px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
           />
-          <button
-            type="submit"
-            disabled={key.trim().length < 10 || save.isPending}
-            className="shrink-0 border border-line-strong px-3 py-2 text-[12px] hover:border-gold disabled:opacity-40"
-          >
+          <Button type="submit" disabled={key.trim().length < 10 || save.isPending}>
             {save.isPending ? 'Saving…' : 'Rotate'}
-          </button>
+          </Button>
         </form>
-        <p className="mt-1 text-[11px] text-ink-dim">
-          Stored in the database, so every process picks it up without a restart. It is never
-          shown again.
-        </p>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }
 
-function AddAccountPanel({ accounts }: { accounts: AdminAccount[] }) {
+function AddAccountCard({ accounts }: { accounts: AdminAccount[] }) {
   const queryClient = useQueryClient()
   const [riotId, setRiotId] = useState('')
   const [platform, setPlatform] = useState('euw1')
-  const [memberSlug, setMemberSlug] = useState('')
+  const [memberSlug, setMemberSlug] = useState('new')
 
   const members = [...new Map(accounts.map((a) => [a.memberSlug, a.displayName])).entries()]
 
@@ -223,157 +244,204 @@ function AddAccountPanel({ accounts }: { accounts: AdminAccount[] }) {
         platform,
         // An existing member wins over a typed name, so attaching a smurf cannot
         // quietly create a second person.
-        memberSlug: memberSlug || undefined,
+        memberSlug: memberSlug === 'new' ? undefined : memberSlug,
       }),
-    onSuccess: () => {
+    onSuccess: (account) => {
       setRiotId('')
-      setMemberSlug('')
+      setMemberSlug('new')
       queryClient.invalidateQueries()
+      toast.success(`${account.riotId} added. The backfill starts on the next cycle.`)
     },
+    onError: (error) =>
+      toast.error(
+        error instanceof ApiError && error.status === 404
+          ? 'Riot does not know that Riot ID on that platform.'
+          : 'Could not add that account.'
+      ),
   })
 
   return (
-    <section>
-      <h2 className="mb-2 text-[13px]">Add an account</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-[14px]">Add an account</CardTitle>
+      </CardHeader>
 
-      <form
-        className="flex flex-wrap items-end gap-2 bg-panel px-4 py-3"
-        onSubmit={(event: FormEvent) => {
-          event.preventDefault()
-          add.mutate()
-        }}
-      >
-        <Field label="Riot ID">
-          <input
-            value={riotId}
-            onChange={(e) => setRiotId(e.target.value)}
-            placeholder="Name#TAG"
-            required
-            className="w-56 bg-panel-raised px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
-          />
-        </Field>
-
-        <Field label="Platform">
-          <input
-            value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            className="w-24 bg-panel-raised px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
-          />
-        </Field>
-
-        <Field label="Belongs to">
-          <select
-            value={memberSlug}
-            onChange={(e) => setMemberSlug(e.target.value)}
-            className="w-44 bg-panel-raised px-3 py-2 text-[13px] outline-none focus:ring-1 focus:ring-gold"
-          >
-            <option value="">A new member</option>
-            {members.map(([slug, name]) => (
-              <option key={slug} value={slug}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <button
-          type="submit"
-          disabled={!riotId.includes('#') || add.isPending}
-          className="border border-line-strong px-3 py-2 text-[12px] hover:border-gold disabled:opacity-40"
+      <CardContent>
+        <form
+          className="flex flex-wrap items-end gap-3"
+          onSubmit={(event: FormEvent) => {
+            event.preventDefault()
+            add.mutate()
+          }}
         >
-          {add.isPending ? 'Resolving…' : 'Add'}
-        </button>
+          <div className="space-y-1.5">
+            <Label htmlFor="riot-id">Riot ID</Label>
+            <Input
+              id="riot-id"
+              value={riotId}
+              onChange={(e) => setRiotId(e.target.value)}
+              placeholder="Name#TAG"
+              className="w-56"
+              required
+            />
+          </div>
 
-        {add.isError && (
-          <p className="w-full text-[12px] text-loss">
-            {add.error instanceof ApiError && add.error.status === 404
-              ? 'Riot does not know that Riot ID on that platform.'
-              : 'Could not add that account.'}
-          </p>
-        )}
-      </form>
-    </section>
+          <div className="space-y-1.5">
+            <Label htmlFor="platform">Platform</Label>
+            <Input
+              id="platform"
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+              className="w-24"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="belongs-to">Belongs to</Label>
+            <Select value={memberSlug} onValueChange={setMemberSlug}>
+              <SelectTrigger id="belongs-to" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="new">A new member</SelectItem>
+                {members.map(([slug, name]) => (
+                  <SelectItem key={slug} value={slug}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button type="submit" disabled={!riotId.includes('#') || add.isPending}>
+            {add.isPending ? 'Resolving…' : 'Add'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
 
-const STATE_TONE: Record<AdminAccount['backfillState'], string> = {
+const STATE_VARIANT: Record<AdminAccount['backfillState'], string> = {
   done: 'text-win',
   running: 'text-gold',
   pending: 'text-ink-muted',
   failed: 'text-loss',
 }
 
-function AccountsPanel({ accounts }: { accounts: AdminAccount[] }) {
+function AccountsCard({ accounts }: { accounts: AdminAccount[] }) {
   const queryClient = useQueryClient()
-  const invalidate = () => queryClient.invalidateQueries()
+  const [pendingRemoval, setPendingRemoval] = useState<AdminAccount | null>(null)
 
-  const resync = useMutation({ mutationFn: api.resyncAccount, onSuccess: invalidate })
-  const remove = useMutation({ mutationFn: api.removeAccount, onSuccess: invalidate })
+  const resync = useMutation({
+    mutationFn: api.resyncAccount,
+    onSuccess: () => {
+      queryClient.invalidateQueries()
+      toast.success('Queued for a fresh backfill.')
+    },
+  })
+
+  const remove = useMutation({
+    mutationFn: api.removeAccount,
+    onSuccess: () => {
+      setPendingRemoval(null)
+      queryClient.invalidateQueries()
+      toast.success('Account removed. Its matches were kept.')
+    },
+  })
 
   return (
-    <section>
-      <h2 className="mb-2 text-[13px]">Accounts ({accounts.length})</h2>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-[14px]">Accounts ({accounts.length})</CardTitle>
+      </CardHeader>
 
-      <div className="space-y-px">
-        {accounts.map((account) => (
-          <div key={account.id} className="flex items-center gap-3 bg-panel px-4 py-2 text-[12px]">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-ink">{account.riotId}</div>
-              <div className="truncate text-[11px] text-ink-muted">
-                {account.displayName} · {account.platform}
-                {account.summonerLevel ? ` · level ${account.summonerLevel}` : ''}
-              </div>
-            </div>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Riot ID</TableHead>
+              <TableHead>Member</TableHead>
+              <TableHead>Backfill</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {accounts.map((account) => (
+              <TableRow key={account.id}>
+                <TableCell className="font-normal text-ink">
+                  {account.riotId}
+                  <span className="block text-[11px] text-ink-dim">
+                    {account.platform}
+                    {account.summonerLevel ? ` · level ${account.summonerLevel}` : ''}
+                  </span>
+                </TableCell>
 
-            <div className="w-40 shrink-0 text-right">
-              <div className={STATE_TONE[account.backfillState]}>{account.backfillState}</div>
-              <div className="text-[11px] text-ink-dim">
-                {account.lastSyncedAt ? `synced ${timeAgo(account.lastSyncedAt)}` : 'never synced'}
-              </div>
-            </div>
+                <TableCell className="text-ink-muted">{account.displayName}</TableCell>
 
-            <button
-              type="button"
-              onClick={() => resync.mutate(account.id)}
-              className="shrink-0 border border-line-strong px-2 py-1 text-ink-muted hover:text-ink"
+                <TableCell>
+                  <span className={STATE_VARIANT[account.backfillState]}>
+                    {account.backfillState}
+                  </span>
+                  <span className="block text-[11px] text-ink-dim">
+                    {account.lastSyncedAt ? timeAgo(account.lastSyncedAt) : 'never synced'}
+                  </span>
+                  {account.backfillState === 'failed' && account.backfillError && (
+                    <span className="block text-[11px] text-loss">{account.backfillError}</span>
+                  )}
+                </TableCell>
+
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => resync.mutate(account.id)}
+                      aria-label={`Resync ${account.riotId}`}
+                    >
+                      <RefreshCwIcon className="size-3.5" aria-hidden />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPendingRemoval(account)}
+                      aria-label={`Remove ${account.riotId}`}
+                      className="hover:text-loss"
+                    >
+                      <Trash2Icon className="size-3.5" aria-hidden />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+
+      <Dialog open={pendingRemoval !== null} onOpenChange={() => setPendingRemoval(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove {pendingRemoval?.riotId}?</DialogTitle>
+            <DialogDescription>
+              Their stored matches are kept — they belong to the rest of the group too. Re-adding
+              this account later means backfilling it again, which is thousands of Riot requests.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingRemoval(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={remove.isPending}
+              onClick={() => pendingRemoval && remove.mutate(pendingRemoval.id)}
             >
-              Resync
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                // Removing an account is not undoable without re-adding and
-                // re-backfilling it, which costs thousands of Riot requests.
-                if (confirm(`Remove ${account.riotId}? Stored matches are kept.`)) {
-                  remove.mutate(account.id)
-                }
-              }}
-              className="shrink-0 border border-line-strong px-2 py-1 text-ink-muted hover:text-loss"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-
-        {accounts.map((account) =>
-          account.backfillError ? (
-            <p key={`err-${account.id}`} className="bg-panel px-4 py-2 text-[11px] text-loss">
-              {account.riotId}: {account.backfillError}
-            </p>
-          ) : null
-        )}
-      </div>
-    </section>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-[10px] uppercase tracking-[0.08em] text-ink-dim">
-        {label}
-      </span>
-      {children}
-    </label>
+              {remove.isPending ? 'Removing…' : 'Remove'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
   )
 }

@@ -16,7 +16,9 @@
     "test": "pnpm build:shared && pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm build:shared && pnpm -r typecheck",
-    "dev:reset": "docker compose down -v && docker compose up -d --build"
+    "dev:reset": "docker compose down && docker volume rm -f pasen_root_modules pasen_api_modules pasen_web_modules && docker compose up -d --build",
+    "dev:deps": "docker compose exec web pnpm install && docker compose exec api pnpm install",
+    "dev:nuke": "docker compose down -v && docker compose up -d --build"
   },
   "pnpm": {
     "overrides": {
