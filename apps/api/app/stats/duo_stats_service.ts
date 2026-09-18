@@ -1,6 +1,8 @@
 import db from '@adonisjs/lucid/services/db'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, type QueueScope } from '#stats/scope'
+import { groupsInScope } from '@pasen/shared'
 
 export type DuoPair = {
   a: string
@@ -34,12 +36,29 @@ const SAME_TEAM = `p2.team_id = p1.team_id
 const OPPOSING = `(p2.team_id <> p1.team_id
   OR coalesce(p2.subteam_id, -1) <> coalesce(p1.subteam_id, -1))`
 
+/**
+ * Inlined rather than bound, because these queries are raw and the list is
+ * generated from a closed union - never from user input. parseScope turns
+ * anything unrecognised into the default before it gets here.
+ */
+function scopeClause(scope: QueueScope): string {
+  const groups = groupsInScope(scope)
+  if (!groups) {
+    return ''
+  }
+  return `AND m.queue_group IN (${groups.map((g) => `'${g}'`).join(', ')})`
+}
+
 export class DuoStatsService {
-  async forGroup(group: Group, minimumGames = 3): Promise<DuoStats> {
+  async forGroup(
+    group: Group,
+    minimumGames = 3,
+    scope: QueueScope = DEFAULT_SCOPE
+  ): Promise<DuoStats> {
     const [together, against, solo] = await Promise.all([
-      this.#together(group.id),
-      this.#against(group.id),
-      this.#soloWinRates(group.id),
+      this.#together(group.id, scope),
+      this.#against(group.id, scope),
+      this.#soloWinRates(group.id, scope),
     ])
 
     return {
@@ -54,7 +73,10 @@ export class DuoStatsService {
     }
   }
 
-  async #together(groupId: number): Promise<Omit<DuoPair, 'soloWinRateA' | 'soloWinRateB'>[]> {
+  async #together(
+    groupId: number,
+    scope: QueueScope
+  ): Promise<Omit<DuoPair, 'soloWinRateA' | 'soloWinRateB'>[]> {
     const { rows } = await db.rawQuery(
       `SELECT mem1.slug AS a, mem2.slug AS b,
               count(*)::int AS games,
@@ -71,6 +93,7 @@ export class DuoStatsService {
        JOIN group_members g2 ON g2.member_id = a2.member_id AND g2.group_id = ?
        -- Each pair once, and never a member paired with their own smurf.
        WHERE a1.member_id < a2.member_id
+         ${scopeClause(scope)}
        GROUP BY 1, 2
        ORDER BY games DESC`,
       [groupId, groupId]
@@ -85,7 +108,10 @@ export class DuoStatsService {
     }))
   }
 
-  async #against(groupId: number): Promise<{ a: string; b: string; games: number }[]> {
+  async #against(
+    groupId: number,
+    scope: QueueScope
+  ): Promise<{ a: string; b: string; games: number }[]> {
     const { rows } = await db.rawQuery(
       `SELECT mem1.slug AS a, mem2.slug AS b, count(*)::int AS games
        FROM match_participants p1
@@ -99,6 +125,7 @@ export class DuoStatsService {
        JOIN group_members g1 ON g1.member_id = a1.member_id AND g1.group_id = ?
        JOIN group_members g2 ON g2.member_id = a2.member_id AND g2.group_id = ?
        WHERE a1.member_id < a2.member_id
+         ${scopeClause(scope)}
        GROUP BY 1, 2
        ORDER BY games DESC`,
       [groupId, groupId]
@@ -112,7 +139,7 @@ export class DuoStatsService {
    * them does apart: 55% together means nothing until you know one of them wins
    * 60% alone.
    */
-  async #soloWinRates(groupId: number): Promise<Map<string, number>> {
+  async #soloWinRates(groupId: number, scope: QueueScope): Promise<Map<string, number>> {
     const rows = await db
       .from('match_participants as p')
       .join('matches as m', 'm.match_id', 'p.match_id')
@@ -122,6 +149,7 @@ export class DuoStatsService {
         join.on('g.member_id', 'a.member_id').andOnVal('g.group_id', groupId)
       )
       .where('m.stats_eligible', true)
+      .if(groupsInScope(scope), (q) => q.whereIn('m.queue_group', groupsInScope(scope)!))
       .groupBy('mem.slug')
       .select('mem.slug')
       .count('* as games')

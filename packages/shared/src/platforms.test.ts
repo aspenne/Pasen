@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
 import { PLATFORMS, accountRegionFor, isPlatform, matchRegionFor } from './platforms.js'
-import { isStatsEligible, queueGroupFor } from './queues.js'
+import {
+  DEFAULT_SCOPE,
+  groupsInScope,
+  isStatsEligible,
+  queueGroupFor,
+} from './queues.js'
 
 describe('riot routing', () => {
   it('routes every platform on both maps', () => {
@@ -36,6 +41,27 @@ describe('riot routing', () => {
   })
 })
 
+describe('queue scopes', () => {
+  it("defaults to Summoner's Rift, which is not everything", () => {
+    expect(DEFAULT_SCOPE).toBe('rift')
+    const rift = groupsInScope('rift')!
+    expect(rift).toContain('ranked_solo')
+    // Arena is a different game: eighteen players, no lanes, inflated KDA.
+    expect(rift).not.toContain('arena')
+    expect(rift).not.toContain('aram')
+  })
+
+  it('narrows to a single group when one is named', () => {
+    expect(groupsInScope('arena')).toEqual(['arena'])
+  })
+
+  it('returns no filter at all for every queue', () => {
+    // null rather than the full list, so a group added later is covered without
+    // anyone remembering to update this.
+    expect(groupsInScope('all')).toBeNull()
+  })
+})
+
 describe('queue grouping', () => {
   it('maps the queues the UI filters on', () => {
     expect(queueGroupFor(420)).toBe('ranked_solo')
@@ -60,6 +86,18 @@ describe('queue grouping', () => {
     // CLASSIC covers ranked and normal alike; labelling a new ranked queue
     // "normal" would be worse than admitting we do not know.
     expect(queueGroupFor(99999, 'CLASSIC')).toBe('other')
+  })
+
+  it('files tournament-code games under clash', () => {
+    // 3130 carries a tournamentCode and gameType CUSTOM_GAME: organised play,
+    // not a practice lobby.
+    expect(queueGroupFor(3130)).toBe('clash')
+    expect(queueGroupFor(700)).toBe('clash')
+  })
+
+  it('knows the arena variants Riot has not published', () => {
+    expect(queueGroupFor(1740)).toBe('arena')
+    expect(queueGroupFor(1750)).toBe('arena')
   })
 
   it('excludes customs, bot games and tutorials from stats', () => {

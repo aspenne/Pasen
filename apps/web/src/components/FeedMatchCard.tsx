@@ -3,6 +3,8 @@ import { Link } from '@tanstack/react-router'
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
 import type { FeedMatch, StaticData } from '@/lib/api'
+import type { QueueScope } from '@pasen/shared'
+
 import { clockTime, duration, kda, positionLabel, queueLabel } from '@/lib/format'
 
 type FeedMatchCardProps = {
@@ -11,6 +13,8 @@ type FeedMatchCardProps = {
   groupSlug: string
   timezone: string
   colorFor: (memberSlug: string) => string
+  /** Carried onto member links, so following one keeps the same question. */
+  scope: QueueScope
 }
 
 /**
@@ -28,6 +32,7 @@ export function FeedMatchCard({
   groupSlug,
   timezone,
   colorFor,
+  scope,
 }: FeedMatchCardProps) {
   const results = new Set(match.members.map((member) => member.win))
   const outcome = results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
@@ -76,6 +81,9 @@ export function FeedMatchCard({
               <Link
                 to="/$group/players/$member"
                 params={{ group: groupSlug, member: member.memberSlug }}
+                // Carries the active scope, so following a link does not
+                // silently change the question being asked.
+                search={{ scope }}
                 className="block truncate text-[16px] text-ink transition-colors hover:text-accent"
               >
                 {member.displayName}

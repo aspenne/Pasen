@@ -86,15 +86,34 @@ test.group('Group API', (group) => {
       gameMode: 'ARAM',
     })
 
-    const response = await client.get('/api/groups/arigafion/feed?date=2026-09-16&queue=aram')
+    const response = await client.get('/api/groups/arigafion/feed?date=2026-09-16&scope=aram')
 
     assert.equal(response.body().totals.games, 1)
     assert.equal(response.body().matches[0].queueGroup, 'aram')
   })
 
-  test('rejects a queue filter that is not a real group', async ({ client }) => {
+  test('leaves ARAM and Arena out of the default view', async ({ client, assert }) => {
+    const seeded = await seedGroup()
+    const at = DateTime.fromISO('2026-09-16T20:00:00', { zone: 'Europe/Paris' })
+    await seedMatch('EUW1_ranked', at, seeded.account.puuid)
+    await seedMatch('EUW1_aram', at, seeded.account.puuid, {
+      queueId: 450,
+      queueGroup: 'aram',
+      gameMode: 'ARAM',
+    })
+
+    // Summoner's Rift by default: Arena and ARAM are different games, and
+    // averaging them in produces a number that describes neither.
+    const byDefault = await client.get('/api/groups/arigafion/feed?date=2026-09-16')
+    assert.equal(byDefault.body().totals.games, 1)
+
+    const everything = await client.get('/api/groups/arigafion/feed?date=2026-09-16&scope=all')
+    assert.equal(everything.body().totals.games, 2)
+  })
+
+  test('rejects a scope that is not a real one', async ({ client }) => {
     await seedGroup()
-    const response = await client.get('/api/groups/arigafion/feed?queue=nonsense')
+    const response = await client.get('/api/groups/arigafion/feed?scope=nonsense')
     response.assertStatus(422)
   })
 

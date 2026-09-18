@@ -3,6 +3,7 @@ import type { QueueGroup } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type FeedMember = {
   memberSlug: string
@@ -58,7 +59,7 @@ export type DailyFeed = {
 export type FeedQuery = {
   /** ISO date in the group's own timezone. Defaults to today there. */
   date?: string
-  queueGroup?: QueueGroup
+  scope?: QueueScope
 }
 
 /**
@@ -82,7 +83,7 @@ export class DailyFeedService {
     const from = day.startOf('day')
     const to = from.plus({ days: 1 })
 
-    const rows = await db
+    const feed = db
       .from('matches as m')
       .join('match_participants as p', 'p.match_id', 'm.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
@@ -91,7 +92,6 @@ export class DailyFeedService {
       .where('gm.group_id', group.id)
       .andWhere('m.game_creation', '>=', from.toUTC().toSQL()!)
       .andWhere('m.game_creation', '<', to.toUTC().toSQL()!)
-      .if(query.queueGroup, (q) => q.andWhere('m.queue_group', query.queueGroup!))
       .orderBy('m.game_creation', 'desc')
       .select(
         'm.match_id',
@@ -121,6 +121,9 @@ export class DailyFeedService {
         'p.summoner2_id',
         'p.subteam_placement'
       )
+
+    applyScope(feed, query.scope ?? DEFAULT_SCOPE)
+    const rows = await feed
 
     const matches = new Map<string, FeedMatch>()
     const champions = new Set<number>()

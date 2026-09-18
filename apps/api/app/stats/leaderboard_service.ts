@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type LeaderboardPeriod = 'week' | 'month' | 'all'
 
@@ -54,7 +55,11 @@ export type Leaderboards = {
 const MINIMUM_GAMES = 5
 
 export class LeaderboardService {
-  async forGroup(group: Group, period: LeaderboardPeriod = 'week'): Promise<Leaderboards> {
+  async forGroup(
+    group: Group,
+    period: LeaderboardPeriod = 'week',
+    scope: QueueScope = DEFAULT_SCOPE
+  ): Promise<Leaderboards> {
     const now = DateTime.now().setZone(group.timezone)
     const from =
       period === 'all'
@@ -63,7 +68,7 @@ export class LeaderboardService {
           ? now.minus({ days: 7 }).startOf('day')
           : now.minus({ days: 30 }).startOf('day')
 
-    const totals = await this.#totals(group, from)
+    const totals = await this.#totals(group, from, scope)
     const eligible = totals.filter((member) => member.games >= MINIMUM_GAMES)
 
     return {
@@ -77,8 +82,12 @@ export class LeaderboardService {
     }
   }
 
-  async #totals(group: Group, from: DateTime | null): Promise<MemberTotals[]> {
-    const rows = await db
+  async #totals(
+    group: Group,
+    from: DateTime | null,
+    scope: QueueScope
+  ): Promise<MemberTotals[]> {
+    const query = db
       .from('match_participants as p')
       .join('matches as m', 'm.match_id', 'p.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
@@ -108,6 +117,9 @@ export class LeaderboardService {
           [group.timezone]
         ),
       })
+
+    applyScope(query, scope)
+    const rows = await query
 
     return rows
       .map((row: any) => {

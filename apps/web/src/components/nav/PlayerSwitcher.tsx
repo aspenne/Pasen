@@ -10,6 +10,8 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import type { QueueScope } from '@pasen/shared'
+
 import type { GroupMember } from '@/lib/api'
 import { memberColor } from '@/lib/format'
 
@@ -21,9 +23,11 @@ import { memberColor } from '@/lib/format'
 export function PlayerSwitcher({
   group,
   members,
+  scope,
 }: {
   group: string
   members: GroupMember[]
+  scope: QueueScope
 }) {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -43,7 +47,8 @@ export function PlayerSwitcher({
 
   const go = (to: string, params: Record<string, string>) => {
     setOpen(false)
-    navigate({ to, params })
+    // Keep the active scope: jumping to a player should not reset the filter.
+    navigate({ to, params, search: { scope } } as never)
   }
 
   return (

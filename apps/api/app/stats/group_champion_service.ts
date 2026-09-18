@@ -1,6 +1,7 @@
 import db from '@adonisjs/lucid/services/db'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type GroupChampion = {
   championId: number
@@ -25,8 +26,11 @@ export type GroupChampionPool = {
  * pick, and - the part people actually argue about - what nobody has touched.
  */
 export class GroupChampionService {
-  async forGroup(group: Group): Promise<GroupChampionPool> {
-    const rows = await db
+  async forGroup(
+    group: Group,
+    scope: QueueScope = DEFAULT_SCOPE
+  ): Promise<GroupChampionPool> {
+    const query = db
       .from('match_participants as p')
       .join('matches as m', 'm.match_id', 'p.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
@@ -39,6 +43,9 @@ export class GroupChampionService {
       .select('p.champion_id', 'p.champion_name', 'mem.slug', 'mem.display_name')
       .count('* as games')
       .sum({ wins: db.raw('case when p.win then 1 else 0 end') })
+
+    applyScope(query, scope)
+    const rows = await query
 
     const champions = new Map<number, GroupChampion>()
 

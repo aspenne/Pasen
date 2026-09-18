@@ -72,7 +72,7 @@ test.group('Group insights', (group) => {
       ])
     }
 
-    const response = await client.get('/api/groups/arigafion/duos')
+    const response = await client.get('/api/groups/arigafion/duos?scope=arena')
 
     assert.isEmpty(response.body().pairs, 'a shared teamId in Arena is not a shared team')
     assert.equal(response.body().against[0].games, 4)
@@ -89,7 +89,7 @@ test.group('Group insights', (group) => {
       ])
     }
 
-    const response = await client.get('/api/groups/arigafion/duos')
+    const response = await client.get('/api/groups/arigafion/duos?scope=arena')
     assert.equal(response.body().pairs[0].games, 3)
   })
 

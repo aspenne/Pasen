@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
@@ -27,12 +27,13 @@ function shiftDate(date: string, days: number): string {
 
 function Dashboard() {
   const { group } = useParams({ from: '/$group/' })
+  const { scope } = useSearch({ from: '/$group' })
   const [date, setDate] = useState<string | null>(null)
 
   const { data: staticData } = useStaticData()
   const { data: overview } = useQuery({
-    queryKey: ['group', group],
-    queryFn: () => api.group(group),
+    queryKey: ['group', group, scope],
+    queryFn: () => api.group(group, { scope }),
   })
 
   const timezone = overview?.timezone ?? 'Europe/Paris'
@@ -40,8 +41,8 @@ function Dashboard() {
   const selected = date ?? today
 
   const { data: feed, isPending: feedPending } = useQuery({
-    queryKey: ['feed', group, selected],
-    queryFn: () => api.feed(group, { date: selected }),
+    queryKey: ['feed', group, selected, scope],
+    queryFn: () => api.feed(group, { date: selected, scope }),
     // Matches land within a minute of a game ending, so refresh at that pace.
     refetchInterval: selected === today ? 60_000 : false,
   })
@@ -69,8 +70,8 @@ function Dashboard() {
 
   // The champion the roster has played most, for the banner's backdrop.
   const { data: groupChampions } = useQuery({
-    queryKey: ['group-champions', group],
-    queryFn: () => api.groupChampions(group),
+    queryKey: ['group-champions', group, scope],
+    queryFn: () => api.groupChampions(group, { scope }),
   })
   const topChampionId = groupChampions?.champions[0]?.championId
   const bestKda = useMemo(() => {
@@ -180,6 +181,7 @@ function Dashboard() {
             groupSlug={group}
             timezone={timezone}
             colorFor={colorFor}
+            scope={scope}
           />
         ))}
       </section>

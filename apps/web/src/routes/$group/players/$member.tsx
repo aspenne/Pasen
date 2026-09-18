@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
@@ -23,6 +23,7 @@ export const Route = createFileRoute('/$group/players/$member')({ component: Mem
 
 function MemberPage() {
   const { group, member: memberSlug } = useParams({ from: '/$group/players/$member' })
+  const { scope } = useSearch({ from: '/$group' })
 
   const { data: staticData } = useStaticData()
   const { data: profile, isPending } = useQuery({
@@ -30,25 +31,25 @@ function MemberPage() {
     queryFn: () => api.member(memberSlug),
   })
   const { data: pool } = useQuery({
-    queryKey: ['pool', memberSlug],
-    queryFn: () => api.championPool(memberSlug),
+    queryKey: ['pool', memberSlug, scope],
+    queryFn: () => api.championPool(memberSlug, { scope }),
   })
   const { data: overview } = useQuery({
-    queryKey: ['group', group],
-    queryFn: () => api.group(group),
+    queryKey: ['group', group, scope],
+    queryFn: () => api.group(group, { scope }),
   })
   const { data: lp } = useQuery({
     queryKey: ['lp', memberSlug],
     queryFn: () => api.lpHistory(memberSlug),
   })
   const { data: boards } = useQuery({
-    queryKey: ['leaderboards', group, 'all'],
-    queryFn: () => api.leaderboards(group, { period: 'all' }),
+    queryKey: ['leaderboards', group, 'all', scope],
+    queryFn: () => api.leaderboards(group, { period: 'all', scope }),
   })
 
   const history = useInfiniteQuery({
-    queryKey: ['history', memberSlug],
-    queryFn: ({ pageParam }) => api.matches(memberSlug, { cursor: pageParam, limit: 20 }),
+    queryKey: ['history', memberSlug, scope],
+    queryFn: ({ pageParam }) => api.matches(memberSlug, { cursor: pageParam, limit: 20, scope }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   })

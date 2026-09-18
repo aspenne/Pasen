@@ -1,11 +1,25 @@
-import { Link, Outlet, createFileRoute, useParams } from '@tanstack/react-router'
+import { Link, Outlet, createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { DEFAULT_SCOPE, QUEUE_SCOPES, type QueueScope } from '@pasen/shared'
 
 import { PlayerSwitcher } from '@/components/nav/PlayerSwitcher'
+import { ScopeSelect } from '@/components/ScopeSelect'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 
-export const Route = createFileRoute('/$group')({ component: GroupLayout })
+/**
+ * The scope lives in the URL rather than in component state, so it survives
+ * navigation between pages, comes back on a reload, and travels when someone
+ * pastes a link into the group chat.
+ */
+export const Route = createFileRoute('/$group')({
+  validateSearch: (search: Record<string, unknown>): { scope: QueueScope } => ({
+    scope: QUEUE_SCOPES.includes(search.scope as QueueScope)
+      ? (search.scope as QueueScope)
+      : DEFAULT_SCOPE,
+  }),
+  component: GroupLayout,
+})
 
 const NAV = [
   { to: '/$group', label: 'Today', exact: true },
@@ -14,9 +28,12 @@ const NAV = [
 
 function GroupLayout() {
   const { group } = useParams({ from: '/$group' })
+  const { scope } = Route.useSearch()
+  const navigate = useNavigate({ from: '/$group' })
+
   const { data, error, isPending } = useQuery({
-    queryKey: ['group', group],
-    queryFn: () => api.group(group),
+    queryKey: ['group', group, scope],
+    queryFn: () => api.group(group, { scope }),
   })
 
   return (
@@ -41,6 +58,7 @@ function GroupLayout() {
                   key={entry.label}
                   to={entry.to}
                   params={{ group }}
+                  search={{ scope }}
                   activeOptions={{ exact: entry.exact }}
                   activeProps={{ className: 'text-ink' }}
                   inactiveProps={{ className: 'text-ink-muted hover:text-ink' }}
@@ -50,7 +68,15 @@ function GroupLayout() {
               ))}
             </nav>
 
-            {data && <PlayerSwitcher group={group} members={data.members} />}
+            <ScopeSelect
+              value={scope}
+              onChange={(next) =>
+                // replace, not push: flipping a filter is not a place to go back to.
+                navigate({ search: { scope: next }, replace: true })
+              }
+            />
+
+            {data && <PlayerSwitcher group={group} members={data.members} scope={scope} />}
           </div>
         </div>
       </header>

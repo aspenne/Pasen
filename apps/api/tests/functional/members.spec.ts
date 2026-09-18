@@ -118,7 +118,7 @@ test.group('Member API', (group) => {
     response.assertStatus(400)
   })
 
-  test('filters history by queue', async ({ client, assert }) => {
+  test('filters history by scope', async ({ client, assert }) => {
     const seeded = await seedGroup()
     await seedMatch('EUW1_ranked', AT, seeded.account.puuid)
     await seedMatch('EUW1_aram', AT, seeded.account.puuid, {
@@ -127,7 +127,7 @@ test.group('Member API', (group) => {
       gameMode: 'ARAM',
     })
 
-    const response = await client.get('/api/members/patate/matches?queue=aram')
+    const response = await client.get('/api/members/patate/matches?scope=aram')
 
     assert.lengthOf(response.body().entries, 1)
     assert.equal(response.body().entries[0].matchId, 'EUW1_aram')

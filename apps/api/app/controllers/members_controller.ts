@@ -1,20 +1,21 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
-import { QUEUE_GROUPS } from '@pasen/shared'
+import { QUEUE_SCOPES } from '@pasen/shared'
 
 import Member from '#models/member'
 import { PlayerStatsService } from '#stats/player_stats_service'
+import { parseScope } from '#stats/scope'
 
 const historyQuery = vine.compile(
   vine.object({
     cursor: vine.string().optional(),
     limit: vine.number().min(1).max(100).optional(),
-    queue: vine.enum(QUEUE_GROUPS).optional(),
+    scope: vine.enum(QUEUE_SCOPES).optional(),
   })
 )
 
 const poolQuery = vine.compile(
-  vine.object({ queue: vine.enum(QUEUE_GROUPS).optional() })
+  vine.object({ scope: vine.enum(QUEUE_SCOPES).optional() })
 )
 
 const lpQuery = vine.compile(vine.object({ queueType: vine.string().optional() }))
@@ -50,7 +51,7 @@ export default class MembersController {
     return new PlayerStatsService().matches(member, {
       cursor: query.cursor,
       limit: query.limit,
-      queueGroup: query.queue,
+      scope: parseScope(query.scope),
     })
   }
 
@@ -58,7 +59,7 @@ export default class MembersController {
     const member = await Member.findByOrFail('slug', params.slug)
     const query = await poolQuery.validate(request.qs())
 
-    return new PlayerStatsService().championPool(member, { queueGroup: query.queue })
+    return new PlayerStatsService().championPool(member, { scope: parseScope(query.scope) })
   }
 
   async lpHistory({ params, request }: HttpContext) {

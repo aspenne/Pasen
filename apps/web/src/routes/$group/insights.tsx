@@ -1,4 +1,4 @@
-import { createFileRoute, useParams } from '@tanstack/react-router'
+import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
@@ -21,25 +21,29 @@ const PERIODS = [
 
 function Insights() {
   const { group } = useParams({ from: '/$group/insights' })
+  const { scope } = useSearch({ from: '/$group' })
   const [period, setPeriod] = useState<Leaderboards['period']>('week')
 
   const { data: staticData } = useStaticData()
   const { data: overview } = useQuery({
-    queryKey: ['group', group],
-    queryFn: () => api.group(group),
+    queryKey: ['group', group, scope],
+    queryFn: () => api.group(group, { scope }),
   })
   const { data: boards } = useQuery({
-    queryKey: ['leaderboards', group, period],
-    queryFn: () => api.leaderboards(group, { period }),
+    queryKey: ['leaderboards', group, period, scope],
+    queryFn: () => api.leaderboards(group, { period, scope }),
   })
-  const { data: duos } = useQuery({ queryKey: ['duos', group], queryFn: () => api.duos(group) })
+  const { data: duos } = useQuery({
+    queryKey: ['duos', group, scope],
+    queryFn: () => api.duos(group, { scope }),
+  })
   const { data: pool } = useQuery({
-    queryKey: ['group-champions', group],
-    queryFn: () => api.groupChampions(group),
+    queryKey: ['group-champions', group, scope],
+    queryFn: () => api.groupChampions(group, { scope }),
   })
   const { data: activity } = useQuery({
-    queryKey: ['activity', group],
-    queryFn: () => api.activity(group),
+    queryKey: ['activity', group, scope],
+    queryFn: () => api.activity(group, { scope }),
   })
 
   const colorFor = useMemo(() => {

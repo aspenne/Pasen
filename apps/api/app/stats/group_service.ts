@@ -1,6 +1,7 @@
 import db from '@adonisjs/lucid/services/db'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type MemberRank = {
   queueType: string
@@ -38,7 +39,7 @@ export type GroupOverview = {
 }
 
 export class GroupService {
-  async overview(group: Group): Promise<GroupOverview> {
+  async overview(group: Group, scope: QueueScope = DEFAULT_SCOPE): Promise<GroupOverview> {
     await group.load('members', (query) => query.preload('riotAccounts'))
 
     const memberIds = group.members.map((member) => member.id)
@@ -48,7 +49,7 @@ export class GroupService {
 
     const [ranks, totals] = await Promise.all([
       this.#latestRanks(memberIds),
-      this.#totals(memberIds),
+      this.#totals(memberIds, scope),
     ])
 
     return {
@@ -112,8 +113,8 @@ export class GroupService {
   }
 
   /** Lifetime totals across every account a member owns, smurfs included. */
-  async #totals(memberIds: number[]) {
-    const rows = await db
+  async #totals(memberIds: number[], scope: QueueScope) {
+    const query = db
       .from('match_participants as p')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
       .join('matches as m', 'm.match_id', 'p.match_id')
@@ -125,6 +126,9 @@ export class GroupService {
       .count('* as games')
       .sum({ wins: db.raw('case when p.win then 1 else 0 end') })
       .countDistinct('p.champion_id as champions')
+
+    applyScope(query, scope)
+    const rows = await query
 
     return new Map(
       rows.map((row: any) => {

@@ -2,6 +2,7 @@ import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
 import Group from '#models/group'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type ActivityDay = {
   /** ISO date in the group's timezone. */
@@ -22,10 +23,14 @@ export type ActivityDay = {
  * has to agree with it or the calendar and the feed will disagree by one game.
  */
 export class ActivityService {
-  async forGroup(group: Group, days = 365): Promise<ActivityDay[]> {
+  async forGroup(
+    group: Group,
+    days = 365,
+    scope: QueueScope = DEFAULT_SCOPE
+  ): Promise<ActivityDay[]> {
     const since = DateTime.now().setZone(group.timezone).minus({ days }).startOf('day')
 
-    const rows = await db
+    const query = db
       .from('matches as m')
       .join('match_participants as p', 'p.match_id', 'm.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
@@ -52,6 +57,9 @@ export class ActivityService {
       .count('* as member_games')
       .sum({ wins: db.raw('case when p.win then 1 else 0 end') })
       .orderBy('day', 'asc')
+
+    applyScope(query, scope)
+    const rows = await query
 
     return (rows as any[]).map((row) => ({
       date: DateTime.fromJSDate(new Date(row.day)).toISODate()!,

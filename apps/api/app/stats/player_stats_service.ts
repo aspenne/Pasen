@@ -4,6 +4,7 @@ import type { QueueGroup } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import Member from '#models/member'
+import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type ChampionPoolEntry = {
   championId: number
@@ -59,7 +60,7 @@ export type LpPoint = {
   losses: number
 }
 
-export type StatsFilter = { queueGroup?: QueueGroup }
+export type StatsFilter = { scope?: QueueScope }
 
 /**
  * Everything on a member's own page. Every query spans all of that member's
@@ -71,13 +72,12 @@ export class PlayerStatsService {
    * of the roster you have touched, and which ones you keep going back to.
    */
   async championPool(member: Member, filter: StatsFilter = {}): Promise<ChampionPool> {
-    const rows = await db
+    const pool = db
       .from('match_participants as p')
       .join('matches as m', 'm.match_id', 'p.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
       .where('a.member_id', member.id)
       .andWhere('m.stats_eligible', true)
-      .if(filter.queueGroup, (q) => q.andWhere('m.queue_group', filter.queueGroup!))
       .groupBy('p.champion_id', 'p.champion_name')
       .select('p.champion_id', 'p.champion_name')
       .count('* as games')
@@ -88,6 +88,9 @@ export class PlayerStatsService {
       .avg({ avg_cs: 'p.cs' })
       .max({ last_played: 'm.game_creation' })
       .orderBy('games', 'desc')
+
+    applyScope(pool, filter.scope ?? DEFAULT_SCOPE)
+    const rows = await pool
 
     // The denominator comes from the synced champion list, never a constant:
     // Riot adds champions, and 173 today was 170 a year ago.
@@ -129,12 +132,11 @@ export class PlayerStatsService {
     const limit = Math.min(options.limit ?? 20, 100)
     const cursor = decodeCursor(options.cursor)
 
-    const rows = await db
+    const history = db
       .from('match_participants as p')
       .join('matches as m', 'm.match_id', 'p.match_id')
       .join('riot_accounts as a', 'a.puuid', 'p.puuid')
       .where('a.member_id', member.id)
-      .if(filterGiven(options), (q) => q.andWhere('m.queue_group', options.queueGroup!))
       .if(cursor, (q) =>
         q.andWhereRaw('(m.game_creation, m.match_id) < (?, ?)', [cursor!.at, cursor!.matchId])
       )
@@ -164,6 +166,9 @@ export class PlayerStatsService {
         'p.items',
         'p.subteam_placement'
       )
+
+    applyScope(history, options.scope ?? DEFAULT_SCOPE)
+    const rows = await history
 
     const page = rows.slice(0, limit)
     const last = page.at(-1)
@@ -215,10 +220,6 @@ export class PlayerStatsService {
       losses: row.losses,
     }))
   }
-}
-
-function filterGiven(options: StatsFilter): boolean {
-  return options.queueGroup !== undefined
 }
 
 function encodeCursor(at: Date, matchId: string): string {

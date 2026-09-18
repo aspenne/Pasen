@@ -1,4 +1,4 @@
-import type { QueueGroup } from '@pasen/shared'
+import type { QueueGroup, QueueScope } from '@pasen/shared'
 
 /*
  * Empty in production: the site and the API share one origin behind the reverse
@@ -321,26 +321,32 @@ export type StaticData = {
   queues: Record<string, { description: string | null; map: string | null }>
 }
 
+/** Every stats call takes the same scope, so one control drives the whole site. */
+type Scoped = { scope?: QueueScope }
+
 export const api = {
   health: () => apiFetch<HealthResponse>('/health'),
   staticData: () => apiFetch<StaticData>('/api/static'),
-  group: (slug: string) => apiFetch<GroupOverview>(`/api/groups/${slug}`),
-  feed: (slug: string, params: { date?: string; queue?: QueueGroup } = {}) =>
+  group: (slug: string, params: Scoped = {}) =>
+    apiFetch<GroupOverview>(`/api/groups/${slug}${searchOf(params)}`),
+  feed: (slug: string, params: { date?: string } & Scoped = {}) =>
     apiFetch<DailyFeed>(`/api/groups/${slug}/feed${searchOf(params)}`),
   live: (slug: string) => apiFetch<{ games: LiveGame[] }>(`/api/groups/${slug}/live`),
   member: (slug: string) => apiFetch<MemberProfile>(`/api/members/${slug}`),
-  championPool: (slug: string, params: { queue?: QueueGroup } = {}) =>
+  championPool: (slug: string, params: Scoped = {}) =>
     apiFetch<ChampionPool>(`/api/members/${slug}/champions${searchOf(params)}`),
-  matches: (slug: string, params: { cursor?: string; limit?: number; queue?: QueueGroup } = {}) =>
+  matches: (slug: string, params: { cursor?: string; limit?: number } & Scoped = {}) =>
     apiFetch<MatchHistory>(`/api/members/${slug}/matches${searchOf(params)}`),
   lpHistory: (slug: string, params: { queueType?: string } = {}) =>
     apiFetch<{ points: LpPoint[] }>(`/api/members/${slug}/lp-history${searchOf(params)}`),
-  duos: (slug: string) => apiFetch<DuoStats>(`/api/groups/${slug}/duos`),
-  leaderboards: (slug: string, params: { period?: 'week' | 'month' | 'all' } = {}) =>
+  duos: (slug: string, params: Scoped = {}) =>
+    apiFetch<DuoStats>(`/api/groups/${slug}/duos${searchOf(params)}`),
+  leaderboards: (slug: string, params: { period?: 'week' | 'month' | 'all' } & Scoped = {}) =>
     apiFetch<Leaderboards>(`/api/groups/${slug}/leaderboards${searchOf(params)}`),
-  groupChampions: (slug: string) =>
-    apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions`),
-  activity: (slug: string) => apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity`),
+  groupChampions: (slug: string, params: Scoped = {}) =>
+    apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions${searchOf(params)}`),
+  activity: (slug: string, params: Scoped = {}) =>
+    apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 
   session: () => apiFetch<{ authenticated: boolean; email: string | null }>('/api/admin/session'),
   signIn: (email: string, password: string) =>

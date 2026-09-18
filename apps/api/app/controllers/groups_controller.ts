@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import redis from '@adonisjs/redis/services/main'
 import vine from '@vinejs/vine'
-import { QUEUE_GROUPS } from '@pasen/shared'
+import { QUEUE_SCOPES } from '@pasen/shared'
 
 import Group from '#models/group'
 import RiotAccount from '#models/riot_account'
@@ -11,25 +11,39 @@ import { DuoStatsService } from '#stats/duo_stats_service'
 import { GroupChampionService } from '#stats/group_champion_service'
 import { GroupService } from '#stats/group_service'
 import { LeaderboardService } from '#stats/leaderboard_service'
+import { parseScope } from '#stats/scope'
 import { LiveGameService } from '#ingestion/live_game_service'
 import { riot } from '#riot/service'
 import type { RedisLike } from '#riot/redis'
 
+/**
+ * Every read takes the same `scope`. Omitted, it is Summoner's Rift rather than
+ * every queue: Arena is a different game and averaging it in produces a number
+ * that describes neither.
+ */
+const scopeField = vine.enum(QUEUE_SCOPES).optional()
+
 const leaderboardQuery = vine.compile(
-  vine.object({ period: vine.enum(['week', 'month', 'all'] as const).optional() })
+  vine.object({
+    period: vine.enum(['week', 'month', 'all'] as const).optional(),
+    scope: scopeField,
+  })
 )
+
+const scopeQuery = vine.compile(vine.object({ scope: scopeField }))
 
 const feedQuery = vine.compile(
   vine.object({
     date: vine.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    queue: vine.enum(QUEUE_GROUPS).optional(),
+    scope: scopeField,
   })
 )
 
 export default class GroupsController {
-  async show({ params }: HttpContext) {
+  async show({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
-    return new GroupService().overview(group)
+    const { scope } = await scopeQuery.validate(request.qs())
+    return new GroupService().overview(group, parseScope(scope))
   }
 
   async feed({ params, request }: HttpContext) {
@@ -38,29 +52,32 @@ export default class GroupsController {
 
     return new DailyFeedService().forGroup(group, {
       date: query.date,
-      queueGroup: query.queue,
+      scope: parseScope(query.scope),
     })
   }
 
-  async duos({ params }: HttpContext) {
+  async duos({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
-    return new DuoStatsService().forGroup(group)
+    const { scope } = await scopeQuery.validate(request.qs())
+    return new DuoStatsService().forGroup(group, 3, parseScope(scope))
   }
 
   async leaderboards({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
     const query = await leaderboardQuery.validate(request.qs())
-    return new LeaderboardService().forGroup(group, query.period ?? 'week')
+    return new LeaderboardService().forGroup(group, query.period ?? 'week', parseScope(query.scope))
   }
 
-  async champions({ params }: HttpContext) {
+  async champions({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
-    return new GroupChampionService().forGroup(group)
+    const { scope } = await scopeQuery.validate(request.qs())
+    return new GroupChampionService().forGroup(group, parseScope(scope))
   }
 
-  async activity({ params }: HttpContext) {
+  async activity({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
-    return { days: await new ActivityService().forGroup(group) }
+    const { scope } = await scopeQuery.validate(request.qs())
+    return { days: await new ActivityService().forGroup(group, 365, parseScope(scope)) }
   }
 
   /**
