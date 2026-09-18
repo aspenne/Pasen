@@ -83,11 +83,19 @@ export class MatchSyncService {
     await this.#advanceFrontiers(account)
 
     /*
-     * A short page means Riot has nothing older left inside the window, which is
-     * the only reliable end signal: an empty page can also mean every match on
-     * it was already stored.
+     * Finished means two things at once, and conflating them silently threw
+     * away history: a short page (Riot has nothing older inside the window) AND
+     * every id on that page accounted for.
+     *
+     * Each step is capped so it cannot monopolise the Riot budget, so a page of
+     * 80 ids with a cap of 25 leaves 55 untouched. Judging completion on the
+     * page length alone marked the account done and abandoned them - which is
+     * why accounts stopped at wildly different depths, from thirteen months of
+     * history down to four.
      */
-    const complete = ids.length < MATCH_IDS_PAGE_SIZE
+    const pageWasShort = ids.length < MATCH_IDS_PAGE_SIZE
+    const nothingSkipped = outcome.ingested + outcome.alreadyStored === ids.length
+    const complete = pageWasShort && nothingSkipped
     account.backfillState = complete ? 'done' : 'running'
     // A step that got through clears whatever the last failure was. Leaving it
     // behind shows an error next to a finished backfill, which reads as broken.

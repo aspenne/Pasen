@@ -199,6 +199,36 @@ test.group('MatchSyncService', (group) => {
     assert.isNull(account.backfillError, 'an error next to a finished backfill reads as broken')
   })
 
+  test('does not call a backfill finished while the page still has matches on it', async ({
+    assert,
+  }) => {
+    const account = await makeAccount('alice')
+    // A short page - fewer than Riot's hundred - but more than one step may fetch.
+    const riot = fakeRiot(
+      Array.from({ length: 10 }, (_, i) =>
+        matchAt(`EUW1_${i}`, `2026-09-${String(i + 1).padStart(2, '0')}T10:00:00Z`, ['alice'])
+      )
+    )
+    const service = new MatchSyncService(riot.client)
+
+    const first = await service.backfillStep(account, { maxFetches: 3 })
+    assert.equal(first.ingested, 3)
+    assert.isFalse(first.complete, 'seven matches on that page were never fetched')
+
+    await account.refresh()
+    assert.equal(account.backfillState, 'running')
+
+    // Keep stepping; the walk must eventually reach every one of them.
+    for (let step = 0; step < 6; step++) {
+      const outcome = await service.backfillStep(account, { maxFetches: 3 })
+      if (outcome.complete) break
+    }
+
+    assert.lengthOf(await Match.all(), 10, 'nothing may be left behind')
+    await account.refresh()
+    assert.equal(account.backfillState, 'done')
+  })
+
   test('marks the backfill done when a short page comes back', async ({ assert }) => {
     const account = await makeAccount('alice')
     const riot = fakeRiot([matchAt('EUW1_1', '2026-09-10T10:00:00Z', ['alice'])])
