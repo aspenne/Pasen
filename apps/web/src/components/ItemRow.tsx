@@ -4,12 +4,12 @@ import type { StaticData } from '@/lib/api'
 /** Six slots plus the trinket. Empty slots stay as gaps so the row never reflows. */
 export function ItemRow({ items, staticData }: { items: number[]; staticData?: StaticData }) {
   return (
-    <div className="flex gap-0.5">
+    <div className="flex gap-1">
       {items.slice(0, 7).map((itemId, index) => {
         const src = itemIcon(staticData?.version ?? null, itemId)
         return (
-          <div key={index} className="size-[18px] rounded-[2px] bg-line">
-            {src && <img src={src} alt="" width={18} height={18} loading="lazy" />}
+          <div key={index} className="size-[26px] rounded-[9px] bg-line-strong/60">
+            {src && <img src={src} alt="" width={26} height={26} loading="lazy" className="rounded-[9px]" />}
           </div>
         )
       })}

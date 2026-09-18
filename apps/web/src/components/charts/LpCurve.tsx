@@ -68,9 +68,9 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
           symbol: 'circle',
           symbolSize: 8,
           showSymbol: points.length <= 60,
-          lineStyle: { width: 2, color: CHART.gold },
-          itemStyle: { color: CHART.gold },
-          areaStyle: { color: 'rgba(212, 175, 90, 0.08)' },
+          lineStyle: { width: 2, color: CHART.accent },
+          itemStyle: { color: CHART.accent },
+          areaStyle: { color: 'rgba(232, 101, 12, 0.10)' },
         },
       ],
     }

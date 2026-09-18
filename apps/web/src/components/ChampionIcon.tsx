@@ -6,6 +6,7 @@ type ChampionIconProps = {
   championName: string
   staticData?: StaticData
   size?: number
+  className?: string
 }
 
 /**
@@ -16,7 +17,8 @@ export function ChampionIcon({
   championId,
   championName,
   staticData,
-  size = 34,
+  size = 48,
+  className = '',
 }: ChampionIconProps) {
   const champion = staticData?.champions[String(championId)]
   const src = championIcon(staticData?.version ?? null, champion?.slug)
@@ -24,14 +26,14 @@ export function ChampionIcon({
 
   return (
     <div
-      className="shrink-0 overflow-hidden rounded-[3px] bg-line-strong"
-      style={{ width: size, height: size }}
+      className={`shrink-0 overflow-hidden bg-line-strong ${className}`}
+      style={{ width: size, height: size, borderRadius: Math.round(size / 3.2) }}
       title={label}
     >
       {src ? (
         <img src={src} alt={label} width={size} height={size} loading="lazy" />
       ) : (
-        <span className="flex h-full w-full items-center justify-center text-[11px] text-ink-muted">
+        <span className="flex size-full items-center justify-center text-[12px] text-ink-muted">
           {label.slice(0, 2)}
         </span>
       )}

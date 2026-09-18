@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { EChartsOption } from 'echarts'
 
 import { Chart } from '@/components/Chart'
-import { CHART, SEQUENTIAL_GOLD, baseOptions } from '@/lib/chart-theme'
+import { CHART, SEQUENTIAL_ACCENT, baseOptions } from '@/lib/chart-theme'
 import type { ActivityDay } from '@/lib/api'
 
 /**
@@ -25,7 +25,7 @@ export function ActivityCalendar({ days, year }: { days: ActivityDay[]; year: nu
           return `${day.date}<br/>${day.games} matches · ${day.memberGames} played · ${rate}% won`
         },
       },
-      visualMap: { min: 0, max: busiest, show: false, inRange: { color: SEQUENTIAL_GOLD } },
+      visualMap: { min: 0, max: busiest, show: false, inRange: { color: SEQUENTIAL_ACCENT } },
       calendar: {
         top: 24,
         left: 32,

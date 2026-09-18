@@ -25,6 +25,15 @@ export function profileIcon(version: string | null, iconId: number | null): stri
 }
 
 /**
+ * Full-resolution splash art, which is what gives a player banner its life.
+ * Note the path: splash lives outside the versioned tree, so it takes no
+ * version at all - passing one 404s.
+ */
+export function championSplash(slug: string | undefined): string | null {
+  return slug ? `${CDN}/img/champion/splash/${slug}_0.jpg` : null
+}
+
+/**
  * Loaded once and kept for the session: ids are stable within a patch, and every
  * screen needs the same lookup.
  */

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
+import { PlayerBanner } from '@/components/PlayerBanner'
 import { StatTile } from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -64,6 +65,14 @@ function Dashboard() {
   }, [overview])
 
   const totals = feed?.totals
+  const totalGames = overview?.members.reduce((sum, m) => sum + m.totals.games, 0) ?? 0
+
+  // The champion the roster has played most, for the banner's backdrop.
+  const { data: groupChampions } = useQuery({
+    queryKey: ['group-champions', group],
+    queryFn: () => api.groupChampions(group),
+  })
+  const topChampionId = groupChampions?.champions[0]?.championId
   const bestKda = useMemo(() => {
     const all = feed?.matches.flatMap((match) => match.members) ?? []
     if (all.length === 0) return null
@@ -75,13 +84,23 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
+      <PlayerBanner
+        name={overview?.name ?? group}
+        subtitle={`${overview?.members.length ?? 0} members · ${totalGames} games together`}
+        figure={totals?.games ? String(totals.games) : '0'}
+        figureLabel={selected === today ? 'games today' : `games on ${selected}`}
+        profileIconId={null}
+        championId={topChampionId}
+        staticData={staticData}
+      />
+
       {live && live.games.length > 0 && (
         <section>
-          <h2 className="mb-2 flex items-center gap-2 text-[11px] tracking-[0.1em] text-loss">
-            <span className="inline-block size-1.5 rounded-full bg-loss" />
-            LIVE NOW · {live.games.length}
+          <h2 className="mb-2.5 flex items-center gap-2 text-[13px] tracking-[0.04em] text-loss">
+            <span className="inline-block size-[7px] rounded-full bg-loss" />
+            IN GAME NOW · {live.games.length}
           </h2>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {live.games.map((game) => (
               <LiveGameCard
                 key={game.gameId}
@@ -126,18 +145,13 @@ function Dashboard() {
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <StatTile label="Games" value={totals?.games ?? 0} />
+          <StatTile label="Wins" value={totals?.wins ?? 0} tone="win" />
+          <StatTile label="Losses" value={totals?.losses ?? 0} tone="loss" />
           <StatTile
-            label="Win rate"
-            value={totals?.memberGames ? `${totals.winRate}%` : '—'}
-            detail={totals?.memberGames ? `${totals.wins}W ${totals.losses}L` : undefined}
-            tone={totals && totals.winRate >= 50 ? 'win' : 'loss'}
-          />
-          <StatTile label="Champions" value={totals?.championsPlayed ?? 0} />
-          <StatTile
-            label="Best KDA"
-            value={bestKda ? bestKda.ratio.toFixed(2) : '—'}
-            detail={bestKda?.name || undefined}
-            tone="gold"
+            label="Champions"
+            value={totals?.championsPlayed ?? 0}
+            detail={bestKda ? `best KDA ${bestKda.ratio.toFixed(2)} · ${bestKda.name}` : undefined}
+            tone="accent"
           />
         </div>
       </section>

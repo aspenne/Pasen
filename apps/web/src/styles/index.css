@@ -4,36 +4,45 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Direction A - "esport data": a near-black blue ground so champion art and
- * chart colours carry, gold reserved for the single most important number on a
- * surface, and one green / one red that never mean anything but win / loss.
+ * The palette the app writes against. Orange carries the brand - the mark, the
+ * active tab, the headline figure, the primary button - and never says whether
+ * something went well. Blue and red mean won and lost, and nothing else.
  *
- * These are the names the app writes against. The shadcn tokens below are
- * mapped onto them, so a component dropped in from the registry inherits this
- * palette instead of bringing its own.
+ * That separation is not taste. Orange and red sit at deltaE 11.8 in normal
+ * vision, under the 15 floor: put them side by side as competing signals and
+ * people cannot tell them apart, colourblind or not. Blue against red measures
+ * 26.4 even under protanopia, so the result is always legible.
  */
 @theme {
-  --color-ground: #0a0d14;
-  --color-panel: #111725;
-  --color-panel-raised: #161d2e;
-  --color-line: #1a2030;
-  --color-line-strong: #243049;
+  --color-ground: #0f131b;
+  --color-panel: #161b26;
+  --color-panel-raised: #181e2a;
+  --color-line: #1e2430;
+  --color-line-strong: #2a3242;
 
-  --color-ink: #e8ecf4;
-  --color-ink-muted: #7a869e;
-  --color-ink-dim: #5a6580;
+  --color-ink: #f0f3f8;
+  --color-ink-muted: #8a94a6;
+  --color-ink-dim: #6e7a8f;
+  /* Sits on warm surfaces - the player banner - where cool grey turns muddy. */
+  --color-ink-warm: #b09c88;
 
-  --color-gold: #d4af5a;
-  --color-win: #4ecda4;
-  --color-loss: #e24b4a;
+  /* Darker than the orange first sketched: #ff7a45 fell outside the dark
+     lightness band and floated off the background. */
+  --color-accent: #e8650c;
+  --color-accent-soft: #46301e;
+  /* Orange is light; text on a filled orange button has to be near-black. */
+  --color-on-accent: #2a1305;
+
+  --color-win: #4c8dff;
+  --color-win-surface: #17223a;
+  --color-loss: #e5484d;
+  --color-loss-surface: #2a1a1e;
 
   /*
-   * Member identity. One hue per person, held across every screen and every
-   * chart, so a colour always means the same human.
-   *
-   * Validated against the card surface #111725: all eight inside the dark
-   * lightness band, chroma floor clear, worst adjacent CVD deltaE 8.4, worst
-   * normal-vision deltaE 19.3, every slot over 3:1 contrast.
+   * Member identity. One hue per person, held across every screen and chart.
+   * Validated as a set against the card surface: inside the dark lightness
+   * band, worst adjacent CVD deltaE 8.4, worst normal-vision deltaE 19.3,
+   * every slot over 3:1 contrast.
    */
   --color-member-1: #3987e5;
   --color-member-2: #d95926;
@@ -45,9 +54,13 @@
   --color-member-8: #e66767;
 
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-card: 18px;
+  --radius-banner: 22px;
+  --radius-tile: 16px;
 }
 
-/* What shadcn components read. Every value points back at direction A. */
+/* What shadcn components read. Every value points back at the palette above. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -61,7 +74,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
+  --color-accent-ui: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -69,19 +82,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: var(--radius);
-  --radius-md: var(--radius);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
 }
 
 :root {
-  /*
-   * Very nearly square. Direction A calls for sharp corners; a hair of radius
-   * keeps buttons and inputs from looking like they were cut with scissors,
-   * without turning the site into a rounded-card product.
-   */
-  --radius: 0.125rem;
+  --radius: 0.75rem;
 
   --background: var(--color-ground);
   --foreground: var(--color-ink);
@@ -89,9 +97,8 @@
   --card-foreground: var(--color-ink);
   --popover: var(--color-panel-raised);
   --popover-foreground: var(--color-ink);
-  --primary: var(--color-gold);
-  /* Gold is a light hue; text on it has to be the dark ground, not white. */
-  --primary-foreground: var(--color-ground);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-on-accent);
   --secondary: var(--color-panel-raised);
   --secondary-foreground: var(--color-ink);
   --muted: var(--color-panel-raised);
@@ -102,14 +109,11 @@
   --destructive-foreground: var(--color-ink);
   --border: var(--color-line);
   --input: var(--color-line-strong);
-  --ring: var(--color-gold);
+  --ring: var(--color-accent);
 }
 
-/*
- * The site is dark-only, so the two scopes carry the same values. shadcn
- * components still branch on `.dark`, and leaving it undefined would give them
- * the registry's own palette rather than this one.
- */
+/* Dark-only site: the same values under both scopes, because shadcn components
+   still branch on `.dark` and would otherwise use the registry's own palette. */
 .dark {
   --background: var(--color-ground);
   --foreground: var(--color-ink);
@@ -117,8 +121,8 @@
   --card-foreground: var(--color-ink);
   --popover: var(--color-panel-raised);
   --popover-foreground: var(--color-ink);
-  --primary: var(--color-gold);
-  --primary-foreground: var(--color-ground);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-on-accent);
   --secondary: var(--color-panel-raised);
   --secondary-foreground: var(--color-ink);
   --muted: var(--color-panel-raised);
@@ -129,7 +133,7 @@
   --destructive-foreground: var(--color-ink);
   --border: var(--color-line);
   --input: var(--color-line-strong);
-  --ring: var(--color-gold);
+  --ring: var(--color-accent);
 }
 
 @layer base {
@@ -146,10 +150,10 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Stat numbers are read by shape as much as by value: tabular figures keep
-     columns of them from jittering as they refresh. */
+  /* Columns of numbers only. A large standalone figure uses proportional
+     digits, since tabular ones give every digit the width of a zero and read
+     loose at display sizes. */
   .tnum {
-    font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
 }

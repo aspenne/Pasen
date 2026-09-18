@@ -59,9 +59,13 @@ function Insights() {
     <div className="space-y-8">
       {/* Filters sit in one row above what they filter. */}
       <Tabs value={period} onValueChange={(value) => setPeriod(value as Leaderboards['period'])}>
-        <TabsList>
+        <TabsList className="h-auto gap-1.5 rounded-[14px] bg-panel p-1.5">
           {PERIODS.map((entry) => (
-            <TabsTrigger key={entry.key} value={entry.key}>
+            <TabsTrigger
+              key={entry.key}
+              value={entry.key}
+              className="rounded-[10px] px-4 py-1.5 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
+            >
               {entry.label}
             </TabsTrigger>
           ))}
@@ -85,15 +89,18 @@ function Insights() {
             {boards?.titles.map((title) => (
               <div
                 key={title.key}
-                className="border-l-2 bg-panel px-3 py-2.5"
-                style={{ borderColor: colorFor(title.memberSlug) }}
+                className="rounded-[18px] px-[17px] py-[15px]"
+                style={{
+                  background: 'linear-gradient(120deg, #2A1C10, #171B24 70%)',
+                  borderLeft: `3px solid ${colorFor(title.memberSlug)}`,
+                }}
               >
-                <div className="text-[10px] uppercase tracking-[0.08em] text-ink-dim">
+                <div className="text-[11px] uppercase tracking-[0.05em] text-ink-warm/70">
                   {title.description}
                 </div>
-                <div className="mt-0.5 text-[14px] text-gold">{title.label}</div>
-                <div className="text-[12px] text-ink">{title.displayName}</div>
-                <div className="tnum text-[11px] text-ink-muted">{title.detail}</div>
+                <div className="mt-1 text-[19px] text-accent">{title.label}</div>
+                <div className="mt-0.5 text-[14px] text-ink">{title.displayName}</div>
+                <div className="tnum text-[13px] text-ink-muted">{title.detail}</div>
               </div>
             ))}
           </div>

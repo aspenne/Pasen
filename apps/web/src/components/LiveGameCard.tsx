@@ -34,31 +34,36 @@ export function LiveGameCard({
   const teams = [100, 200].map((teamId) => game.participants.filter((p) => p.teamId === teamId))
 
   return (
-    <article className="border-l-2 border-gold bg-panel">
-      <header className="flex items-center justify-between gap-3 px-4 py-2.5">
+    /*
+     * A translucent accent border rather than a solid one. A game in progress
+     * should catch the eye without shouting louder than the results of the
+     * games that are already decided.
+     */
+    <article className="rounded-[18px] border border-accent/25 bg-panel-raised px-[18px] py-4">
+      <header className="mb-3 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="truncate text-[13px] text-ink">
+          <div className="truncate text-[15px] text-ink">
             {ours.map((p) => p.displayName ?? p.riotId).join(', ')}
           </div>
-          <div className="text-[11px] text-ink-muted">{queueLabel}</div>
+          <div className="mt-0.5 text-[13px] text-ink-dim">{queueLabel}</div>
         </div>
-        <div className="tnum shrink-0 text-[15px] text-gold">{duration(elapsed)}</div>
+        <div className="tnum shrink-0 text-[19px] text-accent">{duration(elapsed)}</div>
       </header>
 
-      <div className="grid grid-cols-2 gap-px bg-line">
+      <div className="grid gap-4 sm:grid-cols-2">
         {teams.map((team, index) => (
-          <div key={index} className="space-y-1 bg-panel px-3 py-2">
+          <div key={index} className="space-y-1.5">
             {team.map((participant) => (
               <div key={participant.puuid} className="flex items-center gap-2">
                 <ChampionIcon
                   championId={participant.championId}
                   championName={String(participant.championId)}
                   staticData={staticData}
-                  size={22}
+                  size={24}
                 />
                 <span
-                  className={`truncate text-[11px] ${
-                    participant.tracked ? 'text-gold' : 'text-ink-muted'
+                  className={`truncate text-[13px] ${
+                    participant.tracked ? 'text-accent' : 'text-ink-muted'
                   }`}
                 >
                   {participant.displayName ?? participant.riotId ?? 'Unknown'}

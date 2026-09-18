@@ -4,22 +4,23 @@ type StatTileProps = {
   /** Optional qualifier under the value: "of 173", "2W 2L". */
   detail?: string
   /** Tints the value only. Labels and details always wear text tokens. */
-  tone?: 'default' | 'gold' | 'win' | 'loss'
+  tone?: 'default' | 'accent' | 'win' | 'loss'
 }
 
 const TONES = {
   default: 'text-ink',
-  gold: 'text-gold',
+  accent: 'text-accent',
   win: 'text-win',
   loss: 'text-loss',
 } as const
 
 export function StatTile({ label, value, detail, tone = 'default' }: StatTileProps) {
   return (
-    <div className="bg-panel px-3 py-2.5">
-      <div className="text-[10px] uppercase tracking-[0.08em] text-ink-dim">{label}</div>
-      <div className={`tnum mt-0.5 text-[22px] leading-none ${TONES[tone]}`}>{value}</div>
-      {detail && <div className="mt-1 text-[11px] text-ink-muted">{detail}</div>}
+    <div className="rounded-[16px] bg-panel px-[17px] py-[15px]">
+      <div className="text-[12px] text-ink-dim">{label}</div>
+      {/* Proportional figures: tabular ones read loose at this size. */}
+      <div className={`mt-1 text-[22px] leading-none ${TONES[tone]}`}>{value}</div>
+      {detail && <div className="mt-1.5 text-[12px] text-ink-muted">{detail}</div>}
     </div>
   )
 }

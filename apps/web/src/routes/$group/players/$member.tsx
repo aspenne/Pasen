@@ -3,6 +3,7 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
+import { PlayerBanner } from '@/components/PlayerBanner'
 import { SortableHead } from '@/components/SortableHead'
 import { StatTile } from '@/components/StatTile'
 import { ChampionBars } from '@/components/charts/ChampionBars'
@@ -15,7 +16,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSort } from '@/hooks/useSort'
 import { api, type ChampionPoolEntry } from '@/lib/api'
-import { profileIcon, useStaticData } from '@/lib/ddragon'
+import { useStaticData } from '@/lib/ddragon'
 import { duration, kda, memberColor, positionLabel, queueLabel, timeAgo } from '@/lib/format'
 
 export const Route = createFileRoute('/$group/players/$member')({ component: MemberPage })
@@ -57,44 +58,31 @@ function MemberPage() {
   const totals = boards?.totals.find((entry) => entry.memberSlug === memberSlug)
   const accent = memberColor(rosterEntry?.accentColor ?? null, rosterIndex)
   const account = profile?.accounts[0]
-  const avatar = profileIcon(staticData?.version ?? null, account?.profileIconId ?? null)
+  const solo = rosterEntry?.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
   const syncing = profile?.accounts.some((entry) => entry.backfillState !== 'done')
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center gap-4">
-        {isPending ? (
-          <Skeleton className="size-14" />
-        ) : (
-          <div className="size-14 shrink-0 overflow-hidden rounded-sm bg-line-strong">
-            {avatar && <img src={avatar} alt="" width={56} height={56} />}
-          </div>
-        )}
-
-        <div className="min-w-0">
-          {isPending ? (
-            <>
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="mt-1.5 h-3 w-56" />
-            </>
-          ) : (
-            <>
-              <h1 className="flex items-center gap-2 truncate text-[18px] text-ink">
-                <span
-                  aria-hidden
-                  className="h-4 w-0.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: accent }}
-                />
-                {profile?.displayName ?? memberSlug}
-              </h1>
-              <p className="truncate text-[12px] text-ink-muted">
-                {profile?.accounts.map((entry) => entry.riotId).join(' · ')}
-                {account?.summonerLevel ? ` · level ${account.summonerLevel}` : ''}
-              </p>
-            </>
-          )}
-        </div>
-      </header>
+      {isPending ? (
+        <Skeleton className="h-[126px] rounded-[22px]" />
+      ) : (
+        <PlayerBanner
+          name={profile?.displayName ?? memberSlug}
+          subtitle={[
+            profile?.accounts.map((entry) => entry.riotId).join(' · '),
+            account?.summonerLevel ? `level ${account.summonerLevel}` : null,
+            solo ? `${solo.tier} ${solo.rank} · ${solo.leaguePoints} LP` : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          figure={rosterEntry ? `${rosterEntry.totals.winRate}%` : '—'}
+          figureLabel={`${rosterEntry?.totals.games ?? 0} games`}
+          profileIconId={account?.profileIconId ?? null}
+          championId={pool?.entries[0]?.championId}
+          staticData={staticData}
+          accent={accent}
+        />
+      )}
 
       {syncing && (
         <p className="border-l-2 border-gold bg-panel px-4 py-2 text-[12px] text-ink-muted">
@@ -113,7 +101,7 @@ function MemberPage() {
           label="Champion pool"
           value={pool ? pool.played : '—'}
           detail={pool ? `of ${pool.available}` : undefined}
-          tone="gold"
+          tone="accent"
         />
         <StatTile
           label="Most played"
@@ -123,10 +111,20 @@ function MemberPage() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="champions">Champions</TabsTrigger>
-          <TabsTrigger value="history">Match history</TabsTrigger>
+        <TabsList className="h-auto w-full gap-1.5 rounded-[14px] bg-panel p-1.5">
+          {[
+            ['overview', 'Overview'],
+            ['champions', 'Champions'],
+            ['history', 'Match history'],
+          ].map(([value, label]) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="flex-1 rounded-[10px] py-2 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
+            >
+              {label}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
