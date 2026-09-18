@@ -107,6 +107,66 @@ export class MatchSyncService {
   }
 
   /**
+   * Walks an account's whole history by page offset rather than by timestamp,
+   * filling any hole wherever it sits.
+   *
+   * The ordinary backfill tracks a timestamp frontier, which assumes what is
+   * stored is contiguous. When that assumption was broken - by a bug, or by a
+   * run that died mid-page - the frontier sits below the gap and no amount of
+   * backfilling will ever return to it. Offset paging has the opposite
+   * trade-off: a game played mid-walk shifts every page by one, so it can skip
+   * a match, which is why it is a repair tool and not the normal path. Running
+   * it twice closes anything the shift skipped.
+   */
+  async repair(
+    account: RiotAccount,
+    options: SyncOptions & { onProgress?: (done: number, listed: number) => void } = {}
+  ): Promise<SyncOutcome> {
+    const background = { ...options, priority: 'background' as const }
+    let listed = 0
+    let alreadyStored = 0
+    let ingested = 0
+
+    for (let start = 0; ; start += MATCH_IDS_PAGE_SIZE) {
+      const ids = await this.riot.match.idsByPuuid(
+        account.puuid,
+        account.platform,
+        { start, count: MATCH_IDS_PAGE_SIZE },
+        background
+      )
+
+      if (ids.length === 0) {
+        break
+      }
+
+      listed += ids.length
+
+      // No per-step cap here: the point is to finish, and the shared limiter
+      // already keeps it from starving live polling.
+      const outcome = await this.#fetchAndStore(account, ids, {
+        ...background,
+        maxFetches: Number.POSITIVE_INFINITY,
+      })
+
+      alreadyStored += outcome.alreadyStored
+      ingested += outcome.ingested
+      options.onProgress?.(start + ids.length, listed)
+
+      if (ids.length < MATCH_IDS_PAGE_SIZE) {
+        break
+      }
+    }
+
+    await this.#advanceFrontiers(account)
+    account.backfillState = 'done'
+    account.backfillError = null
+    account.lastSyncedAt = DateTime.utc()
+    await account.save()
+
+    return { listed, alreadyStored, ingested, complete: true }
+  }
+
+  /**
    * Fetches only what is missing. Group members share games, so by the time the
    * fourth person syncs a five-stack, the match is usually already stored - and
    * skipping it is the difference between four requests and one.

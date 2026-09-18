@@ -6,6 +6,7 @@ import { DateTime } from 'luxon'
 import Match from '#models/match'
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
+import { MatchIngestService } from '#ingestion/match_ingest_service'
 import { MatchSyncService } from '#ingestion/match_sync_service'
 import { RiotClient } from '#riot/client'
 import type { RiotRequest, RiotRequester } from '#riot/gateway'
@@ -238,6 +239,45 @@ test.group('MatchSyncService', (group) => {
     assert.isTrue(outcome.complete)
     await account.refresh()
     assert.equal(account.backfillState, 'done')
+  })
+
+  test('repair fills a hole the frontier walk has already passed', async ({ assert }) => {
+    const account = await makeAccount('alice')
+    const all = Array.from({ length: 6 }, (_, i) =>
+      matchAt(`EUW1_${i}`, `2026-09-0${i + 1}T10:00:00Z`, ['alice'])
+    )
+
+    // The state the bug left behind: the newest and the oldest stored, a hole in
+    // the middle, and a frontier already sitting below it.
+    await new MatchIngestService().ingestMany([all[5], all[0]])
+    account.syncedFrom = DateTime.fromISO('2026-09-01T10:00:00Z', { zone: 'utc' })
+    account.backfillState = 'done'
+    await account.save()
+
+    const riot = fakeRiot(all)
+    const backfilled = await new MatchSyncService(riot.client).backfillStep(account)
+    assert.equal(backfilled.ingested, 0, 'a frontier walk cannot reach above itself')
+
+    const repaired = await new MatchSyncService(riot.client).repair(account)
+
+    assert.equal(repaired.ingested, 4, 'the four missing matches come back')
+    assert.lengthOf(await Match.all(), 6)
+  })
+
+  test('repair is idempotent: a second pass fetches nothing', async ({ assert }) => {
+    const account = await makeAccount('alice')
+    const riot = fakeRiot(
+      Array.from({ length: 4 }, (_, i) =>
+        matchAt(`EUW1_${i}`, `2026-09-0${i + 1}T10:00:00Z`, ['alice'])
+      )
+    )
+    const service = new MatchSyncService(riot.client)
+
+    await service.repair(account)
+    const second = await service.repair(account)
+
+    assert.equal(second.ingested, 0)
+    assert.equal(second.alreadyStored, 4)
   })
 
   test('a step that fetched nothing does not rewind the cursor', async ({ assert }) => {

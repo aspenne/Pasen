@@ -21,6 +21,11 @@ export default class PasenSync extends BaseCommand {
   @flags.boolean({ description: 'Snapshot ranked standings instead of syncing matches' })
   declare ranks: boolean
 
+  @flags.boolean({
+    description: 'Walk the whole history by page offset, filling gaps a frontier walk cannot reach',
+  })
+  declare repair: boolean
+
   @flags.string({ description: 'Limit to one Riot ID, e.g. "Name#TAG"' })
   declare account?: string
 
@@ -36,7 +41,7 @@ export default class PasenSync extends BaseCommand {
       const [gameName, tagLine] = this.account.split('#')
       query.where('game_name', gameName).andWhere('tag_line', tagLine)
     }
-    if (this.backfill) {
+    if (this.backfill && !this.repair) {
       query.whereNot('backfill_state', 'done')
     }
 
@@ -58,6 +63,17 @@ export default class PasenSync extends BaseCommand {
     }
 
     const service = new MatchSyncService(riot())
+
+    if (this.repair) {
+      for (const account of accounts) {
+        const outcome = await service.repair(account)
+        this.logger.info(
+          `${account.riotId}: listed ${outcome.listed}, already stored ${outcome.alreadyStored}, ` +
+            `recovered ${outcome.ingested}`
+        )
+      }
+      return
+    }
 
     for (const account of accounts) {
       if (!this.backfill) {
