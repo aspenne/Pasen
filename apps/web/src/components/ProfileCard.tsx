@@ -8,7 +8,7 @@ import type {
   ProfileCardStats,
   StaticData,
 } from '@/lib/api'
-import { championSplash } from '@/lib/ddragon'
+import { championCentered, championSplash } from '@/lib/ddragon'
 import { positionLabel, rankLabel, tierColor, tierCrest } from '@/lib/format'
 import { prefersReducedMotion } from '@/lib/motion'
 import { PLATFORM_SHORT, type Platform } from '@pasen/shared'
@@ -59,10 +59,11 @@ export function ProfileCard({
   staticData,
 }: ProfileCardProps) {
   const frame = useRef<HTMLElement>(null)
-  const art = useRef<HTMLDivElement>(null)
+  const art = useRef<HTMLImageElement>(null)
 
   const crest = tierCrest(rank?.tier)
   const mostPlayed = pool?.entries[0]
+  const centered = championCentered(mostPlayed?.championId)
   const splash = championSplash(
     staticData?.champions[String(mostPlayed?.championId ?? '')]?.slug
   )
@@ -121,11 +122,24 @@ export function ProfileCard({
       aria-label={`${name} season card`}
     >
       <div className="player-card-art">
-        <div
-          ref={art}
-          className="player-card-art-img"
-          style={splash ? { backgroundImage: `url(${splash})` } : undefined}
-        />
+        {(centered ?? splash) && (
+          <img
+            ref={art}
+            className="player-card-art-img"
+            /* Keyed on the champion so a change reloads rather than keeping a
+               fallback that was chosen for the previous one. */
+            key={mostPlayed?.championId}
+            src={centered ?? splash ?? ''}
+            alt=""
+            aria-hidden
+            onError={(event) => {
+              const image = event.currentTarget
+              if (image.dataset.fellBack || !splash) return
+              image.dataset.fellBack = 'true'
+              image.src = splash
+            }}
+          />
+        )}
       </div>
       <div className="player-card-sheen" />
       <div className="player-card-rim" />

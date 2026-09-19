@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { championSplash, profileIcon } from '@/lib/ddragon'
+import { championCentered, championSplash, profileIcon } from '@/lib/ddragon'
 import type { StaticData } from '@/lib/api'
 
 type PlayerBannerProps = {
@@ -38,16 +38,24 @@ export function PlayerBanner({
 }: PlayerBannerProps) {
   const champion = championId ? staticData?.champions[String(championId)] : undefined
   const splash = championSplash(champion?.slug)
+  const centered = championCentered(championId)
   const avatar = profileIcon(staticData?.version ?? null, profileIconId)
 
   return (
     <section className="relative overflow-hidden rounded-[10px] bg-panel">
-      {splash && (
+      {(centered ?? splash) && (
         <img
-          src={splash}
+          key={championId}
+          src={centered ?? splash ?? ''}
           alt=""
           aria-hidden
-          className="absolute inset-0 size-full object-cover object-[center_22%] opacity-35"
+          onError={(event) => {
+            const image = event.currentTarget
+            if (image.dataset.fellBack || !splash) return
+            image.dataset.fellBack = 'true'
+            image.src = splash
+          }}
+          className="absolute inset-0 size-full object-cover object-[center_28%] opacity-35"
         />
       )}
 

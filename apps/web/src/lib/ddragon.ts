@@ -34,6 +34,20 @@ export function championSplash(slug: string | undefined): string | null {
 }
 
 /**
+ * The same art recomposed with the champion in the middle of the frame.
+ *
+ * Riot's own splashes place the character wherever the illustration wanted
+ * them - Ezreal sits well off to one side - so a portrait crop of one lands on
+ * an elbow as often as a face. The centred cut is made for exactly this, and
+ * being keyed on the numeric id rather than the slug it needs no patch version.
+ */
+export function championCentered(championId: number | undefined): string | null {
+  return championId
+    ? `https://cdn.communitydragon.org/latest/champion/${championId}/splash-art/centered`
+    : null
+}
+
+/**
  * Loaded once and kept for the session: ids are stable within a patch, and every
  * screen needs the same lookup.
  */

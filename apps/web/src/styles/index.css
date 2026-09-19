@@ -253,10 +253,13 @@
 
 .player-card-art-img {
   position: absolute;
-  inset: -9%;
-  background-position: center 20%;
-  background-size: cover;
-  background-repeat: no-repeat;
+  top: -9%;
+  left: -9%;
+  width: 118%;
+  height: 118%;
+  object-fit: cover;
+  /* Slightly above centre: faces sit in the upper half of a centred splash. */
+  object-position: center 32%;
   opacity: 0.6;
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
