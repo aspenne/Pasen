@@ -5,7 +5,7 @@ import { PLATFORM_SHORT, SCOPE_LABELS, type Platform } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { CountUp } from '@/components/CountUp'
-import { ItemRow } from '@/components/ItemRow'
+import { MatchHistoryRow } from '@/components/MatchHistoryRow'
 import { PlayerBanner } from '@/components/PlayerBanner'
 import { ProfileCard } from '@/components/ProfileCard'
 import { RankPanel } from '@/components/RankPanel'
@@ -23,15 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSort } from '@/hooks/useSort'
 import { api, type ChampionPoolEntry } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import {
-  duration,
-  kda,
-  memberColor,
-  memberHex,
-  positionLabel,
-  queueLabel,
-  timeAgo,
-} from '@/lib/format'
+import { memberColor, memberHex, timeAgo } from '@/lib/format'
 
 /*
  * "All" is every snapshot we hold, not a season: rank has only been recorded
@@ -273,44 +265,17 @@ function MemberPage() {
         </TabsContent>
 
         <TabsContent value="history" className="space-y-px">
-          {history.data?.pages.flatMap((page) => page.entries).map((entry) => (
-            <div
-              key={entry.matchId}
-              className={`flex items-center gap-3 border-l-2 bg-panel px-3 py-2 ${
-                entry.win ? 'border-win' : 'border-loss'
-              }`}
-            >
-              <ChampionIcon
-                championId={entry.championId}
-                championName={entry.championName}
+          {history.data?.pages
+            .flatMap((page) => page.entries)
+            .map((entry) => (
+              <MatchHistoryRow
+                key={entry.matchId}
+                entry={entry}
                 staticData={staticData}
-                size={30}
+                groupSlug={group}
+                scope={scope}
               />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[12px] text-ink">{entry.championName}</div>
-                <div className="truncate text-[11px] text-ink-muted">
-                  {queueLabel(entry.queueGroup)}
-                  {positionLabel(entry.teamPosition) && ` · ${positionLabel(entry.teamPosition)}`}
-                  {entry.subteamPlacement && ` · #${entry.subteamPlacement}`}
-                </div>
-              </div>
-              <div className="hidden sm:block">
-                <ItemRow items={entry.items} staticData={staticData} />
-              </div>
-              <div className="w-[124px] shrink-0 text-right">
-                <div className="tnum text-[12px] text-ink">
-                  {entry.kills}/{entry.deaths}/{entry.assists}
-                </div>
-                <div className="tnum text-[11px] text-ink-muted">
-                  {kda(entry.kills, entry.deaths, entry.assists)} · {entry.cs} cs
-                </div>
-              </div>
-              <div className="w-[70px] shrink-0 text-right">
-                <div className="tnum text-[11px] text-ink-dim">{duration(entry.gameDuration)}</div>
-                <div className="text-[11px] text-ink-dim">{timeAgo(entry.gameCreation)}</div>
-              </div>
-            </div>
-          ))}
+            ))}
 
           {history.isPending && <Skeleton className="h-48 w-full" />}
 
