@@ -34,7 +34,8 @@ export type LiveGame = {
   /** Seconds elapsed. Riot reports 0 or less while the game is still loading. */
   lengthSeconds: number
   participants: {
-    puuid: string
+    /** Null for a player Riot declines to identify. */
+    puuid: string | null
     teamId: number
     championId: number
     spell1Id: number
@@ -115,6 +116,9 @@ export class LiveGameService {
    */
   async #attachRanks(game: LiveGame): Promise<void> {
     for (const participant of game.participants) {
+      // No puuid, no lookup - asking anyway just burns budget on a 400.
+      if (!participant.puuid) continue
+
       const key = `live:rank:${game.platform}:${participant.puuid}`
       const cached = await this.redis.get(key)
 
@@ -168,15 +172,19 @@ function toLiveGame(game: CurrentGameInfoDto, tracked: Set<string>): LiveGame {
     gameMode: game.gameMode,
     startedAt: DateTime.fromMillis(game.gameStartTime, { zone: 'utc' }).toISO()!,
     lengthSeconds: Math.max(game.gameLength, 0),
-    participants: game.participants.map((p) => ({
-      puuid: p.puuid,
-      teamId: p.teamId,
-      championId: p.championId,
-      spell1Id: p.spell1Id,
-      spell2Id: p.spell2Id,
-      riotId: p.riotId ?? null,
-      tracked: tracked.has(p.puuid),
-      rank: null,
-    })),
+    participants: game.participants.map((p) => {
+      const puuid = p.puuid || null
+      return {
+        puuid,
+        teamId: p.teamId,
+        championId: p.championId,
+        spell1Id: p.spell1Id,
+        spell2Id: p.spell2Id,
+        // Without a puuid the "riotId" Riot sends is the champion's name.
+        riotId: puuid ? (p.riotId ?? null) : null,
+        tracked: puuid !== null && tracked.has(puuid),
+        rank: null,
+      }
+    }),
   }
 }

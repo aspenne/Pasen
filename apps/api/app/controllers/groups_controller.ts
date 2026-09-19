@@ -110,11 +110,11 @@ export default class GroupsController {
 
     return {
       games: games
-        .filter((game) => game.participants.some((p) => byPuuid.has(p.puuid)))
+        .filter((game) => game.participants.some((p) => p.puuid !== null && byPuuid.has(p.puuid)))
         .map((game) => ({
           ...game,
           participants: game.participants.map((participant) => {
-            const account = byPuuid.get(participant.puuid)
+            const account = participant.puuid ? byPuuid.get(participant.puuid) : undefined
             return {
               ...participant,
               tracked: Boolean(account),

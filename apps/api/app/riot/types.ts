@@ -98,6 +98,11 @@ export type MatchDto = {
 }
 
 export type CurrentGameParticipantDto = {
+  /**
+   * Empty for players Riot will not identify in spectator data. Those arrive
+   * with the champion's name in `riotId`, which is not a Riot ID and must not
+   * be shown as one.
+   */
   puuid: string
   teamId: number
   championId: number

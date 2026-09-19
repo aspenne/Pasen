@@ -140,7 +140,8 @@ export type LiveRank = {
 }
 
 export type LiveParticipant = {
-  puuid: string
+  /** Null for a player Riot declines to identify in spectator data. */
+  puuid: string | null
   teamId: number
   championId: number
   spell1Id: number

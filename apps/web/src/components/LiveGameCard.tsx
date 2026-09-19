@@ -53,7 +53,7 @@ function PlayerRow({
   staticData?: StaticData
 }) {
   const crest = tierCrest(participant.rank?.tier)
-  const name = participant.displayName ?? participant.riotId ?? 'Unknown'
+  const name = participant.displayName ?? participant.riotId ?? 'Unknown player'
 
   return (
     <div
@@ -129,7 +129,7 @@ export function LiveGameCard({
             <div className="space-y-0.5">
               {team.map((participant) => (
                 <PlayerRow
-                  key={participant.puuid}
+                  key={participant.puuid ?? `${participant.teamId}:${participant.championId}`}
                   participant={participant}
                   staticData={staticData}
                 />
