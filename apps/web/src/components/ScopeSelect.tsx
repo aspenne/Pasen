@@ -31,7 +31,7 @@ export function ScopeSelect({
     <Select value={value} onValueChange={(next) => onChange(next as QueueScope)}>
       <SelectTrigger
         aria-label="Queue"
-        className="h-8 w-[168px] rounded-[10px] border-line bg-panel text-[13px]"
+        className="h-8 w-[150px] rounded-[10px] border-line bg-panel text-[13px] sm:w-[168px]"
       >
         <SelectValue />
       </SelectTrigger>
