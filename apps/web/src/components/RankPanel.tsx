@@ -5,8 +5,6 @@ type RankPanelProps = {
   ranks: MemberRank[]
   /** Ranked solo snapshots, used for the peak. Empty until the first capture. */
   points: LpPoint[]
-  /** Games we hold for this member under the queue currently being viewed. */
-  trackedGames: number
 }
 
 const QUEUE_NAMES: Record<string, string> = {
@@ -21,7 +19,7 @@ const QUEUE_NAMES: Record<string, string> = {
  * the LP and the crest, never alone - Master and Diamond are the same colour to
  * a protanope, so the tier's name is always written beside it.
  */
-export function RankPanel({ ranks, points, trackedGames }: RankPanelProps) {
+export function RankPanel({ ranks, points }: RankPanelProps) {
   if (ranks.length === 0) return null
 
   const peak = points.reduce<number | null>(
@@ -77,10 +75,6 @@ export function RankPanel({ ranks, points, trackedGames }: RankPanelProps) {
                   <dd className="tnum mt-1 text-[13px] text-ink-muted">{peak} LP</dd>
                 </div>
               )}
-              <div className="hidden md:block">
-                <dt className="text-[10px] uppercase tracking-[0.13em] text-ink-dim">Held here</dt>
-                <dd className="tnum mt-1 text-[13px] text-ink-muted">{trackedGames}</dd>
-              </div>
             </dl>
           </div>
         )

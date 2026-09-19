@@ -155,11 +155,7 @@ function MemberPage() {
 
         <TabsContent value="overview" className="space-y-4">
           {rosterEntry && (
-            <RankPanel
-              ranks={rosterEntry.ranks}
-              points={lp?.points ?? []}
-              trackedGames={rosterEntry.totals.games}
-            />
+            <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
           )}
 
           <div className="grid gap-4 lg:grid-cols-2">
