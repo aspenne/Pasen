@@ -38,7 +38,37 @@ function absoluteLp(point: LpPoint): number {
   return tier * 400 + division * 100 + point.leaguePoints
 }
 
-export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel: string }) {
+/**
+ * Narrows to a trailing window.
+ *
+ * A standing is recorded only when it moves, so a window with no rows in it is
+ * not an empty one - it is a rank that held. The last value before the window
+ * is carried to its edge, which is what makes "last 7 days" honest for someone
+ * who has not played in a fortnight.
+ */
+function withinWindow(points: LpPoint[], days: number | null): LpPoint[] {
+  if (days === null || points.length === 0) return points
+
+  const cutoff = Date.now() - days * 86_400_000
+  const inside = points.filter((point) => new Date(point.capturedAt).getTime() >= cutoff)
+  const before = points.filter((point) => new Date(point.capturedAt).getTime() < cutoff).at(-1)
+
+  if (inside.length === 0) return before ? [{ ...before, capturedAt: new Date(cutoff).toISOString() }] : []
+  return before ? [{ ...before, capturedAt: new Date(cutoff).toISOString() }, ...inside] : inside
+}
+
+export function LpCurve({
+  points: allPoints,
+  queueLabel,
+  days = null,
+}: {
+  points: LpPoint[]
+  queueLabel: string
+  /** Trailing window in days; null covers every snapshot held. */
+  days?: number | null
+}) {
+  const points = useMemo(() => withinWindow(allPoints, days), [allPoints, days])
+
   /*
    * A standing is written down only when it moves, so one row means the rank
    * has not changed since - not that we stopped looking. Carrying that single
@@ -150,19 +180,20 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
 
   const only = points.length === 1 ? points[0] : null
 
+  const day = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+
   return (
     <>
       <Chart option={option} height={200} ariaLabel={`Rank over time in ${queueLabel}`} />
-      {only && (
-        <p className="mt-1 text-center text-[11px] text-ink-dim">
-          Unchanged since{' '}
-          {new Date(only.capturedAt).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-          })}
-          , the only standing recorded so far.
-        </p>
-      )}
+      {/* Says what is actually on screen, rather than what the filter asked for. */}
+      <p className="mt-1 text-center text-[11px] text-ink-dim">
+        {only
+          ? `Unchanged since ${day(only.capturedAt)}, the only standing recorded so far.`
+          : `${day(points[0].capturedAt)} – ${day(points[points.length - 1].capturedAt)} · ${
+              points.length
+            } snapshots`}
+      </p>
     </>
   )
 }

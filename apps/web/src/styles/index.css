@@ -257,6 +257,10 @@
   left: -9%;
   width: 118%;
   height: 118%;
+  /* Tailwind's reset caps every image at max-width:100%, which clipped this
+     back to the card's own width while the -9% offset still applied - leaving
+     a bare strip down the right edge. */
+  max-width: none;
   object-fit: cover;
   /* Slightly above centre: faces sit in the upper half of a centred splash. */
   object-position: center 32%;

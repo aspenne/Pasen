@@ -1,5 +1,6 @@
 import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { PLATFORM_SHORT, SCOPE_LABELS, type Platform } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
@@ -32,11 +33,22 @@ import {
   timeAgo,
 } from '@/lib/format'
 
+/*
+ * "All" is every snapshot we hold, not a season: rank has only been recorded
+ * since we started polling, and Riot publishes no history to backfill it with.
+ */
+const LP_WINDOWS = [
+  { label: '7d', days: 7 },
+  { label: '30d', days: 30 },
+  { label: 'All', days: null },
+] as const
+
 export const Route = createFileRoute('/$group/players/$member')({ component: MemberPage })
 
 function MemberPage() {
   const { group, member: memberSlug } = useParams({ from: '/$group/players/$member' })
   const { scope } = useSearch({ from: '/$group' })
+  const [lpWindow, setLpWindow] = useState<number | null>(null)
 
   const { data: staticData } = useStaticData()
   const { data: profile, isPending } = useQuery({
@@ -189,6 +201,23 @@ function MemberPage() {
             <Card>
               <CardHeader className="flex-row items-baseline justify-between gap-3 space-y-0">
                 <CardTitle className="text-[13px]">Ranked solo over time</CardTitle>
+                <div className="flex gap-1 text-[11px]">
+                  {LP_WINDOWS.map((entry) => (
+                    <button
+                      key={entry.label}
+                      type="button"
+                      onClick={() => setLpWindow(entry.days)}
+                      aria-pressed={lpWindow === entry.days}
+                      className={`rounded-[4px] px-2 py-1 transition-colors ${
+                        lpWindow === entry.days
+                          ? 'bg-accent text-on-accent'
+                          : 'text-ink-muted hover:text-ink'
+                      }`}
+                    >
+                      {entry.label}
+                    </button>
+                  ))}
+                </div>
                 {ladder?.position && (
                   <div className="text-right">
                     <div className="display tnum text-[15px] font-semibold text-ink">
@@ -208,7 +237,7 @@ function MemberPage() {
                 )}
               </CardHeader>
               <CardContent>
-                <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" />
+                <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" days={lpWindow} />
               </CardContent>
             </Card>
 
