@@ -106,10 +106,43 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
   }, [points, queueLabel])
 
   if (points.length < 2) {
+    /*
+     * A single snapshot is not a curve, but it is still the player's standing -
+     * worth more on screen than an apology for what is missing. Rank is only
+     * recorded when it moves, so a player who has not touched this queue since
+     * we started tracking sits here legitimately.
+     */
+    const only = points[0]
+
     return (
-      <p className="rounded-[6px] border border-line bg-panel px-4 py-6 text-center text-[12px] text-ink-muted">
-        Not enough snapshots yet. The curve fills in as rank is polled each hour.
-      </p>
+      <div className="rounded-[6px] border border-line bg-panel px-4 py-5 text-center">
+        {only ? (
+          <>
+            <div
+              className="display text-[17px] font-semibold"
+              style={{ color: TIER_HEX[(only.tier ?? '').toUpperCase()] ?? CHART.accent }}
+            >
+              {only.tier
+                ? `${TIER_LABELS[TIERS.indexOf(only.tier)] ?? only.tier} ${
+                    apexPoint(only) ? '' : (only.rank ?? '')
+                  } · ${only.leaguePoints} LP`
+                : 'Unranked'}
+            </div>
+            <p className="mt-1.5 text-[12px] text-ink-muted">
+              One snapshot so far, taken{' '}
+              {new Date(only.capturedAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+              })}
+              . The curve starts once this moves.
+            </p>
+          </>
+        ) : (
+          <p className="text-[12px] text-ink-muted">
+            No standing captured yet in {queueLabel.toLowerCase()}. Rank is polled each hour.
+          </p>
+        )}
+      </div>
     )
   }
 

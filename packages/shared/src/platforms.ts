@@ -89,3 +89,28 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
   tw2: 'Taiwan',
   vn2: 'Vietnam',
 }
+
+/**
+ * The short server codes players actually use - "EUW", not "euw1" and not
+ * "Europe West". Spelled out rather than derived by trimming the trailing
+ * digit, which would turn eun1 into EUN instead of EUNE.
+ */
+export const PLATFORM_SHORT: Record<Platform, string> = {
+  br1: 'BR',
+  eun1: 'EUNE',
+  euw1: 'EUW',
+  jp1: 'JP',
+  kr: 'KR',
+  la1: 'LAN',
+  la2: 'LAS',
+  me1: 'ME',
+  na1: 'NA',
+  oc1: 'OCE',
+  ph2: 'PH',
+  ru: 'RU',
+  sg2: 'SG',
+  th2: 'TH',
+  tr1: 'TR',
+  tw2: 'TW',
+  vn2: 'VN',
+}

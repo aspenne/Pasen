@@ -1,6 +1,6 @@
 import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { SCOPE_LABELS } from '@pasen/shared'
+import { PLATFORM_SHORT, SCOPE_LABELS, type Platform } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { CountUp } from '@/components/CountUp'
@@ -171,7 +171,7 @@ function MemberPage() {
                     <div className="display tnum text-[15px] font-semibold text-ink">
                       #{ladder.position.toLocaleString('en-GB')}{' '}
                       <span className="text-[12px] text-ink-muted">
-                        {ladder.platform?.toUpperCase()}
+                        {PLATFORM_SHORT[ladder.platform as Platform] ?? ladder.platform}
                       </span>
                     </div>
                     {/*
