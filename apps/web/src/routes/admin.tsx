@@ -39,7 +39,7 @@ function Admin() {
     <div className="min-h-screen bg-ground text-ink">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <span className="text-[13px] tracking-[0.14em] text-gold">PASEN ADMIN</span>
+          <span className="text-[13px] tracking-[0.14em] text-accent">PASEN ADMIN</span>
           {session.data?.authenticated && <SignOut email={session.data.email} />}
         </div>
       </header>
@@ -175,7 +175,7 @@ function RiotKeyCard({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-[14px]">
-          <KeyRoundIcon className="size-4 text-gold" aria-hidden />
+          <KeyRoundIcon className="size-4 text-accent" aria-hidden />
           Riot API key
         </CardTitle>
         <CardDescription>
@@ -324,7 +324,7 @@ function AddAccountCard({ accounts }: { accounts: AdminAccount[] }) {
 
 const STATE_VARIANT: Record<AdminAccount['backfillState'], string> = {
   done: 'text-win',
-  running: 'text-gold',
+  running: 'text-accent',
   pending: 'text-ink-muted',
   failed: 'text-loss',
 }

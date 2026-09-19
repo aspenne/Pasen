@@ -41,7 +41,7 @@ export function PlayerBanner({
   const avatar = profileIcon(staticData?.version ?? null, profileIconId)
 
   return (
-    <section className="relative overflow-hidden rounded-[22px] bg-panel">
+    <section className="relative overflow-hidden rounded-[10px] bg-panel">
       {splash && (
         <img
           src={splash}
@@ -56,26 +56,26 @@ export function PlayerBanner({
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(100deg, #0F131BF2 0%, #161B26E6 34%, #161B26B3 62%, #161B2680 100%)',
+            'linear-gradient(100deg, #0A0C10F5 0%, #0A0C10E0 34%, #0A0C10A6 62%, #0A0C1066 100%)',
         }}
       />
 
       <div className="relative flex items-center gap-[18px] px-6 py-[26px]">
         <div
-          className="size-[74px] shrink-0 overflow-hidden rounded-[24px] bg-accent-soft"
+          className="size-[74px] shrink-0 overflow-hidden rounded-[8px] bg-accent-soft"
           style={{ border: `2px solid ${accent}` }}
         >
           {avatar && <img src={avatar} alt="" width={74} height={74} />}
         </div>
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[24px] tracking-[-0.015em] text-white">{name}</h1>
+          <h1 className="display truncate text-[26px] font-semibold text-white">{name}</h1>
           <p className="mt-1.5 truncate text-[14px] text-ink-warm">{subtitle}</p>
           {children}
         </div>
 
         <div className="shrink-0 text-right">
-          <div className="text-[32px] leading-none" style={{ color: accent }}>
+          <div className="display text-[34px] font-bold leading-none" style={{ color: accent }}>
             {figure}
           </div>
           <div className="mt-1.5 text-[13px] text-ink-warm">{figureLabel}</div>

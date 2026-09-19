@@ -8,8 +8,8 @@ export function ItemRow({ items, staticData }: { items: number[]; staticData?: S
       {items.slice(0, 7).map((itemId, index) => {
         const src = itemIcon(staticData?.version ?? null, itemId)
         return (
-          <div key={index} className="size-[26px] rounded-[9px] bg-line-strong/60">
-            {src && <img src={src} alt="" width={26} height={26} loading="lazy" className="rounded-[9px]" />}
+          <div key={index} className="size-[26px] rounded-[4px] bg-line-strong/60">
+            {src && <img src={src} alt="" width={26} height={26} loading="lazy" className="rounded-[4px]" />}
           </div>
         )
       })}

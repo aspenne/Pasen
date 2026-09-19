@@ -6,11 +6,12 @@
  * has to explain whether its orange means "good".
  */
 export const CHART = {
-  surface: '#161b26',
-  ink: '#f0f3f8',
-  inkMuted: '#8a94a6',
-  inkDim: '#6e7a8f',
-  line: '#1e2430',
+  /* The panel is translucent white over the ground; this is what it composites to. */
+  surface: '#14161b',
+  ink: '#eceef3',
+  inkMuted: '#a3aab6',
+  inkDim: '#6a7280',
+  line: 'rgba(255, 255, 255, 0.09)',
   accent: '#e8650c',
   win: '#4c8dff',
   loss: '#e5484d',
@@ -21,7 +22,7 @@ export const CHART = {
  * rainbow. The lowest step sits almost on the card so an empty day in the
  * activity calendar reads as absence rather than as a small value.
  */
-export const SEQUENTIAL_ACCENT = ['#1e2430', '#4a2e14', '#7a4718', '#b0591a', '#e8650c']
+export const SEQUENTIAL_ACCENT = ['#191c22', '#4a2e14', '#7a4718', '#b0591a', '#e8650c']
 
 /**
  * Diverging ramp for polarity, anchored on a neutral midpoint. Blue and red
@@ -29,7 +30,7 @@ export const SEQUENTIAL_ACCENT = ['#1e2430', '#4a2e14', '#7a4718', '#b0591a', '#
  * results wear the result colours. The pair measures deltaE 26.4 under
  * protanopia, so which side of even a duo sits on is never in doubt.
  */
-export const DIVERGING_WINRATE = ['#e5484d', '#7a3d47', '#2a3142', '#3a6ba8', '#4c8dff']
+export const DIVERGING_WINRATE = ['#e5484d', '#7a3d47', '#272b34', '#3a6ba8', '#4c8dff']
 
 /**
  * Thresholds for a win rate, centred on 50 rather than on the data, so the
@@ -51,7 +52,7 @@ export const WIN_RATE_PIECES = [
  */
 export const baseOptions = {
   backgroundColor: 'transparent',
-  textStyle: { color: CHART.inkMuted, fontSize: 12 },
+  textStyle: { color: CHART.inkMuted, fontSize: 12, fontFamily: 'Barlow, sans-serif' },
   /*
    * Explicit margins, not containLabel and not outerBounds. ECharts 6
    * deprecated containLabel, and outerBounds only clamps a grid still using its
@@ -59,12 +60,12 @@ export const baseOptions = {
    */
   grid: { left: 40, right: 16, top: 16, bottom: 28 },
   tooltip: {
-    backgroundColor: '#181e2a',
+    backgroundColor: '#151920',
     borderColor: CHART.line,
     borderWidth: 1,
     padding: [9, 12],
     textStyle: { color: CHART.ink, fontSize: 13 },
-    extraCssText: 'box-shadow: none; border-radius: 12px;',
+    extraCssText: 'box-shadow: none; border-radius: 6px;',
   },
 }
 

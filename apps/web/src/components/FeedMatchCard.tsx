@@ -62,7 +62,7 @@ export function FeedMatchCard({
   }[outcome]
 
   return (
-    <article className={`overflow-hidden rounded-[18px] ${surface}`}>
+    <article className={`overflow-hidden rounded-[8px] ${surface}`}>
       <header className="flex items-center justify-between gap-3 px-[18px] pt-3.5 text-[13px]">
         <div className="flex items-baseline gap-2.5">
           <span className="text-ink">{queueLabel(match.queueGroup)}</span>
@@ -157,7 +157,7 @@ export function FeedMatchCard({
       {open && (
         <div className="px-[18px] pb-3.5">
           {detailPending ? (
-            <Skeleton className="h-[184px] rounded-[14px]" />
+            <Skeleton className="h-[184px] rounded-[6px]" />
           ) : detail ? (
             <MatchScoreboard
               detail={detail}

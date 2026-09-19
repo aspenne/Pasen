@@ -34,7 +34,7 @@ export function MatchScoreboard({
       className={arena ? 'grid gap-2 sm:grid-cols-2' : 'grid gap-2 lg:grid-cols-2'}
     >
       {detail.sides.map((side) => (
-        <div key={side.id} className="min-w-0 rounded-[14px] bg-ground/40 p-3">
+        <div key={side.id} className="min-w-0 rounded-[6px] border border-line bg-ground/50 p-3">
           <div className="mb-2 flex items-baseline justify-between text-[12px]">
             <span className={side.win ? 'text-win' : 'text-loss'}>
               {sideLabel(side, arena)}

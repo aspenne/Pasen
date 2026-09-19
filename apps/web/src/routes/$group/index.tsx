@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { memberColor } from '@/lib/format'
+import { memberColor, rankLabel, tierColor, tierCrest } from '@/lib/format'
 
 export const Route = createFileRoute('/$group/')({ component: Dashboard })
 
@@ -197,16 +197,27 @@ function Dashboard() {
             {overview.members.map((member, index) => {
               const solo = member.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
               return (
-                <div key={member.slug} className="flex items-center gap-3 bg-panel px-4 py-3">
+                <div
+                  key={member.slug}
+                  className="flex items-center gap-3 rounded-[6px] border border-line bg-panel px-3.5 py-3"
+                >
                   <span
                     aria-hidden
                     className="h-8 w-0.5 shrink-0 rounded-full"
                     style={{ backgroundColor: memberColor(member.accentColor, index) }}
                   />
+                  {solo?.tier && tierCrest(solo.tier) && (
+                    <img src={tierCrest(solo.tier)!} alt="" aria-hidden width={26} height={26} className="shrink-0" />
+                  )}
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] text-ink">{member.displayName}</div>
-                    <div className="truncate text-[11px] text-ink-muted">
-                      {solo ? `${solo.tier} ${solo.rank} · ${solo.leaguePoints} LP` : 'Unranked'}
+                    {/* Tinted by tier, but the tier is written out - the colours
+                        alone do not separate Master from Diamond. */}
+                    <div
+                      className="truncate text-[11px]"
+                      style={{ color: solo ? tierColor(solo.tier) : undefined }}
+                    >
+                      {solo ? rankLabel(solo) : 'Unranked'}
                     </div>
                   </div>
                   <div className="text-right">

@@ -63,12 +63,12 @@ function Insights() {
     <div className="space-y-8">
       {/* Filters sit in one row above what they filter. */}
       <Tabs value={period} onValueChange={(value) => setPeriod(value as Leaderboards['period'])}>
-        <TabsList className="h-auto gap-1.5 rounded-[14px] bg-panel p-1.5">
+        <TabsList className="h-auto gap-1.5 rounded-[6px] bg-panel p-1.5">
           {PERIODS.map((entry) => (
             <TabsTrigger
               key={entry.key}
               value={entry.key}
-              className="rounded-[10px] px-4 py-1.5 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
+              className="rounded-[4px] px-4 py-1.5 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
             >
               {entry.label}
             </TabsTrigger>
@@ -93,9 +93,9 @@ function Insights() {
             {boards?.titles.map((title) => (
               <div
                 key={title.key}
-                className="rounded-[18px] px-[17px] py-[15px]"
+                className="rounded-[8px] px-[17px] py-[15px]"
                 style={{
-                  background: 'linear-gradient(120deg, #2A1C10, #171B24 70%)',
+                  background: 'linear-gradient(120deg, #2a1c10, #101318 70%)',
                   borderLeft: `3px solid ${colorFor(title.memberSlug)}`,
                 }}
               >
@@ -235,7 +235,7 @@ function Insights() {
         <section>
           <h2 className="text-[13px] text-ink">Champion pool</h2>
           <p className="mb-2 text-[11px] text-ink-muted">
-            <span className="tnum text-gold">{pool.played}</span> of {pool.available} champions
+            <span className="tnum text-accent">{pool.played}</span> of {pool.available} champions
             played between us · {pool.untouched.length} never picked
           </p>
 

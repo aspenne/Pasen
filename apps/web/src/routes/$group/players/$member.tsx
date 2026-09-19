@@ -6,6 +6,7 @@ import { ChampionIcon } from '@/components/ChampionIcon'
 import { CountUp } from '@/components/CountUp'
 import { ItemRow } from '@/components/ItemRow'
 import { PlayerBanner } from '@/components/PlayerBanner'
+import { RankPanel } from '@/components/RankPanel'
 import { Reveal } from '@/components/Reveal'
 import { SortableHead } from '@/components/SortableHead'
 import { StatTile } from '@/components/StatTile'
@@ -68,7 +69,7 @@ function MemberPage() {
   return (
     <div className="space-y-6">
       {isPending ? (
-        <Skeleton className="h-[126px] rounded-[22px]" />
+        <Skeleton className="h-[126px] rounded-[10px]" />
       ) : (
         <PlayerBanner
           name={profile?.displayName ?? memberSlug}
@@ -91,7 +92,7 @@ function MemberPage() {
       )}
 
       {syncing && (
-        <p className="border-l-2 border-gold bg-panel px-4 py-2 text-[12px] text-ink-muted">
+        <p className="border-l-2 border-accent bg-panel px-4 py-2 text-[12px] text-ink-muted">
           Still pulling history from Riot. Numbers below will keep growing.
         </p>
       )}
@@ -120,7 +121,7 @@ function MemberPage() {
       </Reveal>
 
       <Tabs defaultValue="overview">
-        <TabsList className="h-auto w-full gap-1.5 rounded-[14px] bg-panel p-1.5">
+        <TabsList className="h-auto w-full gap-1.5 rounded-[6px] bg-panel p-1.5">
           {[
             ['overview', 'Overview'],
             ['champions', 'Champions'],
@@ -129,7 +130,7 @@ function MemberPage() {
             <TabsTrigger
               key={value}
               value={value}
-              className="flex-1 rounded-[10px] py-2 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
+              className="flex-1 rounded-[4px] py-2 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
             >
               {label}
             </TabsTrigger>
@@ -137,24 +138,12 @@ function MemberPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {rosterEntry && rosterEntry.ranks.length > 0 && (
-            <div className="grid gap-2 sm:grid-cols-3">
-              {rosterEntry.ranks.map((rank) => (
-                <Card key={rank.queueType}>
-                  <CardContent className="px-4 py-3">
-                    <div className="text-[10px] uppercase tracking-[0.08em] text-ink-dim">
-                      {rank.queueType.replace(/_/g, ' ').toLowerCase()}
-                    </div>
-                    <div className="mt-0.5 text-[15px] text-ink">
-                      {rank.tier} {rank.rank}
-                    </div>
-                    <div className="tnum text-[11px] text-ink-muted">
-                      {rank.leaguePoints} LP · {rank.wins}W {rank.losses}L
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+          {rosterEntry && (
+            <RankPanel
+              ranks={rosterEntry.ranks}
+              points={lp?.points ?? []}
+              trackedGames={rosterEntry.totals.games}
+            />
           )}
 
           <div className="grid gap-4 lg:grid-cols-2">
@@ -306,10 +295,28 @@ function ChampionTable({
                   </div>
                 </TableCell>
                 <TableCell className="tnum text-right text-ink-muted">{entry.games}</TableCell>
-                <TableCell
-                  className={`tnum text-right ${entry.winRate >= 50 ? 'text-win' : 'text-loss'}`}
-                >
-                  {entry.winRate}%
+                <TableCell>
+                  {/* A win rate is a proportion, so the bar carries it and the
+                      number only has to be read when you want the decimal. */}
+                  <div className="flex items-center justify-end gap-2.5">
+                    <div
+                      className="hidden h-1 w-16 overflow-hidden rounded-[2px] bg-line-strong sm:block"
+                      role="img"
+                      aria-label={`${entry.winRate}% win rate`}
+                    >
+                      <div
+                        className={`h-full ${entry.winRate >= 50 ? 'bg-win' : 'bg-loss'}`}
+                        style={{ width: `${Math.min(entry.winRate, 100)}%` }}
+                      />
+                    </div>
+                    <span
+                      className={`tnum w-12 text-right ${
+                        entry.winRate >= 50 ? 'text-win' : 'text-loss'
+                      }`}
+                    >
+                      {entry.winRate}%
+                    </span>
+                  </div>
                 </TableCell>
                 <TableCell className="tnum text-right text-ink-muted">{entry.kda}</TableCell>
                 <TableCell className="tnum text-right text-ink-muted">{entry.averageCs}</TableCell>
