@@ -59,26 +59,6 @@
   --color-loss: #e5484d;
   --color-loss-surface: #2a1a1e;
 
-  /*
-   * Ranked tiers. These are identities, not a categorical series, and they fail
-   * every adjacency check on purpose: Iron is grey because Iron is grey, and
-   * Master against Diamond measures deltaE 0.3 under protanopia.
-   *
-   * So a tier colour never carries the identity by itself. The tier is always
-   * written beside it and the crest sits next to that. Never use this set to
-   * colour a chart - members have their own validated palette below.
-   */
-  --color-tier-iron: #8c8c8c;
-  --color-tier-bronze: #bd7b4a;
-  --color-tier-silver: #a8b4c0;
-  --color-tier-gold: #e0b352;
-  --color-tier-platinum: #3fc0c4;
-  --color-tier-emerald: #35c46b;
-  --color-tier-diamond: #6aa9ff;
-  --color-tier-master: #c89bff;
-  --color-tier-grandmaster: #e5646a;
-  --color-tier-challenger: #f0cb6b;
-  --color-tier-unranked: #6a7280;
 
   /*
    * Member identity. One hue per person, held across every screen and chart.
@@ -108,6 +88,33 @@
   --radius-card: 8px;
   --radius-tile: 6px;
   --radius-chip: 4px;
+}
+
+/*
+ * Ranked tiers. Deliberately outside @theme: Tailwind emits only the theme
+ * variables some generated utility references, and these are read exclusively
+ * through var() in inline styles built in TypeScript - invisible to it, so
+ * declared here where they always survive.
+ *
+ * These are identities, not a categorical series, and they fail every adjacency
+ * check on purpose: Iron is grey because Iron is grey, and Master against
+ * Diamond measures deltaE 0.3 under protanopia. So a tier colour never carries
+ * the identity by itself - the tier is written beside it and the crest sits
+ * next to that. Never use this set to colour a chart; members have their own
+ * validated palette.
+ */
+:root {
+  --color-tier-iron: #8c8c8c;
+  --color-tier-bronze: #bd7b4a;
+  --color-tier-silver: #a8b4c0;
+  --color-tier-gold: #e0b352;
+  --color-tier-platinum: #3fc0c4;
+  --color-tier-emerald: #35c46b;
+  --color-tier-diamond: #6aa9ff;
+  --color-tier-master: #c89bff;
+  --color-tier-grandmaster: #e5646a;
+  --color-tier-challenger: #f0cb6b;
+  --color-tier-unranked: #6a7280;
 }
 
 /* What shadcn components read. Every value points back at the palette above. */
