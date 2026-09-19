@@ -9,6 +9,7 @@ import { LadderService } from '#stats/ladder_service'
 import { riot } from '#riot/service'
 import type { RedisLike } from '#riot/redis'
 import { PlayerStatsService } from '#stats/player_stats_service'
+import { ProfileCardService } from '#stats/profile_card_service'
 import { parseScope } from '#stats/scope'
 
 const historyQuery = vine.compile(
@@ -87,6 +88,12 @@ export default class MembersController {
     }
 
     return best ?? { position: null }
+  }
+
+  async card({ params, request }: HttpContext) {
+    const member = await Member.findByOrFail('slug', params.slug)
+    const query = await poolQuery.validate(request.qs())
+    return new ProfileCardService().forMember(member, parseScope(query.scope))
   }
 
   async lpHistory({ params, request }: HttpContext) {

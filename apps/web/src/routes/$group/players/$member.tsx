@@ -6,6 +6,7 @@ import { ChampionIcon } from '@/components/ChampionIcon'
 import { CountUp } from '@/components/CountUp'
 import { ItemRow } from '@/components/ItemRow'
 import { PlayerBanner } from '@/components/PlayerBanner'
+import { ProfileCard } from '@/components/ProfileCard'
 import { RankPanel } from '@/components/RankPanel'
 import { Reveal } from '@/components/Reveal'
 import { SortableHead } from '@/components/SortableHead'
@@ -54,6 +55,10 @@ function MemberPage() {
     queryKey: ['lp', memberSlug],
     queryFn: () => api.lpHistory(memberSlug),
   })
+  const { data: cardStats } = useQuery({
+    queryKey: ['profile-card', memberSlug, scope],
+    queryFn: () => api.profileCard(memberSlug, { scope }),
+  })
   const { data: ladder } = useQuery({
     queryKey: ['ladder', memberSlug],
     queryFn: () => api.ladder(memberSlug),
@@ -81,6 +86,12 @@ function MemberPage() {
   const account = profile?.accounts[0]
   const solo = rosterEntry?.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
   const syncing = profile?.accounts.some((entry) => entry.backfillState !== 'done')
+  // Highest standing across every snapshot we hold, which is all the history
+  // that exists - Riot publishes none retroactively.
+  const peakLp = (lp?.points ?? []).reduce<number | null>(
+    (best, point) => (best === null || point.leaguePoints > best ? point.leaguePoints : best),
+    null
+  )
 
   return (
     <div className="space-y-6">
@@ -158,7 +169,22 @@ function MemberPage() {
             <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
           )}
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+            {totals && cardStats && (
+              <ProfileCard
+                name={profile?.displayName ?? memberSlug}
+                tagLine={account?.riotId.split('#')[1] ?? null}
+                rank={solo ?? null}
+                ladder={ladder}
+                peakLp={peakLp}
+                totals={totals}
+                card={cardStats}
+                pool={pool}
+                staticData={staticData}
+              />
+            )}
+
+            <div className="grid content-start gap-4">
             <Card>
               <CardHeader className="flex-row items-baseline justify-between gap-3 space-y-0">
                 <CardTitle className="text-[13px]">Ranked solo over time</CardTitle>
@@ -199,6 +225,7 @@ function MemberPage() {
                 )}
               </CardContent>
             </Card>
+            </div>
           </div>
         </TabsContent>
 

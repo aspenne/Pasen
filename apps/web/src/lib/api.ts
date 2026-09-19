@@ -350,6 +350,16 @@ export type LadderStanding = {
   platform?: string
 }
 
+export type ProfileCardStats = {
+  mainRole: string | null
+  roleShare: number | null
+  hoursPlayed: number
+  killParticipation: number | null
+  bestStreak: number
+  bestMultikill: { kind: 'penta' | 'quadra' | 'triple' | 'double'; count: number } | null
+  bestChampion: { championName: string; games: number; winRate: number } | null
+}
+
 export type AdminAccount = {
   id: number
   riotId: string
@@ -407,6 +417,8 @@ export const api = {
   groupChampions: (slug: string, params: Scoped = {}) =>
     apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions${searchOf(params)}`),
   ladder: (slug: string) => apiFetch<LadderStanding>(`/api/members/${slug}/ladder`),
+  profileCard: (slug: string, params: Scoped = {}) =>
+    apiFetch<ProfileCardStats>(`/api/members/${slug}/card${searchOf(params)}`),
   match: (slug: string, matchId: string) =>
     apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
   activity: (slug: string, params: Scoped = {}) =>
