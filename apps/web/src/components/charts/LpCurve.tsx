@@ -39,15 +39,38 @@ function absoluteLp(point: LpPoint): number {
 }
 
 export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel: string }) {
+  /*
+   * A standing is written down only when it moves, so one row means the rank
+   * has not changed since - not that we stopped looking. Carrying that single
+   * value forward to now draws the flat line that is the truth, rather than
+   * withholding the chart until something happens.
+   */
+  const plotted = useMemo<LpPoint[]>(
+    () =>
+      points.length === 1
+        ? [points[0], { ...points[0], capturedAt: new Date().toISOString() }]
+        : points,
+    [points]
+  )
+
   const option = useMemo<EChartsOption>(() => {
     // One tint for the whole curve: where the player stands now.
-    const color = TIER_HEX[(points.at(-1)?.tier ?? '').toUpperCase()] ?? CHART.accent
-    const apex = points.length > 0 && points.every(apexPoint)
+    const color = TIER_HEX[(plotted.at(-1)?.tier ?? '').toUpperCase()] ?? CHART.accent
+    const apex = plotted.length > 0 && plotted.every(apexPoint)
 
-    const data = points.map((point) => [
-      point.capturedAt,
-      apex ? point.leaguePoints : absoluteLp(point),
-    ])
+    const values = plotted.map((point) => (apex ? point.leaguePoints : absoluteLp(point)))
+    const data = plotted.map((point, index) => [point.capturedAt, values[index]])
+
+    /*
+     * An unmoved rank gives every point the same value, and an auto-scaled axis
+     * collapses to a single line with nothing around it. Padding the range puts
+     * the flat line where it belongs: in the middle.
+     */
+    const flat = Math.min(...values) === Math.max(...values)
+    const padding = apex ? 25 : 60
+    const flatBounds = flat
+      ? { min: Math.max(0, values[0] - padding), max: values[0] + padding }
+      : {}
 
     return {
       ...baseOptions,
@@ -57,7 +80,7 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
         trigger: 'axis',
         axisPointer: { type: 'line', lineStyle: { color: CHART.line } },
         formatter: (params: any) => {
-          const point = points[params[0].dataIndex]
+          const point = plotted[params[0].dataIndex]
           const when = new Date(point.capturedAt).toLocaleDateString('en-GB')
           const tier = point.tier
             ? TIER_LABELS[TIERS.indexOf(point.tier)] ?? point.tier
@@ -73,6 +96,7 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
         scale: true,
         // Below Master a gridline every 400 lands exactly on a tier boundary.
         ...(apex ? {} : { interval: 400 }),
+        ...flatBounds,
         axisLabel: {
           ...axisStyle.axisLabel,
           formatter: (value: number) =>
@@ -87,7 +111,7 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
           smooth: false,
           symbol: 'circle',
           symbolSize: 7,
-          showSymbol: points.length <= 60,
+          showSymbol: plotted.length <= 60,
           lineStyle: { width: 2, color },
           itemStyle: { color },
           areaStyle: {
@@ -103,48 +127,31 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
         },
       ],
     }
-  }, [points, queueLabel])
+  }, [plotted, queueLabel])
 
-  if (points.length < 2) {
-    /*
-     * A single snapshot is not a curve, but it is still the player's standing -
-     * worth more on screen than an apology for what is missing. Rank is only
-     * recorded when it moves, so a player who has not touched this queue since
-     * we started tracking sits here legitimately.
-     */
-    const only = points[0]
-
+  if (points.length === 0) {
     return (
-      <div className="rounded-[6px] border border-line bg-panel px-4 py-5 text-center">
-        {only ? (
-          <>
-            <div
-              className="display text-[17px] font-semibold"
-              style={{ color: TIER_HEX[(only.tier ?? '').toUpperCase()] ?? CHART.accent }}
-            >
-              {only.tier
-                ? `${TIER_LABELS[TIERS.indexOf(only.tier)] ?? only.tier} ${
-                    apexPoint(only) ? '' : (only.rank ?? '')
-                  } · ${only.leaguePoints} LP`
-                : 'Unranked'}
-            </div>
-            <p className="mt-1.5 text-[12px] text-ink-muted">
-              One snapshot so far, taken{' '}
-              {new Date(only.capturedAt).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-              })}
-              . The curve starts once this moves.
-            </p>
-          </>
-        ) : (
-          <p className="text-[12px] text-ink-muted">
-            No standing captured yet in {queueLabel.toLowerCase()}. Rank is polled each hour.
-          </p>
-        )}
-      </div>
+      <p className="rounded-[6px] border border-line bg-panel px-4 py-6 text-center text-[12px] text-ink-muted">
+        No standing captured yet in {queueLabel.toLowerCase()}. Rank is polled each hour.
+      </p>
     )
   }
 
-  return <Chart option={option} height={200} ariaLabel={`Rank over time in ${queueLabel}`} />
+  const only = points.length === 1 ? points[0] : null
+
+  return (
+    <>
+      <Chart option={option} height={200} ariaLabel={`Rank over time in ${queueLabel}`} />
+      {only && (
+        <p className="mt-1 text-center text-[11px] text-ink-dim">
+          Unchanged since{' '}
+          {new Date(only.capturedAt).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+          })}
+          , the only standing recorded so far.
+        </p>
+      )}
+    </>
+  )
 }
