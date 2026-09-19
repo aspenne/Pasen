@@ -46,7 +46,7 @@ function absoluteLp(point: LpPoint): number {
  * is carried to its edge, which is what makes "last 7 days" honest for someone
  * who has not played in a fortnight.
  */
-function withinWindow(points: LpPoint[], days: number | null): LpPoint[] {
+export function withinWindow(points: LpPoint[], days: number | null): LpPoint[] {
   if (days === null || points.length === 0) return points
 
   const cutoff = Date.now() - days * 86_400_000
