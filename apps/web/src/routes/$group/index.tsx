@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react'
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { PlayerBanner } from '@/components/PlayerBanner'
+import { CountUp } from '@/components/CountUp'
+import { Reveal } from '@/components/Reveal'
 import { StatTile } from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -88,7 +90,7 @@ function Dashboard() {
       <PlayerBanner
         name={overview?.name ?? group}
         subtitle={`${overview?.members.length ?? 0} members · ${totalGames} games together`}
-        figure={totals?.games ? String(totals.games) : '0'}
+        figure={<CountUp value={totals?.games ?? 0} />}
         figureLabel={selected === today ? 'games today' : `games on ${selected}`}
         profileIconId={null}
         championId={topChampionId}
@@ -144,17 +146,17 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <StatTile label="Games" value={totals?.games ?? 0} />
-          <StatTile label="Wins" value={totals?.wins ?? 0} tone="win" />
-          <StatTile label="Losses" value={totals?.losses ?? 0} tone="loss" />
+        <Reveal token={`${selected}:${scope}`} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <StatTile label="Games" value={<CountUp value={totals?.games ?? 0} />} />
+          <StatTile label="Wins" value={<CountUp value={totals?.wins ?? 0} />} tone="win" />
+          <StatTile label="Losses" value={<CountUp value={totals?.losses ?? 0} />} tone="loss" />
           <StatTile
             label="Champions"
-            value={totals?.championsPlayed ?? 0}
+            value={<CountUp value={totals?.championsPlayed ?? 0} />}
             detail={bestKda ? `best KDA ${bestKda.ratio.toFixed(2)} · ${bestKda.name}` : undefined}
             tone="accent"
           />
-        </div>
+        </Reveal>
       </section>
 
       <section className="space-y-2">
@@ -173,23 +175,25 @@ function Dashboard() {
           </p>
         )}
 
-        {feed?.matches.map((match) => (
-          <FeedMatchCard
-            key={match.matchId}
-            match={match}
-            staticData={staticData}
-            groupSlug={group}
-            timezone={timezone}
-            colorFor={colorFor}
-            scope={scope}
-          />
-        ))}
+        <Reveal token={`${selected}:${scope}`} className="space-y-2">
+          {feed?.matches.map((match) => (
+            <FeedMatchCard
+              key={match.matchId}
+              match={match}
+              staticData={staticData}
+              groupSlug={group}
+              timezone={timezone}
+              colorFor={colorFor}
+              scope={scope}
+            />
+          ))}
+        </Reveal>
       </section>
 
       {overview && overview.members.length > 0 && (
         <section>
           <h2 className="mb-2 text-[13px] text-ink">Roster</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+          <Reveal token={scope} className="grid gap-2 sm:grid-cols-2">
             {overview.members.map((member, index) => {
               const solo = member.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
               return (
@@ -214,7 +218,7 @@ function Dashboard() {
                 </div>
               )
             })}
-          </div>
+          </Reveal>
         </section>
       )}
 

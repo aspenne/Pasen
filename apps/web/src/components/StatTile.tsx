@@ -1,6 +1,8 @@
+import type { ReactNode } from 'react'
+
 type StatTileProps = {
   label: string
-  value: string | number
+  value: ReactNode
   /** Optional qualifier under the value: "of 173", "2W 2L". */
   detail?: string
   /** Tints the value only. Labels and details always wear text tokens. */

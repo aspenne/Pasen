@@ -222,6 +222,9 @@ export type MemberTotals = {
   games: number
   wins: number
   winRate: number
+  kills: number
+  deaths: number
+  assists: number
   kda: number
   csPerMinute: number
   visionPerGame: number

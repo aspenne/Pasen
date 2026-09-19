@@ -6,7 +6,7 @@ import type { StaticData } from '@/lib/api'
 type PlayerBannerProps = {
   name: string
   subtitle: string
-  figure: string
+  figure: ReactNode
   figureLabel: string
   profileIconId: number | null
   /** Their most played champion; its splash art becomes the backdrop. */

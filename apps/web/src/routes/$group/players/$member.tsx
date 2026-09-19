@@ -3,8 +3,10 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { SCOPE_LABELS } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
+import { CountUp } from '@/components/CountUp'
 import { ItemRow } from '@/components/ItemRow'
 import { PlayerBanner } from '@/components/PlayerBanner'
+import { Reveal } from '@/components/Reveal'
 import { SortableHead } from '@/components/SortableHead'
 import { StatTile } from '@/components/StatTile'
 import { ChampionBars } from '@/components/charts/ChampionBars'
@@ -77,7 +79,9 @@ function MemberPage() {
           ]
             .filter(Boolean)
             .join(' · ')}
-          figure={rosterEntry ? `${rosterEntry.totals.winRate}%` : '—'}
+          figure={
+            rosterEntry ? <CountUp value={rosterEntry.totals.winRate} decimals={1} suffix="%" /> : '—'
+          }
           figureLabel={`${rosterEntry?.totals.games ?? 0} games · ${SCOPE_LABELS[scope]}`}
           profileIconId={account?.profileIconId ?? null}
           championId={pool?.entries[0]?.championId}
@@ -92,16 +96,19 @@ function MemberPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <Reveal token={scope} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile
           label="KDA"
-          value={totals ? totals.kda.toFixed(2) : '—'}
+          value={totals ? <CountUp value={totals.kda} decimals={2} /> : '—'}
           detail={totals ? `${totals.kills}/${totals.deaths}/${totals.assists}` : undefined}
         />
-        <StatTile label="CS per minute" value={totals ? totals.csPerMinute.toFixed(1) : '—'} />
+        <StatTile
+          label="CS per minute"
+          value={totals ? <CountUp value={totals.csPerMinute} decimals={1} /> : '—'}
+        />
         <StatTile
           label="Champion pool"
-          value={pool ? pool.played : '—'}
+          value={pool ? <CountUp value={pool.played} /> : '—'}
           detail={pool ? `of ${pool.available}` : undefined}
           tone="accent"
         />
@@ -110,7 +117,7 @@ function MemberPage() {
           value={pool?.entries[0]?.championName ?? '—'}
           detail={pool?.entries[0] ? `${pool.entries[0].games} games` : undefined}
         />
-      </div>
+      </Reveal>
 
       <Tabs defaultValue="overview">
         <TabsList className="h-auto w-full gap-1.5 rounded-[14px] bg-panel p-1.5">
