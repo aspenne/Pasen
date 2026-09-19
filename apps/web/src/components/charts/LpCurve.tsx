@@ -67,10 +67,21 @@ export function LpCurve({ points, queueLabel }: { points: LpPoint[]; queueLabel:
      * the flat line where it belongs: in the middle.
      */
     const flat = Math.min(...values) === Math.max(...values)
-    const padding = apex ? 25 : 60
-    const flatBounds = flat
-      ? { min: Math.max(0, values[0] - padding), max: values[0] + padding }
-      : {}
+    let flatBounds = {}
+    if (flat) {
+      flatBounds = apex
+        ? { min: Math.max(0, values[0] - 25), max: values[0] + 25 }
+        : /*
+           * Below Master the gridlines are the tier boundaries, 400 apart. A
+           * narrow window around the value would contain none of them and leave
+           * the axis blank, so the range becomes the tier the player sits in -
+           * which also shows how far into it they are.
+           */
+          {
+            min: Math.floor(values[0] / 400) * 400,
+            max: Math.floor(values[0] / 400) * 400 + 400,
+          }
+    }
 
     return {
       ...baseOptions,
