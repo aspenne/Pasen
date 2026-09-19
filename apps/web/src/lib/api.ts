@@ -153,6 +153,47 @@ export type LiveGame = {
   participants: LiveParticipant[]
 }
 
+export type MatchDetailPlayer = {
+  puuid: string
+  riotId: string | null
+  championId: number
+  championName: string
+  teamPosition: string | null
+  win: boolean
+  kills: number
+  deaths: number
+  assists: number
+  cs: number
+  goldEarned: number
+  damageDealt: number
+  visionScore: number
+  champLevel: number
+  items: number[]
+  summonerSpells: [number, number]
+  memberSlug: string | null
+  displayName: string | null
+  accentColor: string | null
+}
+
+export type MatchDetailSide = {
+  id: number
+  win: boolean
+  placement: number | null
+  kills: number
+  goldEarned: number
+  players: MatchDetailPlayer[]
+}
+
+export type MatchDetail = {
+  matchId: string
+  queueId: number
+  queueGroup: QueueGroup
+  gameMode: string
+  gameCreation: string
+  gameDuration: number
+  sides: MatchDetailSide[]
+}
+
 export type ChampionPoolEntry = {
   championId: number
   championName: string
@@ -348,6 +389,8 @@ export const api = {
     apiFetch<Leaderboards>(`/api/groups/${slug}/leaderboards${searchOf(params)}`),
   groupChampions: (slug: string, params: Scoped = {}) =>
     apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions${searchOf(params)}`),
+  match: (slug: string, matchId: string) =>
+    apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
   activity: (slug: string, params: Scoped = {}) =>
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 

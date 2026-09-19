@@ -1,8 +1,13 @@
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
+import { ChevronDown } from 'lucide-react'
+import { useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
-import type { FeedMatch, StaticData } from '@/lib/api'
+import { MatchScoreboard } from '@/components/MatchScoreboard'
+import { Skeleton } from '@/components/ui/skeleton'
+import { api, type FeedMatch, type StaticData } from '@/lib/api'
 import type { QueueScope } from '@pasen/shared'
 
 import { clockTime, duration, kda, positionLabel, queueLabel } from '@/lib/format'
@@ -34,6 +39,19 @@ export function FeedMatchCard({
   colorFor,
   scope,
 }: FeedMatchCardProps) {
+  const [open, setOpen] = useState(false)
+
+  /*
+   * A finished match never changes, so it is fetched once and kept: reopening
+   * a card costs nothing, and collapsing it does not throw the answer away.
+   */
+  const { data: detail, isPending: detailPending } = useQuery({
+    queryKey: ['match', groupSlug, match.matchId],
+    queryFn: () => api.match(groupSlug, match.matchId),
+    enabled: open,
+    staleTime: Number.POSITIVE_INFINITY,
+  })
+
   const results = new Set(match.members.map((member) => member.win))
   const outcome = results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
 
@@ -122,6 +140,36 @@ export function FeedMatchCard({
           </div>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-center gap-1.5 border-t border-white/5 py-2 text-[12px] text-ink-dim transition-colors hover:text-ink"
+      >
+        {open ? 'Hide scoreboard' : 'Who else was in this game'}
+        <ChevronDown
+          size={13}
+          className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {open && (
+        <div className="px-[18px] pb-3.5">
+          {detailPending ? (
+            <Skeleton className="h-[184px] rounded-[14px]" />
+          ) : detail ? (
+            <MatchScoreboard
+              detail={detail}
+              staticData={staticData}
+              groupSlug={groupSlug}
+              scope={scope}
+            />
+          ) : (
+            <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
+          )}
+        </div>
+      )}
     </article>
   )
 }

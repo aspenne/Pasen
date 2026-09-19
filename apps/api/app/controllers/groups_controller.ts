@@ -11,6 +11,7 @@ import { DuoStatsService } from '#stats/duo_stats_service'
 import { GroupChampionService } from '#stats/group_champion_service'
 import { GroupService } from '#stats/group_service'
 import { LeaderboardService } from '#stats/leaderboard_service'
+import { MatchDetailService } from '#stats/match_detail_service'
 import { parseScope } from '#stats/scope'
 import { LiveGameService } from '#ingestion/live_game_service'
 import { riot } from '#riot/service'
@@ -54,6 +55,14 @@ export default class GroupsController {
       date: query.date,
       scope: parseScope(query.scope),
     })
+  }
+
+  async match({ params, response }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    const detail = await new MatchDetailService().forMatch(group, params.matchId)
+
+    if (!detail) return response.notFound({ error: 'match not found' })
+    return detail
   }
 
   async duos({ params, request }: HttpContext) {

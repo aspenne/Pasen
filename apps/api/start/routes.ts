@@ -25,6 +25,7 @@ router
     router.get('/groups/:slug/leaderboards', [GroupsController, 'leaderboards'])
     router.get('/groups/:slug/champions', [GroupsController, 'champions'])
     router.get('/groups/:slug/activity', [GroupsController, 'activity'])
+    router.get('/groups/:slug/matches/:matchId', [GroupsController, 'match'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])
