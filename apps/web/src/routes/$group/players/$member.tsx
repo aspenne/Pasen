@@ -174,11 +174,13 @@ function MemberPage() {
                         {ladder.platform?.toUpperCase()}
                       </span>
                     </div>
-                    {ladder.apexPopulation && (
-                      <div className="tnum text-[11px] text-ink-dim">
-                        of {ladder.apexPopulation.toLocaleString('en-GB')} in Master+
-                      </div>
-                    )}
+                    {/*
+                      The position is exact and matches Riot's own client. The
+                      apex population is not stated: the three leagues come back
+                      as 300 + 700 + exactly 10 000, which reads as Riot
+                      truncating the Master league rather than as its real size.
+                    */}
+                    <div className="text-[11px] text-ink-dim">Master+ ladder</div>
                   </div>
                 )}
               </CardHeader>
