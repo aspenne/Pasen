@@ -1,5 +1,6 @@
 import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { SCOPE_LABELS } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
@@ -77,7 +78,7 @@ function MemberPage() {
             .filter(Boolean)
             .join(' · ')}
           figure={rosterEntry ? `${rosterEntry.totals.winRate}%` : '—'}
-          figureLabel={`${rosterEntry?.totals.games ?? 0} games`}
+          figureLabel={`${rosterEntry?.totals.games ?? 0} games · ${SCOPE_LABELS[scope]}`}
           profileIconId={account?.profileIconId ?? null}
           championId={pool?.entries[0]?.championId}
           staticData={staticData}
@@ -92,12 +93,12 @@ function MemberPage() {
       )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Games" value={rosterEntry?.totals.games ?? 0} />
         <StatTile
-          label="Win rate"
-          value={rosterEntry ? `${rosterEntry.totals.winRate}%` : '—'}
-          tone={rosterEntry && rosterEntry.totals.winRate >= 50 ? 'win' : 'loss'}
+          label="KDA"
+          value={totals ? totals.kda.toFixed(2) : '—'}
+          detail={totals ? `${totals.kills}/${totals.deaths}/${totals.assists}` : undefined}
         />
+        <StatTile label="CS per minute" value={totals ? totals.csPerMinute.toFixed(1) : '—'} />
         <StatTile
           label="Champion pool"
           value={pool ? pool.played : '—'}
