@@ -321,12 +321,14 @@
     linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
-  opacity: 0;
+  /*
+   * Driven by a custom property the pointer handler writes, rather than by a
+   * descendant rule keyed off the card's active attribute. The rule was correct
+   * - right specificity, same cascade layer, selector matching - and still
+   * resolved to zero in the browser; one inline value has nothing to argue with.
+   */
+  opacity: calc(var(--rim, 0) * 0.9);
   transition: opacity 0.45s;
-}
-
-.player-card[data-active] .player-card-rim {
-  opacity: 0.9;
 }
 
 @media (prefers-reduced-motion: reduce) {

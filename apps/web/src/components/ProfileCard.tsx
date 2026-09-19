@@ -72,6 +72,7 @@ export function ProfileCard({
     const px = Math.min(100, Math.max(0, ((clientX - box.left) / box.width) * 100))
     const py = Math.min(100, Math.max(0, ((clientY - box.top) / box.height) * 100))
 
+    node.style.setProperty('--rim', '1')
     node.style.setProperty('--px', px.toFixed(1))
     node.style.setProperty('--py', py.toFixed(1))
     // Lean into the light rather than away from it.
@@ -90,6 +91,7 @@ export function ProfileCard({
     const node = frame.current
     if (!node) return
     node.removeAttribute('data-active')
+    node.style.removeProperty('--rim')
     node.style.removeProperty('--rx')
     node.style.removeProperty('--ry')
     if (art.current) art.current.style.transform = ''
