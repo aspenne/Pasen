@@ -29,19 +29,33 @@ export function CountUp({ value, decimals = 0, suffix = '' }: CountUpProps) {
     }
 
     const state = { n: from.current }
+    const settle = () => {
+      from.current = value
+      setShown(value)
+    }
+
     const animation = animate(state, {
       n: value,
       duration: MOTION.count,
       ease: 'outQuart',
       onUpdate: () => setShown(state.n),
-      onComplete: () => {
-        from.current = value
-        setShown(value)
-      },
+      onComplete: settle,
     })
+
+    /*
+     * A backgrounded or power-saving tab stops handing out animation frames,
+     * and a figure frozen halfway to its value is not a slower animation - it
+     * is a wrong number sitting on screen. Timers survive that throttling far
+     * better than frames do, so one commits the truth regardless.
+     */
+    const safety = window.setTimeout(() => {
+      animation.pause()
+      settle()
+    }, MOTION.count * 3)
 
     // Leaving mid-count would strand the figure between two values.
     return () => {
+      window.clearTimeout(safety)
       animation.pause()
       from.current = value
     }
