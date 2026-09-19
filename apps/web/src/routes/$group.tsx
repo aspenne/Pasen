@@ -29,7 +29,12 @@ const NAV = [
 function GroupLayout() {
   const { group } = useParams({ from: '/$group' })
   const { scope } = Route.useSearch()
-  const navigate = useNavigate({ from: '/$group' })
+  /*
+   * Unbound, because this header renders over the group's child routes too.
+   * Pinning `from` to '/$group' made every scope change resolve back to the
+   * group index, dropping whoever's page you were reading.
+   */
+  const navigate = useNavigate()
 
   const { data, error, isPending } = useQuery({
     queryKey: ['group', group, scope],
@@ -71,8 +76,13 @@ function GroupLayout() {
             <ScopeSelect
               value={scope}
               onChange={(next) =>
-                // replace, not push: flipping a filter is not a place to go back to.
-                navigate({ search: { scope: next }, replace: true })
+                navigate({
+                  // '.' is wherever the reader already is; only the scope moves.
+                  to: '.',
+                  search: (prev) => ({ ...prev, scope: next }),
+                  // replace, not push: flipping a filter is not a place to go back to.
+                  replace: true,
+                })
               }
             />
 
