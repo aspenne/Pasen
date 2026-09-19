@@ -19,6 +19,25 @@ export type SummonerDto = {
   revisionDate: number
 }
 
+/**
+ * An apex league in full. `entries` carries every player in that tier, which is
+ * the only way Riot exposes a ladder position: below Master there is no order,
+ * just a tier and a division.
+ */
+export type LeagueListDto = {
+  tier: string
+  leagueId: string
+  queue: string
+  name: string
+  entries: {
+    puuid: string
+    leaguePoints: number
+    rank: string
+    wins: number
+    losses: number
+  }[]
+}
+
 export type LeagueEntryDto = {
   leagueId: string
   queueType: string

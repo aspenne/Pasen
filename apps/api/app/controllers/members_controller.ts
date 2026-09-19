@@ -2,7 +2,12 @@ import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
 import { QUEUE_SCOPES } from '@pasen/shared'
 
+import redis from '@adonisjs/redis/services/main'
+
 import Member from '#models/member'
+import { LadderService } from '#stats/ladder_service'
+import { riot } from '#riot/service'
+import type { RedisLike } from '#riot/redis'
 import { PlayerStatsService } from '#stats/player_stats_service'
 import { parseScope } from '#stats/scope'
 
@@ -60,6 +65,28 @@ export default class MembersController {
     const query = await poolQuery.validate(request.qs())
 
     return new PlayerStatsService().championPool(member, { scope: parseScope(query.scope) })
+  }
+
+  /**
+   * Where this member sits on the region's apex ladder. Null below Master,
+   * where Riot publishes no order to sit in.
+   */
+  async ladder({ params }: HttpContext) {
+    const member = await Member.query()
+      .where('slug', params.slug)
+      .preload('riotAccounts')
+      .firstOrFail()
+
+    const service = new LadderService(riot(), redis as unknown as RedisLike)
+
+    // A member's smurfs can each be ranked; the best placing is the one to show.
+    let best: Awaited<ReturnType<LadderService['positionFor']>> = null
+    for (const account of member.riotAccounts) {
+      const found = await service.positionFor(account.puuid, account.platform)
+      if (found && (best === null || found.position < best.position)) best = found
+    }
+
+    return best ?? { position: null }
   }
 
   async lpHistory({ params, request }: HttpContext) {

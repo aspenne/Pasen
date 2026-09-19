@@ -21,7 +21,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSort } from '@/hooks/useSort'
 import { api, type ChampionPoolEntry } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { duration, kda, memberColor, positionLabel, queueLabel, timeAgo } from '@/lib/format'
+import {
+  duration,
+  kda,
+  memberColor,
+  memberHex,
+  positionLabel,
+  queueLabel,
+  timeAgo,
+} from '@/lib/format'
 
 export const Route = createFileRoute('/$group/players/$member')({ component: MemberPage })
 
@@ -46,6 +54,12 @@ function MemberPage() {
     queryKey: ['lp', memberSlug],
     queryFn: () => api.lpHistory(memberSlug),
   })
+  const { data: ladder } = useQuery({
+    queryKey: ['ladder', memberSlug],
+    queryFn: () => api.ladder(memberSlug),
+    // Three whole apex leagues sit behind this; the server caches it hourly.
+    staleTime: 30 * 60_000,
+  })
   const { data: boards } = useQuery({
     queryKey: ['leaderboards', group, 'all', scope],
     queryFn: () => api.leaderboards(group, { period: 'all', scope }),
@@ -62,6 +76,8 @@ function MemberPage() {
   const rosterIndex = overview?.members.findIndex((entry) => entry.slug === memberSlug) ?? 0
   const totals = boards?.totals.find((entry) => entry.memberSlug === memberSlug)
   const accent = memberColor(rosterEntry?.accentColor ?? null, rosterIndex)
+  // ECharts paints to canvas and cannot read a CSS variable.
+  const accentHex = memberHex(rosterEntry?.accentColor ?? null, rosterIndex)
   const account = profile?.accounts[0]
   const solo = rosterEntry?.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
   const syncing = profile?.accounts.some((entry) => entry.backfillState !== 'done')
@@ -148,8 +164,23 @@ function MemberPage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex-row items-baseline justify-between gap-3 space-y-0">
                 <CardTitle className="text-[13px]">Ranked solo over time</CardTitle>
+                {ladder?.position && (
+                  <div className="text-right">
+                    <div className="display tnum text-[15px] font-semibold text-ink">
+                      #{ladder.position.toLocaleString('en-GB')}{' '}
+                      <span className="text-[12px] text-ink-muted">
+                        {ladder.platform?.toUpperCase()}
+                      </span>
+                    </div>
+                    {ladder.apexPopulation && (
+                      <div className="tnum text-[11px] text-ink-dim">
+                        of {ladder.apexPopulation.toLocaleString('en-GB')} in Master+
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" />
@@ -162,7 +193,7 @@ function MemberPage() {
               </CardHeader>
               <CardContent>
                 {totals && boards ? (
-                  <ProfileRadar member={totals} roster={boards.totals} color={accent} />
+                  <ProfileRadar member={totals} roster={boards.totals} color={accentHex} />
                 ) : (
                   <p className="px-4 py-6 text-center text-[12px] text-ink-muted">
                     Not enough games yet.

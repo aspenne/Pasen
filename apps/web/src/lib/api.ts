@@ -343,6 +343,13 @@ export type LpPoint = {
   losses: number
 }
 
+export type LadderStanding = {
+  /** Null for anyone below Master, where Riot publishes no order. */
+  position: number | null
+  apexPopulation?: number
+  platform?: string
+}
+
 export type AdminAccount = {
   id: number
   riotId: string
@@ -399,6 +406,7 @@ export const api = {
     apiFetch<Leaderboards>(`/api/groups/${slug}/leaderboards${searchOf(params)}`),
   groupChampions: (slug: string, params: Scoped = {}) =>
     apiFetch<GroupChampionPool>(`/api/groups/${slug}/champions${searchOf(params)}`),
+  ladder: (slug: string) => apiFetch<LadderStanding>(`/api/members/${slug}/ladder`),
   match: (slug: string, matchId: string) =>
     apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
   activity: (slug: string, params: Scoped = {}) =>

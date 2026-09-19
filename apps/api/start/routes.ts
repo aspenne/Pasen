@@ -31,6 +31,7 @@ router
     router.get('/members/:slug/matches', [MembersController, 'matches'])
     router.get('/members/:slug/champions', [MembersController, 'champions'])
     router.get('/members/:slug/lp-history', [MembersController, 'lpHistory'])
+    router.get('/members/:slug/ladder', [MembersController, 'ladder'])
 
     router.get('/health', [HealthController, 'show'])
     router.get('/static', [StaticController, 'index'])

@@ -75,3 +75,22 @@ export const axisStyle = {
   axisLabel: { color: CHART.inkDim, fontSize: 11 },
   splitLine: { lineStyle: { color: CHART.line, type: 'dashed' as const } },
 }
+
+/**
+ * Tier colours as literals, because charts paint to canvas and cannot resolve a
+ * CSS variable. Only ever as a single series' tint - one player's own curve
+ * wearing their own rank. Using this set to tell several series apart is what
+ * the stylesheet forbids: Master and Diamond are deltaE 0.3 under protanopia.
+ */
+export const TIER_HEX: Record<string, string> = {
+  IRON: '#8c8c8c',
+  BRONZE: '#bd7b4a',
+  SILVER: '#a8b4c0',
+  GOLD: '#e0b352',
+  PLATINUM: '#3fc0c4',
+  EMERALD: '#35c46b',
+  DIAMOND: '#6aa9ff',
+  MASTER: '#c89bff',
+  GRANDMASTER: '#e5646a',
+  CHALLENGER: '#f0cb6b',
+}

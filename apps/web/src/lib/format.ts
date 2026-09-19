@@ -19,6 +19,26 @@ export function memberColor(accentColor: string | null, rosterIndex: number): st
   return accentColor ?? MEMBER_COLORS[rosterIndex % MEMBER_COLORS.length]
 }
 
+/**
+ * The same hues as literals. Charts paint to canvas, which cannot resolve a CSS
+ * variable and silently draws the wrong colour instead of failing - so anything
+ * handed to ECharts takes this, and anything handed to CSS takes the one above.
+ */
+const MEMBER_HEX = [
+  '#3987e5',
+  '#d95926',
+  '#199e70',
+  '#c98500',
+  '#d55181',
+  '#008300',
+  '#9085e9',
+  '#e66767',
+]
+
+export function memberHex(accentColor: string | null, rosterIndex: number): string {
+  return accentColor ?? MEMBER_HEX[rosterIndex % MEMBER_HEX.length]
+}
+
 export function duration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   return `${minutes}:${String(seconds % 60).padStart(2, '0')}`
