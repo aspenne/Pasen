@@ -131,6 +131,14 @@ export type DailyFeed = {
   matches: FeedMatch[]
 }
 
+export type LiveRank = {
+  tier: string
+  rank: string | null
+  leaguePoints: number
+  wins: number
+  losses: number
+}
+
 export type LiveParticipant = {
   puuid: string
   teamId: number
@@ -141,6 +149,7 @@ export type LiveParticipant = {
   tracked: boolean
   memberSlug: string | null
   displayName: string | null
+  rank: LiveRank | null
 }
 
 export type LiveGame = {

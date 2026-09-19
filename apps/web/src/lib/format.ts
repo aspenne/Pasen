@@ -114,3 +114,34 @@ export function rankLabel(rank: {
   const tier = rank.tier.charAt(0) + rank.tier.slice(1).toLowerCase()
   return apex ? `${tier} · ${rank.leaguePoints} LP` : `${tier} ${rank.rank} · ${rank.leaguePoints} LP`
 }
+
+const TIER_INITIALS: Record<string, string> = {
+  IRON: 'I',
+  BRONZE: 'B',
+  SILVER: 'S',
+  GOLD: 'G',
+  PLATINUM: 'P',
+  EMERALD: 'E',
+  DIAMOND: 'D',
+  MASTER: 'M',
+  GRANDMASTER: 'GM',
+  CHALLENGER: 'C',
+}
+
+/**
+ * "D2 · 41 LP" - terse enough for a row of ten players, and still carrying the
+ * tier in text so the crest and its colour are never the only thing saying it.
+ */
+export function rankShort(rank: {
+  tier: string | null
+  rank: string | null
+  leaguePoints: number
+} | null): string {
+  if (!rank?.tier) return 'Unranked'
+  const initial = TIER_INITIALS[rank.tier.toUpperCase()] ?? rank.tier.charAt(0)
+  const apex = ['M', 'GM', 'C'].includes(initial)
+  const division = apex || !rank.rank ? '' : ROMAN[rank.rank] ?? rank.rank
+  return `${initial}${division} · ${rank.leaguePoints} LP`
+}
+
+const ROMAN: Record<string, string> = { I: '1', II: '2', III: '3', IV: '4' }

@@ -1,3 +1,4 @@
+import type { Platform } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import RiotAccount from '#models/riot_account'
@@ -9,9 +10,24 @@ const CACHE_KEY = 'live:games'
 /** Comfortably longer than the poll interval, short enough to self-heal. */
 const CACHE_TTL_SECONDS = 180
 
+/**
+ * Ranked standing moves by a few LP a day and a game lasts half an hour, so a
+ * long cache turns "ten lookups per poll" into "ten lookups per new game" - the
+ * difference between half our rate budget and a rounding error.
+ */
+const RANK_CACHE_TTL_SECONDS = 12 * 60 * 60
+
+export type LiveRank = {
+  tier: string
+  rank: string | null
+  leaguePoints: number
+  wins: number
+  losses: number
+}
+
 export type LiveGame = {
   gameId: number
-  platform: string
+  platform: Platform
   queueId: number
   gameMode: string
   startedAt: string
@@ -26,6 +42,8 @@ export type LiveGame = {
     riotId: string | null
     /** True for the members of this group, which is who the card is about. */
     tracked: boolean
+    /** Solo queue standing. Null for an unranked player or a failed lookup. */
+    rank: LiveRank | null
   }[]
 }
 
@@ -81,9 +99,58 @@ export class LiveGameService {
     }
 
     const payload = [...games.values()]
+    for (const game of payload) await this.#attachRanks(game)
+
     await this.redis.set(CACHE_KEY, JSON.stringify(payload), 'EX', CACHE_TTL_SECONDS)
 
     return { polled: accounts.length, inGame: payload.length, justFinished }
+  }
+
+  /**
+   * Fills in every player's solo queue standing, cached per player.
+   *
+   * Background priority throughout: knowing an opponent is Diamond is worth far
+   * less than the spectator poll that found the game in the first place, and
+   * the reserve makes sure a lobby of ten strangers cannot crowd it out.
+   */
+  async #attachRanks(game: LiveGame): Promise<void> {
+    for (const participant of game.participants) {
+      const key = `live:rank:${game.platform}:${participant.puuid}`
+      const cached = await this.redis.get(key)
+
+      if (cached !== null) {
+        participant.rank = JSON.parse(cached) as LiveRank | null
+        continue
+      }
+
+      let rank: LiveRank | null = null
+      try {
+        const entries = await this.riot.league.entriesByPuuid(
+          participant.puuid,
+          game.platform,
+          { priority: 'background' }
+        )
+        const solo = entries.find((entry) => entry.queueType === 'RANKED_SOLO_5x5')
+        if (solo) {
+          rank = {
+            tier: solo.tier,
+            rank: solo.rank ?? null,
+            leaguePoints: solo.leaguePoints,
+            wins: solo.wins,
+            losses: solo.losses,
+          }
+        }
+      } catch {
+        /*
+         * One unreachable standing must not cost us the whole live view, and a
+         * failure is deliberately not cached - the next poll tries again.
+         */
+        continue
+      }
+
+      participant.rank = rank
+      await this.redis.set(key, JSON.stringify(rank), 'EX', RANK_CACHE_TTL_SECONDS)
+    }
   }
 
   /** What the API serves. Never calls Riot. */
@@ -96,7 +163,7 @@ export class LiveGameService {
 function toLiveGame(game: CurrentGameInfoDto, tracked: Set<string>): LiveGame {
   return {
     gameId: game.gameId,
-    platform: game.platformId,
+    platform: game.platformId as Platform,
     queueId: game.gameQueueConfigId,
     gameMode: game.gameMode,
     startedAt: DateTime.fromMillis(game.gameStartTime, { zone: 'utc' }).toISO()!,
@@ -109,6 +176,7 @@ function toLiveGame(game: CurrentGameInfoDto, tracked: Set<string>): LiveGame {
       spell2Id: p.spell2Id,
       riotId: p.riotId ?? null,
       tracked: tracked.has(p.puuid),
+      rank: null,
     })),
   }
 }

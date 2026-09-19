@@ -55,15 +55,21 @@ export function FeedMatchCard({
   const results = new Set(match.members.map((member) => member.win))
   const outcome = results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
 
+  /*
+   * The result still reaches the eye before any number does, but as a wash of
+   * the result colour over the ground rather than an opaque slab of it. The
+   * old surfaces were mixed for a lighter, bluer page; on near-black they read
+   * as coloured blocks sitting on top of the site instead of part of it.
+   */
   const surface = {
-    win: 'bg-win-surface border-l-[4px] border-win',
-    loss: 'bg-loss-surface border-l-[4px] border-loss',
-    split: 'bg-panel border-l-[4px] border-line-strong',
+    win: 'border-l-2 border-l-win bg-win/[0.07]',
+    loss: 'border-l-2 border-l-loss bg-loss/[0.07]',
+    split: 'border-l-2 border-l-line-strong bg-panel',
   }[outcome]
 
   return (
-    <article className={`overflow-hidden rounded-[8px] ${surface}`}>
-      <header className="flex items-center justify-between gap-3 px-[18px] pt-3.5 text-[13px]">
+    <article className={`overflow-hidden rounded-[8px] border border-line ${surface}`}>
+      <header className="flex items-center justify-between gap-3 px-4 pt-3 text-[12px]">
         <div className="flex items-baseline gap-2.5">
           <span className="text-ink">{queueLabel(match.queueGroup)}</span>
           <span className="text-ink-dim">{clockTime(match.gameCreation, timezone)}</span>
@@ -81,10 +87,10 @@ export function FeedMatchCard({
 
       <div className="divide-y divide-white/5">
         {match.members.map((member) => (
-          <div key={member.memberSlug} className="flex items-center gap-[15px] px-[18px] py-3.5">
+          <div key={member.memberSlug} className="flex items-center gap-3 px-4 py-3">
             <span
               aria-hidden
-              className="h-9 w-[3px] shrink-0 rounded-full"
+              className="h-8 w-[3px] shrink-0 rounded-full"
               style={{ backgroundColor: colorFor(member.memberSlug) }}
             />
 
@@ -92,7 +98,7 @@ export function FeedMatchCard({
               championId={member.championId}
               championName={member.championName}
               staticData={staticData}
-              size={52}
+              size={42}
             />
 
             <div className="min-w-0 flex-1">
@@ -102,11 +108,11 @@ export function FeedMatchCard({
                 // Carries the active scope, so following a link does not
                 // silently change the question being asked.
                 search={{ scope }}
-                className="block truncate text-[16px] text-ink transition-colors hover:text-accent"
+                className="block truncate text-[14px] text-ink transition-colors hover:text-accent"
               >
                 {member.displayName}
               </Link>
-              <div className="mt-0.5 truncate text-[13px] text-ink-muted">
+              <div className="mt-0.5 truncate text-[12px] text-ink-muted">
                 {member.championName}
                 {positionLabel(member.teamPosition) && ` · ${positionLabel(member.teamPosition)}`}
                 {member.subteamPlacement && ` · #${member.subteamPlacement}`}
@@ -117,11 +123,11 @@ export function FeedMatchCard({
               <ItemRow items={member.items} staticData={staticData} />
             </div>
 
-            <div className="w-[136px] shrink-0 text-right">
-              <div className="tnum text-[16px] text-ink">
+            <div className="w-[124px] shrink-0 text-right">
+              <div className="display tnum text-[15px] font-semibold text-ink">
                 {member.kills} / {member.deaths} / {member.assists}
               </div>
-              <div className="tnum mt-0.5 text-[13px] text-ink-muted">
+              <div className="tnum mt-0.5 text-[12px] text-ink-muted">
                 {kda(member.kills, member.deaths, member.assists)} KDA · {member.cs} cs
               </div>
             </div>

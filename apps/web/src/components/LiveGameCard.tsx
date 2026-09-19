@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
-import type { LiveGame, StaticData } from '@/lib/api'
-import { duration } from '@/lib/format'
+import type { LiveGame, LiveParticipant, StaticData } from '@/lib/api'
+import { spellIcon } from '@/lib/ddragon'
+import { duration, rankShort, tierColor, tierCrest } from '@/lib/format'
 
 /**
  * Riot reports the elapsed time only at poll time, so the card counts forward
@@ -20,6 +21,78 @@ function useElapsed(startedAt: string, reportedSeconds: number) {
   return Math.max(reportedSeconds, drift, 0)
 }
 
+function SpellPair({
+  participant,
+  staticData,
+}: {
+  participant: LiveParticipant
+  staticData?: StaticData
+}) {
+  const spells = [participant.spell1Id, participant.spell2Id]
+
+  return (
+    <div className="hidden shrink-0 flex-col gap-[2px] sm:flex">
+      {spells.map((id, index) => {
+        const spell = staticData?.summonerSpells[String(id)]
+        const src = spellIcon(staticData?.version ?? null, spell?.slug)
+        return (
+          <div key={index} className="size-[15px] overflow-hidden rounded-[3px] bg-line-strong">
+            {src && <img src={src} alt={spell?.name ?? ''} width={15} height={15} />}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function PlayerRow({
+  participant,
+  staticData,
+}: {
+  participant: LiveParticipant
+  staticData?: StaticData
+}) {
+  const crest = tierCrest(participant.rank?.tier)
+  const name = participant.displayName ?? participant.riotId ?? 'Unknown'
+
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-[4px] px-1.5 py-1 ${
+        participant.tracked ? 'bg-accent-soft/50' : ''
+      }`}
+    >
+      <ChampionIcon
+        championId={participant.championId}
+        championName={String(participant.championId)}
+        staticData={staticData}
+        size={32}
+      />
+      <SpellPair participant={participant} staticData={staticData} />
+
+      <div className="min-w-0 flex-1">
+        <div
+          className={`truncate text-[13px] ${
+            participant.tracked ? 'text-accent' : 'text-ink-muted'
+          }`}
+        >
+          {name}
+        </div>
+        <div className="flex items-center gap-1">
+          {crest && (
+            <img src={crest} alt="" aria-hidden width={13} height={13} className="shrink-0" />
+          )}
+          <span
+            className="tnum truncate text-[11px]"
+            style={{ color: tierColor(participant.rank?.tier) }}
+          >
+            {rankShort(participant.rank)}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function LiveGameCard({
   game,
   staticData,
@@ -34,42 +107,34 @@ export function LiveGameCard({
   const teams = [100, 200].map((teamId) => game.participants.filter((p) => p.teamId === teamId))
 
   return (
-    /*
-     * A translucent accent border rather than a solid one. A game in progress
-     * should catch the eye without shouting louder than the results of the
-     * games that are already decided.
-     */
-    <article className="rounded-[8px] border border-accent/25 bg-panel-raised px-[18px] py-4">
-      <header className="mb-3 flex items-center justify-between gap-3">
+    <article className="overflow-hidden rounded-[8px] border border-accent/30 bg-panel">
+      <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
         <div className="min-w-0">
-          <div className="truncate text-[15px] text-ink">
+          <div className="truncate text-[14px] text-ink">
             {ours.map((p) => p.displayName ?? p.riotId).join(', ')}
           </div>
-          <div className="mt-0.5 text-[13px] text-ink-dim">{queueLabel}</div>
+          <div className="mt-0.5 truncate text-[12px] text-ink-dim">{queueLabel}</div>
         </div>
-        <div className="tnum shrink-0 text-[19px] text-accent">{duration(elapsed)}</div>
+        <div className="display tnum shrink-0 text-[20px] font-semibold text-accent">
+          {duration(elapsed)}
+        </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-x-4 gap-y-3 p-3 sm:grid-cols-2">
         {teams.map((team, index) => (
-          <div key={index} className="space-y-1.5">
-            {team.map((participant) => (
-              <div key={participant.puuid} className="flex items-center gap-2">
-                <ChampionIcon
-                  championId={participant.championId}
-                  championName={String(participant.championId)}
+          <div key={index}>
+            <div className="mb-1.5 px-1.5 text-[10px] uppercase tracking-[0.13em] text-ink-dim">
+              {index === 0 ? 'Blue side' : 'Red side'}
+            </div>
+            <div className="space-y-0.5">
+              {team.map((participant) => (
+                <PlayerRow
+                  key={participant.puuid}
+                  participant={participant}
                   staticData={staticData}
-                  size={24}
                 />
-                <span
-                  className={`truncate text-[13px] ${
-                    participant.tracked ? 'text-accent' : 'text-ink-muted'
-                  }`}
-                >
-                  {participant.displayName ?? participant.riotId ?? 'Unknown'}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         ))}
       </div>

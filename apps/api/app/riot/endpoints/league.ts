@@ -12,11 +12,16 @@ export class LeagueEndpoint {
    *
    * Returns an empty array for an unranked player, which is not an error.
    */
-  entriesByPuuid(puuid: string, platform: Platform) {
+  entriesByPuuid(
+    puuid: string,
+    platform: Platform,
+    options: { priority?: 'interactive' | 'background' } = {}
+  ) {
     return this.gateway.request<LeagueEntryDto[]>({
       host: { kind: 'platform', platform },
       path: `/lol/league/v4/entries/by-puuid/${puuid}`,
       endpoint: 'league-v4.entriesByPuuid',
+      priority: options.priority,
     })
   }
 }
