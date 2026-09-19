@@ -14,6 +14,8 @@ import { prefersReducedMotion } from '@/lib/motion'
 import { PLATFORM_SHORT, type Platform } from '@pasen/shared'
 
 type ProfileCardProps = {
+  /** Sizing from the page: the card fills whatever height it is given. */
+  className?: string
   name: string
   tagLine: string | null
   rank: MemberRank | null
@@ -45,6 +47,7 @@ const MULTIKILL_LABEL = {
  * so the whole effect is CSS and the component only writes numbers.
  */
 export function ProfileCard({
+  className = '',
   name,
   tagLine,
   rank,
@@ -103,7 +106,7 @@ export function ProfileCard({
     <article
       ref={frame}
       tabIndex={0}
-      className="player-card"
+      className={`player-card ${className}`}
       style={{ '--tier': tierColor(rank?.tier) } as CSSProperties}
       onPointerEnter={activate}
       onPointerMove={(event) => move(event.clientX, event.clientY)}

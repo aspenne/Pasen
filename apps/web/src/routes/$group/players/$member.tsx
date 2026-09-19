@@ -172,6 +172,7 @@ function MemberPage() {
           <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
             {totals && cardStats && (
               <ProfileCard
+                className="aspect-[5/7] lg:aspect-auto lg:h-full lg:min-h-[460px]"
                 name={profile?.displayName ?? memberSlug}
                 tagLine={account?.riotId.split('#')[1] ?? null}
                 rank={solo ?? null}

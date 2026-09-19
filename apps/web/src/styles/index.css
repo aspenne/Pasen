@@ -227,7 +227,6 @@
  */
 .player-card {
   position: relative;
-  aspect-ratio: 5 / 7;
   border-radius: 12px;
   overflow: hidden;
   isolation: isolate;
@@ -322,10 +321,8 @@
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   /*
-   * Driven by a custom property the pointer handler writes, rather than by a
-   * descendant rule keyed off the card's active attribute. The rule was correct
-   * - right specificity, same cascade layer, selector matching - and still
-   * resolved to zero in the browser; one inline value has nothing to argue with.
+   * Lit by the same pointer handler that sets the tilt, through one custom
+   * property, so every part of the effect has a single source.
    */
   opacity: calc(var(--rim, 0) * 0.9);
   transition: opacity 0.45s;
