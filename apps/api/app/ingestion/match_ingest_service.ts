@@ -1,3 +1,4 @@
+import logger from '@adonisjs/core/services/logger'
 import db from '@adonisjs/lucid/services/db'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { isStatsEligible, queueGroupFor } from '@pasen/shared'
@@ -85,6 +86,18 @@ export class MatchIngestService {
      * insert, and one dies on the composite key.
      */
     const rows = info.participants.map((p) => participantRow(metadata.matchId, p))
+
+    /*
+     * Riot occasionally returns a match carrying no participants at all. There
+     * is nothing to store and nothing to reconcile - and the delete below would
+     * read an empty roster as "every player has gone" and wipe rows we already
+     * hold. knex also refuses an empty insert outright, which is enough to
+     * abort a whole repair pass over one bad record.
+     */
+    if (rows.length === 0) {
+      logger.warn({ matchId: metadata.matchId }, 'match returned with no participants')
+      return { matchId: metadata.matchId, participants: 0, gameCreation }
+    }
 
     await trx
       .insertQuery()

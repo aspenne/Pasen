@@ -30,6 +30,23 @@ test.group('MatchIngestService', (group) => {
     assert.isTrue(stored?.statsEligible)
   })
 
+  test('stores a match Riot returned with no participants, and keeps the ones it has', async ({
+    assert,
+  }) => {
+    const match = await fixture('match_ranked_sr')
+    await new MatchIngestService().ingest(match)
+
+    // The same match coming back empty: knex refuses an empty insert outright,
+    // which was enough to abort a whole repair pass over one bad record.
+    const empty = { ...match, info: { ...match.info, participants: [] } }
+    const result = await new MatchIngestService().ingest(empty)
+
+    assert.equal(result.participants, 0)
+
+    const kept = await MatchParticipant.query().where('match_id', match.metadata.matchId)
+    assert.lengthOf(kept, 10, 'an empty roster must not be read as everyone having left')
+  })
+
   test('ingests an arena match, which has eighteen players and no lanes', async ({ assert }) => {
     const match = await fixture('match_arena')
     const result = await new MatchIngestService().ingest(match)
