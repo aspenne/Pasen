@@ -350,6 +350,15 @@ export type LadderStanding = {
   platform?: string
 }
 
+export type SiteStatus = {
+  ingestion: {
+    paused: boolean
+    reason: 'key-rejected' | 'key-missing' | null
+    since: string | null
+  }
+  lastMatchAt: string | null
+}
+
 export type ProfileCardStats = {
   mainRole: string | null
   roleShare: number | null
@@ -397,6 +406,7 @@ type Scoped = { scope?: QueueScope }
 
 export const api = {
   health: () => apiFetch<HealthResponse>('/health'),
+  status: () => apiFetch<SiteStatus>('/api/status'),
   staticData: () => apiFetch<StaticData>('/api/static'),
   group: (slug: string, params: Scoped = {}) =>
     apiFetch<GroupOverview>(`/api/groups/${slug}${searchOf(params)}`),

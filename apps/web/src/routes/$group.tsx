@@ -41,6 +41,12 @@ function GroupLayout() {
     queryFn: () => api.group(group, { scope }),
   })
 
+  const { data: status } = useQuery({
+    queryKey: ['status'],
+    queryFn: () => api.status(),
+    refetchInterval: 5 * 60_000,
+  })
+
   return (
     <div className="min-h-screen bg-ground text-ink">
       <header className="sticky top-0 z-30 border-b border-line bg-ground/95 backdrop-blur">
@@ -90,6 +96,31 @@ function GroupLayout() {
           </div>
         </div>
       </header>
+
+      {status?.ingestion.paused && (
+        /*
+         * The site's worst failure is the quiet one: pages keep working while
+         * nothing new arrives, and nobody can tell "nobody played" from "we
+         * stopped being able to look".
+         */
+        <p className="mx-auto flex max-w-5xl flex-wrap items-baseline gap-x-2 border-l-2 border-accent bg-accent-soft/40 px-4 py-2.5 text-[13px] text-ink">
+          <span>Riot stopped accepting our key</span>
+          {status.ingestion.since && (
+            <span className="text-ink-muted">
+              on{' '}
+              {new Date(status.ingestion.since).toLocaleString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          )}
+          <span className="text-ink-muted">
+            · nothing new has come in since, so everything below is what we already held.
+          </span>
+        </p>
+      )}
 
       <main className="mx-auto max-w-5xl px-4 py-5">
         {error ? (

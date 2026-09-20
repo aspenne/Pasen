@@ -35,6 +35,7 @@ router
     router.get('/members/:slug/card', [MembersController, 'card'])
 
     router.get('/health', [HealthController, 'show'])
+    router.get('/status', [HealthController, 'status'])
     router.get('/static', [StaticController, 'index'])
 
     /*
