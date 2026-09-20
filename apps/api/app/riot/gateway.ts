@@ -186,6 +186,20 @@ export class RiotGateway implements RiotRequester {
     return url.toString()
   }
 
+  /**
+   * Riot explains every refusal in the body, and the status alone rarely says
+   * enough: a 401 cannot separate an expired key from a suspended account, and
+   * a 400 says nothing at all about which argument it disliked. Read once, for
+   * whatever error this turns out to be.
+   */
+  async #detailOf(response: Response): Promise<string | null> {
+    try {
+      return (await response.text()).slice(0, 200) || null
+    } catch {
+      return null
+    }
+  }
+
   async #classify(response: Response, request: RiotRequest): Promise<RiotApiError> {
     if (response.status === 404) {
       return new RiotNotFoundError(request.endpoint)
@@ -195,20 +209,11 @@ export class RiotGateway implements RiotRequester {
       // Development keys expire daily; record it so the admin sees why the site
       // stopped refreshing instead of guessing.
       await this.#keyProvider.markInvalid()
-
-      /*
-       * Riot explains itself in the body - an expired key, a key that was never
-       * valid, and a suspended account all arrive as the same status otherwise.
-       * Reading it cannot fail the request that already failed.
-       */
-      let detail: string | null = null
-      try {
-        detail = (await response.text()).slice(0, 200) || null
-      } catch {
-        detail = null
-      }
-
-      return new RiotKeyRejectedError(response.status, request.endpoint, detail)
+      return new RiotKeyRejectedError(
+        response.status,
+        request.endpoint,
+        await this.#detailOf(response)
+      )
     }
 
     if (response.status === 429) {
@@ -219,10 +224,11 @@ export class RiotGateway implements RiotRequester {
       return new RiotUnavailableError(response.status, request.endpoint)
     }
 
+    const detail = await this.#detailOf(response)
     return new RiotApiError(
       response.status,
       request.endpoint,
-      `Riot returned ${response.status} for ${request.endpoint}`
+      `Riot returned ${response.status} for ${request.endpoint}${detail ? `: ${detail}` : ''}`
     )
   }
 }
