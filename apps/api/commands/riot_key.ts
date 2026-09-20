@@ -1,6 +1,7 @@
 import { BaseCommand, args } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 
+import RiotAccount from '#models/riot_account'
 import { riot, riotKeyProvider } from '#riot/service'
 
 /**
@@ -54,6 +55,25 @@ export default class RiotKey extends BaseCommand {
       // A cheap, real call: if this resolves, the key is live and routing works.
       const account = await riot().account.byRiotId(gameName, tagLine, 'euw1')
       this.logger.success(`key is live (resolved ${account.gameName}#${account.tagLine})`)
+
+      /*
+       * Riot encrypts some identifiers per key. If a puuid resolved now differs
+       * from the one we hold, every stored id was minted under a key we no
+       * longer have, and no endpoint taking a puuid will accept them again.
+       */
+      const stored = await RiotAccount.query()
+        .where('game_name', gameName)
+        .andWhere('tag_line', tagLine)
+        .first()
+
+      if (stored) {
+        const same = stored.puuid === account.puuid
+        this.logger[same ? 'success' : 'error'](
+          same
+            ? 'stored puuid still matches what this key returns'
+            : `stored puuid does NOT match this key (${stored.puuid.slice(0, 12)}… vs ${account.puuid.slice(0, 12)}…)`
+        )
+      }
     }
 
     const status = await provider.status()
