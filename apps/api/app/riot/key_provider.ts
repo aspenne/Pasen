@@ -80,7 +80,13 @@ export class RiotKeyProvider {
    */
   async markInvalid(now: Date = new Date()): Promise<void> {
     this.#rejected = true
-    await Setting.updateOrCreate({ key: INVALID_SETTING }, { value: now.toISOString() })
+    /*
+     * First failure wins. Jobs keep retrying every few seconds once a key dies,
+     * and overwriting the timestamp each time would turn "rejected since" into
+     * "rejected a moment ago" - which is exactly the question it exists to
+     * answer. markValid clears it, so the next outage starts its own clock.
+     */
+    await Setting.firstOrCreate({ key: INVALID_SETTING }, { value: now.toISOString() })
   }
 
   /**
