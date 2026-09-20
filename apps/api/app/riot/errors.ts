@@ -23,11 +23,24 @@ export class RiotNotFoundError extends RiotApiError {
   }
 }
 
-/** The key is missing, expired or not entitled. Development keys hit this daily. */
+/**
+ * The key is missing, expired or not entitled. Development keys hit this daily.
+ *
+ * Carries Riot's own explanation, because the status alone cannot tell an
+ * expired key from a suspended account from a key that was never valid - and
+ * guessing between those costs an evening.
+ */
 export class RiotKeyRejectedError extends RiotApiError {
-  constructor(status: number, endpoint: string) {
-    super(status, endpoint, `Riot rejected the API key (${status}) on ${endpoint}`)
+  readonly detail: string | null
+
+  constructor(status: number, endpoint: string, detail: string | null = null) {
+    super(
+      status,
+      endpoint,
+      `Riot rejected the API key (${status}) on ${endpoint}${detail ? `: ${detail}` : ''}`
+    )
     this.name = 'RiotKeyRejectedError'
+    this.detail = detail
   }
 }
 

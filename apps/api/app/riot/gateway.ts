@@ -195,7 +195,20 @@ export class RiotGateway implements RiotRequester {
       // Development keys expire daily; record it so the admin sees why the site
       // stopped refreshing instead of guessing.
       await this.#keyProvider.markInvalid()
-      return new RiotKeyRejectedError(response.status, request.endpoint)
+
+      /*
+       * Riot explains itself in the body - an expired key, a key that was never
+       * valid, and a suspended account all arrive as the same status otherwise.
+       * Reading it cannot fail the request that already failed.
+       */
+      let detail: string | null = null
+      try {
+        detail = (await response.text()).slice(0, 200) || null
+      } catch {
+        detail = null
+      }
+
+      return new RiotKeyRejectedError(response.status, request.endpoint, detail)
     }
 
     if (response.status === 429) {
