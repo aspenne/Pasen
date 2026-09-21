@@ -4,18 +4,19 @@ import { useMemo, useState } from 'react'
 
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
-import { PlayerBanner } from '@/components/PlayerBanner'
-import { CountUp } from '@/components/CountUp'
 import { DuoHighlights } from '@/components/home/DuoHighlights'
+import { GroupHero } from '@/components/home/GroupHero'
 import { GroupRhythm } from '@/components/home/GroupRhythm'
 import { SignatureChampions } from '@/components/home/SignatureChampions'
 import { Reveal } from '@/components/Reveal'
-import { StatTile } from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor, rankLabel, tierColor, tierCrest } from '@/lib/format'
+
+/** Enough to show what kind of day it was without scrolling past it. */
+const FEED_PREVIEW = 6
 
 export const Route = createFileRoute('/$group/')({ component: Dashboard })
 
@@ -70,6 +71,15 @@ function Dashboard() {
     return (slug: string) => colors.get(slug) ?? 'var(--color-line-strong)'
   }, [overview])
 
+  /*
+   * A busy evening runs to thirty near-identical cards, which buries everything
+   * under them. The day's shape is above; the rest is one click away.
+   */
+  const [showAll, setShowAll] = useState(false)
+  const allMatches = feed?.matches ?? []
+  const shownMatches = showAll ? allMatches : allMatches.slice(0, FEED_PREVIEW)
+  const hiddenMatches = allMatches.length - shownMatches.length
+
   const totals = feed?.totals
   const totalGames = overview?.members.reduce((sum, m) => sum + m.totals.games, 0) ?? 0
 
@@ -90,24 +100,39 @@ function Dashboard() {
   const nameOf = (slug: string) =>
     overview?.members.find((member) => member.slug === slug)?.displayName ?? slug
   const topChampionId = groupChampions?.champions[0]?.championId
-  const bestKda = useMemo(() => {
+  /** The day's most striking line, which the hero names on its own art. */
+  const standout = useMemo(() => {
     const all = feed?.matches.flatMap((match) => match.members) ?? []
     if (all.length === 0) return null
+
     return all.reduce((best, member) => {
       const ratio = (member.kills + member.assists) / Math.max(member.deaths, 1)
-      return ratio > best.ratio ? { ratio, name: member.displayName } : best
-    }, { ratio: -1, name: '' })
+      const bestRatio = (best.kills + best.assists) / Math.max(best.deaths, 1)
+      return ratio > bestRatio ? member : best
+    })
   }, [feed])
 
   return (
     <div className="space-y-6">
-      <PlayerBanner
+      <GroupHero
         name={overview?.name ?? group}
-        subtitle={`${overview?.members.length ?? 0} members · ${totalGames} games together`}
-        figure={<CountUp value={totals?.games ?? 0} />}
-        figureLabel={selected === today ? 'games today' : `games on ${selected}`}
-        profileIconId={null}
-        championId={topChampionId}
+        dateLabel={selected === today ? 'today' : selected}
+        totals={totals}
+        groupGames={totalGames}
+        members={overview?.members.length ?? 0}
+        standout={
+          standout
+            ? {
+                displayName: standout.displayName,
+                championId: standout.championId,
+                championName: standout.championName,
+                kills: standout.kills,
+                deaths: standout.deaths,
+                assists: standout.assists,
+              }
+            : null
+        }
+        backdropChampionId={topChampionId}
         staticData={staticData}
       />
 
@@ -160,17 +185,6 @@ function Dashboard() {
           </div>
         </div>
 
-        <Reveal token={`${selected}:${scope}`} className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          <StatTile label="Games" value={<CountUp value={totals?.games ?? 0} />} />
-          <StatTile label="Wins" value={<CountUp value={totals?.wins ?? 0} />} tone="win" />
-          <StatTile label="Losses" value={<CountUp value={totals?.losses ?? 0} />} tone="loss" />
-          <StatTile
-            label="Champions"
-            value={<CountUp value={totals?.championsPlayed ?? 0} />}
-            detail={bestKda ? `best KDA ${bestKda.ratio.toFixed(2)} · ${bestKda.name}` : undefined}
-            tone="accent"
-          />
-        </Reveal>
       </section>
 
       <section className="space-y-2">
@@ -190,7 +204,7 @@ function Dashboard() {
         )}
 
         <Reveal token={`${selected}:${scope}`} className="space-y-2">
-          {feed?.matches.map((match) => (
+          {shownMatches.map((match) => (
             <FeedMatchCard
               key={match.matchId}
               match={match}
@@ -202,6 +216,12 @@ function Dashboard() {
             />
           ))}
         </Reveal>
+
+        {hiddenMatches > 0 && (
+          <Button variant="outline" className="mt-2 w-full" onClick={() => setShowAll(true)}>
+            See the {hiddenMatches} other {hiddenMatches === 1 ? 'game' : 'games'}
+          </Button>
+        )}
       </section>
 
       {overview && overview.members.length > 0 && (
