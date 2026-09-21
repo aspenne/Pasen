@@ -5,6 +5,7 @@ import vine from '@vinejs/vine'
 import { PLATFORMS } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
+import { enqueuePuuidRekey } from '#queues/main'
 import Group from '#models/group'
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
@@ -70,6 +71,15 @@ export default class AdminController {
   async setRiotKey({ request, response }: HttpContext) {
     const { key } = await apiKey.validate(request.all())
     await riotKeyProvider().set(key)
+
+    /*
+     * Riot encrypts puuids per key, so every identifier we hold just stopped
+     * being decryptable - and a member's matches are joined on theirs. Handed
+     * to the worker rather than done here: it is twenty-five Riot calls and as
+     * many transactions, which is not what an admin's form submit should wait
+     * on.
+     */
+    await enqueuePuuidRekey()
 
     // The key is never echoed back, not even to the admin who just typed it.
     return response.ok(await riotKeyProvider().status())

@@ -2,6 +2,7 @@ import { BaseCommand, args } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 
 import RiotAccount from '#models/riot_account'
+import { enqueuePuuidRekey } from '#queues/main'
 import { riot, riotKeyProvider } from '#riot/service'
 
 /**
@@ -42,6 +43,14 @@ export default class RiotKey extends BaseCommand {
 
       await provider.set(this.value)
       this.logger.success('key stored; every process picks it up on its next call')
+
+      /*
+       * Riot encrypts puuids per key, so the ones we hold are now undecryptable
+       * and every member's history is joined on them. The worker re-resolves
+       * and moves both together.
+       */
+      await enqueuePuuidRekey()
+      this.logger.info('queued a puuid re-key; the worker will run it within seconds')
     }
 
     if (this.action === 'check') {

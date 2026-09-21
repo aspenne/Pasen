@@ -15,6 +15,12 @@ export const JOBS = {
   backfillStep: 'backfill:step',
   /** Re-import Data Dragon when the patch moves. */
   staticSync: 'backfill:static-sync',
+  /**
+   * Re-resolve every tracked puuid after the API key changed. Not scheduled:
+   * enqueued the moment a key is stored, because until it has run every call
+   * taking a puuid fails and a member's history is detached from them.
+   */
+  puuidRekey: 'recent:puuid-rekey',
 } as const
 
 export type RecentSyncAccountPayload = { riotAccountId: number }

@@ -2,6 +2,7 @@ import { Queue } from 'bullmq'
 import type { ConnectionOptions } from 'bullmq'
 
 import env from '#start/env'
+import { JOBS } from '#queues/jobs'
 
 export const QUEUE_NAMES = ['live', 'recent', 'backfill'] as const
 export type QueueName = (typeof QUEUE_NAMES)[number]
@@ -46,4 +47,15 @@ export function queue(name: QueueName): Queue {
 export async function closeQueues(): Promise<void> {
   await Promise.all([...queues.values()].map((q) => q.close()))
   queues.clear()
+}
+
+/**
+ * Asks the worker to re-resolve every tracked puuid, because the API key just
+ * changed and Riot encrypts puuids per key.
+ *
+ * Fixed job id: pasting a key twice in a row should leave one pending job, not
+ * two passes over every account.
+ */
+export async function enqueuePuuidRekey(): Promise<void> {
+  await queue('recent').add(JOBS.puuidRekey, {}, { jobId: 'puuid-rekey' })
 }

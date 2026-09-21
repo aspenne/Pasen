@@ -5,6 +5,7 @@ import redis from '@adonisjs/redis/services/main'
 import RiotAccount from '#models/riot_account'
 import { LiveGameService } from '#ingestion/live_game_service'
 import { MatchSyncService } from '#ingestion/match_sync_service'
+import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
 import { RankService } from '#ingestion/rank_service'
 import { JOBS, type RecentSyncAccountPayload } from '#queues/jobs'
 import { queue } from '#queues/main'
@@ -125,4 +126,23 @@ export async function processStaticSync(): Promise<void> {
   if (!result.skipped) {
     logger.info(result, 'data dragon synced')
   }
+}
+
+export async function processPuuidRekey(): Promise<void> {
+  const report = await new PuuidRekeyService(riot(), logger).rekey()
+
+  if (report.rekeyed.length === 0 && report.unresolved.length === 0) {
+    logger.info({ checked: report.checked }, 'puuids still valid')
+    return
+  }
+
+  logger.warn(
+    {
+      checked: report.checked,
+      rekeyed: report.rekeyed.length,
+      participations: report.rekeyed.reduce((sum, entry) => sum + entry.participations, 0),
+      unresolved: report.unresolved,
+    },
+    'puuids re-keyed after an API key change'
+  )
 }

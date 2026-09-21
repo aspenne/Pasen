@@ -10,6 +10,7 @@ import {
   processRecentSync,
   processRecentSyncAccount,
   processStaticSync,
+  processPuuidRekey,
 } from '#queues/processors'
 
 /**
@@ -33,6 +34,7 @@ const HANDLERS: Record<string, (job: any) => Promise<void>> = {
   [JOBS.rankSnapshot]: processRankSnapshot,
   [JOBS.backfillStep]: processBackfillStep,
   [JOBS.staticSync]: processStaticSync,
+  [JOBS.puuidRekey]: processPuuidRekey,
 }
 
 export async function startWorkers(): Promise<Worker[]> {
