@@ -1,10 +1,13 @@
 import type { Job } from 'bullmq'
+import { DateTime } from 'luxon'
 import logger from '@adonisjs/core/services/logger'
+import db from '@adonisjs/lucid/services/db'
 import redis from '@adonisjs/redis/services/main'
 
 import RiotAccount from '#models/riot_account'
 import { LiveGameService } from '#ingestion/live_game_service'
 import { MatchSyncService } from '#ingestion/match_sync_service'
+import { HOT_WINDOW_HOURS, selectLivePollTargets } from '#ingestion/live_poll_selection'
 import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
 import { RankService } from '#ingestion/rank_service'
 import { JOBS, type RecentSyncAccountPayload } from '#queues/jobs'
@@ -24,14 +27,38 @@ function trackedAccounts() {
   return RiotAccount.query().orderBy('id')
 }
 
+/** When each account last actually played, for deciding who is worth polling. */
+async function lastPlayedAt(): Promise<Map<number, DateTime>> {
+  const rows = await db
+    .from('riot_accounts as a')
+    .join('match_participants as p', 'p.puuid', 'a.puuid')
+    .join('matches as m', 'm.match_id', 'p.match_id')
+    .where('m.game_creation', '>', DateTime.utc().minus({ hours: HOT_WINDOW_HOURS }).toSQL()!)
+    .groupBy('a.id')
+    .select('a.id')
+    .max('m.game_creation as at')
+
+  return new Map(
+    rows.map((row: { id: number; at: string | Date }) => [
+      Number(row.id),
+      DateTime.fromJSDate(new Date(row.at)),
+    ])
+  )
+}
+
 export async function processLive(): Promise<void> {
   const accounts = await trackedAccounts()
   if (accounts.length === 0) {
     return
   }
 
+  const targets = selectLivePollTargets(accounts, await lastPlayedAt(), DateTime.utc())
+  if (targets.length === 0) {
+    return
+  }
+
   const service = new LiveGameService(riot(), redis.connection() as unknown as RedisLike)
-  const result = await service.poll(accounts)
+  const result = await service.poll(targets)
 
   /*
    * A game that just ended is fetchable within seconds. Queueing its account now
@@ -47,7 +74,12 @@ export async function processLive(): Promise<void> {
   }
 
   logger.info(
-    { polled: result.polled, inGame: result.inGame, justFinished: result.justFinished.length },
+    {
+      polled: result.polled,
+      skipped: accounts.length - targets.length,
+      inGame: result.inGame,
+      justFinished: result.justFinished.length,
+    },
     'live poll'
   )
 }
