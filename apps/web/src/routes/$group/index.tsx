@@ -6,6 +6,9 @@ import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { PlayerBanner } from '@/components/PlayerBanner'
 import { CountUp } from '@/components/CountUp'
+import { DuoHighlights } from '@/components/home/DuoHighlights'
+import { GroupRhythm } from '@/components/home/GroupRhythm'
+import { SignatureChampions } from '@/components/home/SignatureChampions'
 import { Reveal } from '@/components/Reveal'
 import { StatTile } from '@/components/StatTile'
 import { Button } from '@/components/ui/button'
@@ -75,6 +78,17 @@ function Dashboard() {
     queryKey: ['group-champions', group, scope],
     queryFn: () => api.groupChampions(group, { scope }),
   })
+  const { data: duos } = useQuery({
+    queryKey: ['duos', group, scope],
+    queryFn: () => api.duos(group, { scope }),
+  })
+  const { data: activity } = useQuery({
+    queryKey: ['activity', group, scope],
+    queryFn: () => api.activity(group, { scope }),
+  })
+
+  const nameOf = (slug: string) =>
+    overview?.members.find((member) => member.slug === slug)?.displayName ?? slug
   const topChampionId = groupChampions?.champions[0]?.championId
   const bestKda = useMemo(() => {
     const all = feed?.matches.flatMap((match) => match.members) ?? []
@@ -232,6 +246,32 @@ function Dashboard() {
           </Reveal>
         </section>
       )}
+
+      {/*
+        Three things only this site can say, because they are about the group
+        rather than any one player. Short forms here; Insights carries the full
+        lists behind each link.
+      */}
+      {groupChampions && groupChampions.champions.length > 0 && (
+        <SignatureChampions
+          champions={groupChampions.champions}
+          groupSlug={group}
+          scope={scope}
+          staticData={staticData}
+        />
+      )}
+
+      {duos && duos.pairs.length > 0 && (
+        <DuoHighlights
+          pairs={duos.pairs}
+          nameOf={nameOf}
+          colorFor={colorFor}
+          groupSlug={group}
+          scope={scope}
+        />
+      )}
+
+      {activity && <GroupRhythm days={activity.days} />}
 
       {feed && feed.matches.length > 0 && (
         <p className="text-[11px] text-ink-dim">
