@@ -127,15 +127,46 @@ export function LiveGameCard({
           ten-player line-up on every card would bury the day underneath the
           few games happening right now.
         */}
-        <AccordionTrigger className="items-center gap-3 rounded-none px-4 py-2.5 hover:no-underline data-[state=open]:border-b data-[state=open]:border-line">
+        <AccordionTrigger className="items-center gap-3 rounded-none px-4 py-3 hover:no-underline data-[state=open]:border-b data-[state=open]:border-line">
           <span className="min-w-0 flex-1 text-left">
-            <span className="block truncate text-[14px] text-ink">
-              {ours.map((p) => p.displayName ?? p.riotId).join(', ')}
+            {/*
+              Who, and on what. The champion is the first thing anyone wants
+              from a game in progress, and it used to be buried inside the
+              line-up - collapsed, the card named people and showed nothing.
+            */}
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {ours.map((participant) => (
+                <span
+                  key={participant.puuid ?? `${participant.teamId}:${participant.championId}`}
+                  className="flex min-w-0 items-center gap-2"
+                >
+                  <ChampionIcon
+                    championId={participant.championId}
+                    championName={
+                      staticData?.champions[String(participant.championId)]?.name ??
+                      String(participant.championId)
+                    }
+                    staticData={staticData}
+                    size={34}
+                    className="rounded-[9px]"
+                  />
+                  <span className="min-w-0">
+                    <span className="display block truncate text-[15px] font-semibold text-ink">
+                      {participant.displayName ?? participant.riotId}
+                    </span>
+                    <span className="block truncate text-[11px] font-normal text-ink-dim">
+                      {staticData?.champions[String(participant.championId)]?.name ?? 'Champion'}
+                    </span>
+                  </span>
+                </span>
+              ))}
             </span>
-            <span className="mt-0.5 block truncate text-[12px] font-normal text-ink-dim">
+
+            <span className="mt-2 block truncate text-[12px] font-normal text-ink-dim">
               {queueLabel} · {open ? 'hide the line-up' : 'see who they are against'}
             </span>
           </span>
+
           <span className="display tnum shrink-0 text-[20px] font-semibold text-accent">
             {duration(elapsed)}
           </span>
