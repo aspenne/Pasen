@@ -1,10 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
 import { MatchScoreboard } from '@/components/MatchScoreboard'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type MatchHistoryEntry, type StaticData } from '@/lib/api'
 import { duration, kda, positionLabel, queueLabel, timeAgo } from '@/lib/format'
@@ -77,36 +82,35 @@ export function MatchHistoryRow({
           <div className="text-[11px] text-ink-dim">{timeAgo(entry.gameCreation)}</div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((value) => !value)}
-          aria-expanded={open}
-          aria-label={open ? 'Hide the scoreboard' : 'Show who else was in this game'}
-          className="shrink-0 rounded-[4px] p-1.5 text-ink-dim transition-colors hover:bg-panel-raised hover:text-ink"
-        >
-          <ChevronDown
-            size={14}
-            className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-          />
-        </button>
       </div>
 
-      {open && (
-        <div className="px-3 pb-3">
-          {isPending ? (
-            <Skeleton className="h-[184px] rounded-[6px]" />
-          ) : detail ? (
-            <MatchScoreboard
-              detail={detail}
-              staticData={staticData}
-              groupSlug={groupSlug}
-              scope={scope}
-            />
-          ) : (
-            <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
-          )}
-        </div>
-      )}
+      <Accordion
+        type="single"
+        collapsible
+        value={open ? 'board' : ''}
+        onValueChange={(value) => setOpen(value === 'board')}
+      >
+        <AccordionItem value="board" className="border-b-0">
+          <AccordionTrigger className="items-center justify-center gap-1.5 rounded-none px-3 py-1.5 text-[11px] font-normal text-ink-dim hover:text-ink hover:no-underline">
+            {open ? 'Hide the scoreboard' : 'Who else was in this game'}
+          </AccordionTrigger>
+
+          <AccordionContent className="px-3 pb-3">
+            {isPending ? (
+              <Skeleton className="h-[184px] rounded-[6px]" />
+            ) : detail ? (
+              <MatchScoreboard
+                detail={detail}
+                staticData={staticData}
+                groupSlug={groupSlug}
+                scope={scope}
+              />
+            ) : (
+              <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   )
 }

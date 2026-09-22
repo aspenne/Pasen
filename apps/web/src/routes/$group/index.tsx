@@ -6,6 +6,7 @@ import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { DuoHighlights } from '@/components/home/DuoHighlights'
 import { GroupHero } from '@/components/home/GroupHero'
+import { RosterCard } from '@/components/home/RosterCard'
 import { GroupRhythm } from '@/components/home/GroupRhythm'
 import { SignatureChampions } from '@/components/home/SignatureChampions'
 import { Reveal } from '@/components/Reveal'
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { memberColor, rankLabel, tierColor, tierCrest } from '@/lib/format'
+import { memberColor } from '@/lib/format'
 
 /** Enough to show what kind of day it was without scrolling past it. */
 const FEED_PREVIEW = 6
@@ -139,7 +140,7 @@ function Dashboard() {
       {live && live.games.length > 0 && (
         <section>
           <h2 className="mb-2.5 flex items-center gap-2 text-[13px] tracking-[0.04em] text-loss">
-            <span className="inline-block size-[7px] rounded-full bg-loss" />
+            <span aria-hidden className="live-dot inline-block size-[7px] rounded-full bg-loss" />
             IN GAME NOW · {live.games.length}
           </h2>
           <div className="space-y-2.5">
@@ -228,41 +229,15 @@ function Dashboard() {
         <section>
           <h2 className="mb-2 text-[13px] text-ink">Roster</h2>
           <Reveal token={scope} className="grid gap-2 sm:grid-cols-2">
-            {overview.members.map((member, index) => {
-              const solo = member.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
-              return (
-                <div
-                  key={member.slug}
-                  className="flex items-center gap-3 rounded-[6px] border border-line bg-panel px-3.5 py-3"
-                >
-                  <span
-                    aria-hidden
-                    className="h-8 w-0.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: memberColor(member.accentColor, index) }}
-                  />
-                  {solo?.tier && tierCrest(solo.tier) && (
-                    <img src={tierCrest(solo.tier)!} alt="" aria-hidden width={26} height={26} className="shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[13px] text-ink">{member.displayName}</div>
-                    {/* Tinted by tier, but the tier is written out - the colours
-                        alone do not separate Master from Diamond. */}
-                    <div
-                      className="truncate text-[11px]"
-                      style={{ color: solo ? tierColor(solo.tier) : undefined }}
-                    >
-                      {solo ? rankLabel(solo) : 'Unranked'}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="tnum text-[13px] text-ink">{member.totals.winRate}%</div>
-                    <div className="tnum text-[11px] text-ink-muted">
-                      {member.totals.games} games
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {overview.members.map((member, index) => (
+              <RosterCard
+                key={member.slug}
+                member={member}
+                index={index}
+                groupSlug={group}
+                scope={scope}
+              />
+            ))}
           </Reveal>
         </section>
       )}

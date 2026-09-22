@@ -346,3 +346,28 @@
     transform: none;
   }
 }
+
+/*
+ * The live marker. A ring expanding out of the dot rather than the dot itself
+ * blinking: it reads as a signal that keeps going, and it never changes the
+ * dot's own contrast against the text beside it.
+ */
+@keyframes pasen-pulse {
+  70% {
+    box-shadow: 0 0 0 9px rgb(229 72 77 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(229 72 77 / 0);
+  }
+}
+
+.live-dot {
+  box-shadow: 0 0 0 0 rgb(229 72 77 / 0.55);
+  animation: pasen-pulse 2.2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}

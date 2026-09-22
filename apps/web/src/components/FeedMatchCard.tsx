@@ -1,11 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
 import { MatchScoreboard } from '@/components/MatchScoreboard'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type FeedMatch, type StaticData } from '@/lib/api'
 import type { QueueScope } from '@pasen/shared'
@@ -147,35 +152,33 @@ export function FeedMatchCard({
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-center gap-1.5 border-t border-white/5 py-2 text-[12px] text-ink-dim transition-colors hover:text-ink"
+      <Accordion
+        type="single"
+        collapsible
+        value={open ? 'board' : ''}
+        onValueChange={(value) => setOpen(value === 'board')}
       >
-        {open ? 'Hide scoreboard' : 'Who else was in this game'}
-        <ChevronDown
-          size={13}
-          className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
+        <AccordionItem value="board" className="border-b-0">
+          <AccordionTrigger className="items-center justify-center gap-1.5 rounded-none border-t border-white/5 px-4 py-2 text-[12px] font-normal text-ink-dim hover:text-ink hover:no-underline">
+            {open ? 'Hide scoreboard' : 'Who else was in this game'}
+          </AccordionTrigger>
 
-      {open && (
-        <div className="px-[18px] pb-3.5">
-          {detailPending ? (
-            <Skeleton className="h-[184px] rounded-[6px]" />
-          ) : detail ? (
-            <MatchScoreboard
-              detail={detail}
-              staticData={staticData}
-              groupSlug={groupSlug}
-              scope={scope}
-            />
-          ) : (
-            <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
-          )}
-        </div>
-      )}
+          <AccordionContent className="px-[18px] pb-3.5">
+            {detailPending ? (
+              <Skeleton className="h-[184px] rounded-[6px]" />
+            ) : detail ? (
+              <MatchScoreboard
+                detail={detail}
+                staticData={staticData}
+                groupSlug={groupSlug}
+                scope={scope}
+              />
+            ) : (
+              <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </article>
   )
 }
