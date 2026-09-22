@@ -1,0 +1,11 @@
+{
+  "name": "@pasen/agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Captures a custom game from the League client before it disappears",
+  "bin": { "pasen-agent": "./agent.js" },
+  "scripts": {
+    "watch": "node agent.js"
+  }
+}
