@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { memberColor } from '@/lib/format'
+import { memberColor, rankScore } from '@/lib/format'
 
 /** Enough to show what kind of day it was without scrolling past it. */
 const FEED_PREVIEW = 6
@@ -61,6 +61,24 @@ function Dashboard() {
     // only re-read the same cache entry.
     refetchInterval: 20_000,
   })
+
+  /*
+   * Best solo queue standing first. The original position travels with each
+   * member: their colour is assigned from it, and the rule is that a colour
+   * follows the person rather than their place in a list - reordering the
+   * roster must not repaint the group.
+   */
+  const rosterByRank = useMemo(() => {
+    const entries = (overview?.members ?? []).map((member, index) => ({ member, index }))
+
+    return entries.sort((a, b) => {
+      const soloOf = (entry: (typeof entries)[number]) =>
+        entry.member.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
+      const difference = rankScore(soloOf(b)) - rankScore(soloOf(a))
+      // Unranked members keep a stable order instead of shuffling on each load.
+      return difference !== 0 ? difference : a.index - b.index
+    })
+  }, [overview])
 
   const colorFor = useMemo(() => {
     const colors = new Map(
@@ -229,7 +247,7 @@ function Dashboard() {
         <section>
           <h2 className="mb-2 text-[13px] text-ink">Roster</h2>
           <Reveal token={scope} className="grid gap-2 sm:grid-cols-2">
-            {overview.members.map((member, index) => (
+            {rosterByRank.map(({ member, index }) => (
               <RosterCard
                 key={member.slug}
                 member={member}

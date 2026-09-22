@@ -165,3 +165,51 @@ export function rankShort(rank: {
 }
 
 const ROMAN: Record<string, string> = { I: '1', II: '2', III: '3', IV: '4' }
+
+/** Lowest to highest, which is also the order every comparison below relies on. */
+export const TIER_ORDER = [
+  'IRON',
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'PLATINUM',
+  'EMERALD',
+  'DIAMOND',
+  'MASTER',
+  'GRANDMASTER',
+  'CHALLENGER',
+] as const
+
+const DIVISION_ORDER = ['IV', 'III', 'II', 'I']
+/** Clear of Diamond I at a hundred points, which is the highest a division goes. */
+const APEX_BASE = 2_900
+
+/**
+ * A standing as one number, so two of them can be compared.
+ *
+ * Master, Grandmaster and Challenger are one continuous ladder measured in LP,
+ * and their divisions mean nothing - Grandmaster simply begins wherever the
+ * seven hundredth player sits that day. So above Master the LP alone decides,
+ * and a Master on 1311 correctly outranks one on 48 without the tier index
+ * getting involved.
+ *
+ * Unranked returns -1, which sorts it below Iron IV rather than beside it.
+ */
+export function rankScore(
+  rank: { tier: string | null; rank: string | null; leaguePoints: number } | null | undefined
+): number {
+  if (!rank?.tier) return -1
+
+  const tier = TIER_ORDER.indexOf(rank.tier.toUpperCase() as (typeof TIER_ORDER)[number])
+  if (tier < 0) return -1
+
+  if (tier >= TIER_ORDER.indexOf('MASTER')) return APEX_BASE + rank.leaguePoints
+
+  const division = Math.max(0, DIVISION_ORDER.indexOf(rank.rank ?? 'IV'))
+  /*
+   * Capped at 99 so a division can never reach the next tier's floor: Silver I
+   * on 100 LP is a promotion away from Gold IV on 0, and scoring them equal
+   * left the order between them to chance.
+   */
+  return tier * 400 + division * 100 + Math.min(rank.leaguePoints, 99)
+}
