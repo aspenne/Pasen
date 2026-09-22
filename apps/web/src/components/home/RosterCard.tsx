@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 import type { GroupOverview } from '@/lib/api'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
-import { memberColor, rankLabel, tierColor, tierCrest } from '@/lib/format'
+import { memberColor, rankedQueueFor, rankLabel, tierColor, tierCrest } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
 
 type Member = GroupOverview['members'][number]
@@ -26,8 +26,9 @@ export function RosterCard({
   groupSlug: string
   scope: QueueScope
 }) {
-  const solo = member.ranks.find((rank) => rank.queueType === 'RANKED_SOLO_5x5')
-  const crest = solo?.tier ? tierCrest(solo.tier) : null
+  // The standing the scope is asking about, so flex shows a flex rank.
+  const standing = member.ranks.find((rank) => rank.queueType === rankedQueueFor(scope))
+  const crest = standing?.tier ? tierCrest(standing.tier) : null
 
   return (
     <HoverCard openDelay={180} closeDelay={80}>
@@ -51,9 +52,9 @@ export function RosterCard({
                 do not separate Master from Diamond. */}
             <span
               className="block truncate text-[11px]"
-              style={{ color: solo ? tierColor(solo.tier) : undefined }}
+              style={{ color: standing ? tierColor(standing.tier) : undefined }}
             >
-              {solo ? rankLabel(solo) : 'Unranked'}
+              {standing ? rankLabel(standing) : 'Unranked'}
             </span>
           </span>
 

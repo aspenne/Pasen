@@ -213,3 +213,18 @@ export function rankScore(
    */
   return tier * 400 + division * 100 + Math.min(rank.leaguePoints, 99)
 }
+
+/**
+ * The ranked ladder a scope is asking about, if it is asking about one.
+ *
+ * Only two of the scopes name a ranked queue. The rest - Summoner's Rift,
+ * normals, ARAM, Arena, everything - span queues with no ladder between them,
+ * and ordering a roster by a ladder that does not cover the games being shown
+ * would be inventing a standing. Those fall back to solo queue, which is the
+ * one everybody recognises and the only one a row can state without
+ * qualification.
+ */
+export function rankedQueueFor(scope: string): string {
+  if (scope === 'ranked_flex') return 'RANKED_FLEX_SR'
+  return 'RANKED_SOLO_5x5'
+}

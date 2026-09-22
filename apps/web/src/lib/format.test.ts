@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { rankScore } from '@/lib/format'
+import { rankedQueueFor, rankScore } from '@/lib/format'
 
 const at = (tier: string | null, division: string | null, leaguePoints: number) => ({
   tier,
@@ -52,5 +52,20 @@ describe('rankScore', () => {
       'visage insolite',
       'le facteur',
     ])
+  })
+})
+
+describe('rankedQueueFor', () => {
+  it('names the ladder a ranked scope is about', () => {
+    expect(rankedQueueFor('ranked_solo')).toBe('RANKED_SOLO_5x5')
+    expect(rankedQueueFor('ranked_flex')).toBe('RANKED_FLEX_SR')
+  })
+
+  it('falls back to solo where a scope covers no ladder', () => {
+    // Rift, normals, ARAM, Arena and "all" span queues with no ladder between
+    // them; ordering by one that does not cover them would invent a standing.
+    for (const scope of ['rift', 'normal', 'clash', 'aram', 'arena', 'all']) {
+      expect(rankedQueueFor(scope)).toBe('RANKED_SOLO_5x5')
+    }
   })
 })
