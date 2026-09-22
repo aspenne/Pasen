@@ -28,7 +28,7 @@ export function RankPanel({ ranks, points }: RankPanelProps) {
   )
 
   return (
-    <div className="divide-y divide-line rounded-[8px] border border-line bg-panel">
+    <div className="tinted divide-y divide-line rounded-[8px] border border-line bg-panel">
       {ranks.map((rank) => {
         const color = tierColor(rank.tier)
         const crest = tierCrest(rank.tier)

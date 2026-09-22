@@ -51,7 +51,7 @@ export function DuoHighlights({
         {top.map((pair) => (
           <div
             key={`${pair.a}-${pair.b}`}
-            className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[8px] border border-line bg-panel px-3.5 py-3"
+            className="tinted flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[8px] border border-line bg-panel px-3.5 py-3"
           >
             <span className="flex shrink-0 gap-1" aria-hidden>
               <span

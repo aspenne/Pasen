@@ -18,7 +18,7 @@ const TONES = {
 
 export function StatTile({ label, value, detail, tone = 'default' }: StatTileProps) {
   return (
-    <div className="rounded-[6px] border border-line bg-panel px-[15px] py-3">
+    <div className="tinted rounded-[6px] border border-line bg-panel px-[15px] py-3">
       <div className="text-[10px] uppercase tracking-[0.13em] text-ink-dim">{label}</div>
       {/* Proportional figures: tabular ones read loose at this size. */}
       <div className={`display mt-2 text-[21px] font-semibold leading-none ${TONES[tone]}`}>

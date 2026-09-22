@@ -63,7 +63,7 @@ export function GroupRhythm({ days }: { days: ActivityDay[] }) {
 
       <div
         ref={plot}
-        className="flex h-[92px] items-end gap-[3px] rounded-[10px] border border-line bg-panel px-3 py-2.5"
+        className="tinted flex h-[92px] items-end gap-[3px] rounded-[10px] border border-line bg-panel px-3 py-2.5"
         role="img"
         aria-label={`Daily games over the last ${window.length} days, from ${label(
           window[0].date

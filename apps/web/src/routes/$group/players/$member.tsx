@@ -1,6 +1,6 @@
 import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { PLATFORM_SHORT, SCOPE_LABELS, type Platform } from '@pasen/shared'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSort } from '@/hooks/useSort'
 import { api, type ChampionPoolEntry } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { memberColor, memberHex, timeAgo } from '@/lib/format'
+import { memberColor, memberHex, tierColor, timeAgo } from '@/lib/format'
 
 /*
  * "All" is every snapshot we hold, not a season: rank has only been recorded
@@ -98,7 +98,16 @@ function MemberPage() {
   )
 
   return (
-    <div className="space-y-6">
+    /*
+     * The page takes the colour of the standing it is about: froslass violet,
+     * Azizes blue, LORIS green. Every panel below washes with it, which is how
+     * dpm gives each profile a look of its own rather than one dark template
+     * with a different name on it.
+     */
+    <div
+      className="space-y-6"
+      style={{ '--tint': tierColor(solo?.tier) } as CSSProperties}
+    >
       {isPending ? (
         <Skeleton className="h-[126px] rounded-[10px]" />
       ) : (

@@ -74,7 +74,7 @@ export function FeedMatchCard({
   }[outcome]
 
   return (
-    <article className={`overflow-hidden rounded-[8px] border border-line border-l-[3px] bg-panel ${edge}`}>
+    <article className={`tinted overflow-hidden rounded-[8px] border border-line border-l-[3px] bg-panel ${edge}`}>
       {/*
         One card per match however many of the group were in it, so a five-stack
         is one game rather than five. The shared context is stated once above

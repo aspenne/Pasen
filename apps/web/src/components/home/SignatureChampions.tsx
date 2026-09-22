@@ -56,7 +56,7 @@ export function SignatureChampions({
           return (
             <div
               key={champion.championId}
-              className="flex items-center gap-3 rounded-[8px] border border-line bg-panel px-3.5 py-3"
+              className="tinted flex items-center gap-3 rounded-[8px] border border-line bg-panel px-3.5 py-3"
             >
               <ChampionIcon
                 championId={champion.championId}
