@@ -59,43 +59,46 @@ export function FeedMatchCard({
 
   const results = new Set(match.members.map((member) => member.win))
   const outcome = results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
+  const shared = match.members.length > 1
 
   /*
-   * The result still reaches the eye before any number does, but as a wash of
-   * the result colour over the ground rather than an opaque slab of it. The
-   * old surfaces were mixed for a lighter, bluer page; on near-black they read
-   * as coloured blocks sitting on top of the site instead of part of it.
+   * A neutral panel with the result on its leading edge, rather than a wash of
+   * the result colour across the whole card. Thirty of those in an evening
+   * turns the feed into alternating blocks of blue and red, and the pill on
+   * each line says the same thing without tinting everything around it.
    */
-  const surface = {
-    win: 'border-l-2 border-l-win bg-win/[0.07]',
-    loss: 'border-l-2 border-l-loss bg-loss/[0.07]',
-    split: 'border-l-2 border-l-line-strong bg-panel',
+  const edge = {
+    win: 'border-l-win',
+    loss: 'border-l-loss',
+    split: 'border-l-line-strong',
   }[outcome]
 
   return (
-    <article className={`overflow-hidden rounded-[8px] border border-line ${surface}`}>
-      <header className="flex items-center justify-between gap-3 px-4 pt-3 text-[12px]">
-        <div className="flex items-baseline gap-2.5">
-          <span className="text-ink">{queueLabel(match.queueGroup)}</span>
-          <span className="text-ink-dim">{clockTime(match.gameCreation, timezone)}</span>
-          <span className="tnum text-ink-dim">{duration(match.gameDuration)}</span>
-        </div>
-
-        {outcome === 'split' ? (
-          <span className="text-[12px] text-ink-dim">Against each other</span>
-        ) : (
-          <span className={outcome === 'win' ? 'text-win' : 'text-loss'}>
-            {outcome === 'win' ? 'Victory' : 'Defeat'}
-          </span>
-        )}
-      </header>
+    <article className={`overflow-hidden rounded-[8px] border border-line border-l-[3px] bg-panel ${edge}`}>
+      {/*
+        One card per match however many of the group were in it, so a five-stack
+        is one game rather than five. The shared context is stated once above
+        the rows; a lone player carries it on their own line instead.
+      */}
+      {shared && (
+        <header className="flex items-center justify-between gap-3 px-4 pt-3 text-[12px]">
+          <div className="flex items-baseline gap-2.5">
+            <span className="text-ink">{queueLabel(match.queueGroup)}</span>
+            <span className="text-ink-dim">{clockTime(match.gameCreation, timezone)}</span>
+            <span className="tnum text-ink-dim">{duration(match.gameDuration)}</span>
+          </div>
+          {outcome === 'split' && (
+            <span className="text-ink-dim">Against each other</span>
+          )}
+        </header>
+      )}
 
       <div className="divide-y divide-white/5">
         {match.members.map((member) => (
-          <div key={member.memberSlug} className="flex items-center gap-3 px-4 py-3">
+          <div key={member.memberSlug} className="flex items-center gap-3.5 px-4 py-3">
             <span
               aria-hidden
-              className="h-8 w-[3px] shrink-0 rounded-full"
+              className="h-9 w-[3px] shrink-0 rounded-full"
               style={{ backgroundColor: colorFor(member.memberSlug) }}
             />
 
@@ -103,7 +106,8 @@ export function FeedMatchCard({
               championId={member.championId}
               championName={member.championName}
               staticData={staticData}
-              size={42}
+              size={46}
+              className="rounded-[10px]"
             />
 
             <div className="min-w-0 flex-1">
@@ -113,7 +117,7 @@ export function FeedMatchCard({
                 // Carries the active scope, so following a link does not
                 // silently change the question being asked.
                 search={{ scope }}
-                className="block truncate text-[14px] text-ink transition-colors hover:text-accent"
+                className="display block truncate text-[15px] font-semibold text-ink transition-colors hover:text-accent"
               >
                 {member.displayName}
               </Link>
@@ -121,33 +125,37 @@ export function FeedMatchCard({
                 {member.championName}
                 {positionLabel(member.teamPosition) && ` · ${positionLabel(member.teamPosition)}`}
                 {member.subteamPlacement && ` · #${member.subteamPlacement}`}
+                {!shared && ` · ${queueLabel(match.queueGroup)}`}
               </div>
             </div>
 
-            <div className="hidden lg:block">
+            <div className="hidden xl:block">
               <ItemRow items={member.items} staticData={staticData} />
             </div>
 
-            <div className="w-[124px] shrink-0 text-right">
-              <div className="display tnum text-[15px] font-semibold text-ink">
+            <div className="w-[118px] shrink-0 text-right">
+              <div className="display tnum text-[16px] font-bold text-ink">
                 {member.kills} / {member.deaths} / {member.assists}
               </div>
-              <div className="tnum mt-0.5 text-[12px] text-ink-muted">
+              <div className="tnum mt-0.5 text-[11px] text-ink-muted">
                 {kda(member.kills, member.deaths, member.assists)} KDA · {member.cs} cs
               </div>
             </div>
 
-            {/* Only a split card needs a per-member result; otherwise the card
-                has already said it and repeating it is noise. */}
-            {outcome === 'split' && (
+            <div className="w-[104px] shrink-0 text-right">
               <span
-                className={`w-[52px] shrink-0 text-right text-[13px] ${
-                  member.win ? 'text-win' : 'text-loss'
+                className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${
+                  member.win ? 'bg-win/15 text-win' : 'bg-loss/15 text-loss'
                 }`}
               >
-                {member.win ? 'Win' : 'Loss'}
+                {member.win ? 'Victory' : 'Defeat'}
               </span>
-            )}
+              {!shared && (
+                <div className="tnum mt-1 text-[11px] text-ink-dim">
+                  {clockTime(match.gameCreation, timezone)} · {duration(match.gameDuration)}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
