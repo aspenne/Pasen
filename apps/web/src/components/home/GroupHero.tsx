@@ -47,7 +47,7 @@ export function GroupHero({
   const championId = standout?.championId ?? backdropChampionId
   const art =
     championCentered(championId) ??
-    championSplash(staticData?.champions[String(championId ?? '')]?.slug) ??
+    championSplash(staticData?.champions?.[String(championId ?? '')]?.slug) ??
     null
 
   const played = totals?.games ?? 0

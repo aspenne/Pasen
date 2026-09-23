@@ -20,7 +20,7 @@ export function ChampionIcon({
   size = 48,
   className = '',
 }: ChampionIconProps) {
-  const champion = staticData?.champions[String(championId)]
+  const champion = staticData?.champions?.[String(championId)]
   const src = championIcon(staticData?.version ?? null, champion?.slug)
   const label = champion?.name ?? championName
 

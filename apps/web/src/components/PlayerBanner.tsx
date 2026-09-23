@@ -39,7 +39,7 @@ export function PlayerBanner({
   accent = 'var(--color-accent)',
   children,
 }: PlayerBannerProps) {
-  const champion = championId ? staticData?.champions[String(championId)] : undefined
+  const champion = championId ? staticData?.champions?.[String(championId)] : undefined
   const splash = championSplash(champion?.slug)
   const centered = championCentered(championId)
   const avatar = profileIcon(staticData?.version ?? null, profileIconId)

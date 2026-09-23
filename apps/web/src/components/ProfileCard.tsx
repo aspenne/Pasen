@@ -65,7 +65,7 @@ export function ProfileCard({
   const mostPlayed = pool?.entries[0]
   const centered = championCentered(mostPlayed?.championId)
   const splash = championSplash(
-    staticData?.champions[String(mostPlayed?.championId ?? '')]?.slug
+    staticData?.champions?.[String(mostPlayed?.championId ?? '')]?.slug
   )
 
   const move = (clientX: number, clientY: number) => {

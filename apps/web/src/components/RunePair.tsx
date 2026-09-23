@@ -31,8 +31,8 @@ export function RunePair({
   // Arena and bot games arrive with every id zeroed; there is nothing to draw.
   if (!keystoneId && !secondaryId) return null
 
-  const keystone = staticData?.runes[String(keystoneId)]
-  const secondary = staticData?.runes[String(secondaryId)]
+  const keystone = staticData?.runes?.[String(keystoneId)]
+  const secondary = staticData?.runes?.[String(secondaryId)]
   const small = Math.round(size * 0.62)
 
   return (

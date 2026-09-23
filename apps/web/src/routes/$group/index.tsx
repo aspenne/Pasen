@@ -179,7 +179,7 @@ function Dashboard() {
                 game={game}
                 staticData={staticData}
                 queueLabel={
-                  staticData?.queues[String(game.queueId)]?.description ?? game.gameMode
+                  staticData?.queues?.[String(game.queueId)]?.description ?? game.gameMode
                 }
               />
             ))}

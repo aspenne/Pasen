@@ -24,7 +24,15 @@ export default class StaticController {
 
     // The patch only moves once every couple of weeks, and every id below is
     // stable within it, so this is worth caching hard in the browser.
-    response.header('Cache-Control', 'public, max-age=3600')
+    /*
+     * Short freshness, long grace. A browser holding an older copy of this
+     * payload is missing whichever key was added since - and a lookup into a
+     * key that is not there throws, which is how adding runes broke exactly one
+     * device and no others. Five minutes of hard caching keeps the request
+     * cheap; the hour of stale-while-revalidate keeps it instant while the new
+     * copy arrives in the background.
+     */
+    response.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=3600')
 
     return {
       version: (version?.value as string | undefined) ?? null,

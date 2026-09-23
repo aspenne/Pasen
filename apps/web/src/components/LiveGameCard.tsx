@@ -39,7 +39,7 @@ function SpellPair({
   return (
     <div className="hidden shrink-0 flex-col gap-[2px] sm:flex">
       {spells.map((id, index) => {
-        const spell = staticData?.summonerSpells[String(id)]
+        const spell = staticData?.summonerSpells?.[String(id)]
         const src = spellIcon(staticData?.version ?? null, spell?.slug)
         return (
           <div key={index} className="size-[15px] overflow-hidden rounded-[3px] bg-line-strong">
@@ -143,7 +143,7 @@ export function LiveGameCard({
                   <ChampionIcon
                     championId={participant.championId}
                     championName={
-                      staticData?.champions[String(participant.championId)]?.name ??
+                      staticData?.champions?.[String(participant.championId)]?.name ??
                       String(participant.championId)
                     }
                     staticData={staticData}
@@ -155,7 +155,7 @@ export function LiveGameCard({
                       {participant.displayName ?? participant.riotId}
                     </span>
                     <span className="block truncate text-[11px] font-normal text-ink-dim">
-                      {staticData?.champions[String(participant.championId)]?.name ?? 'Champion'}
+                      {staticData?.champions?.[String(participant.championId)]?.name ?? 'Champion'}
                     </span>
                   </span>
                 </span>
