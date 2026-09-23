@@ -28,7 +28,14 @@ export type GroupMemberOverview = {
   accentColor: string | null
   accounts: MemberAccount[]
   ranks: MemberRank[]
-  totals: { games: number; wins: number; winRate: number; championsPlayed: number }
+  totals: {
+    games: number
+    wins: number
+    winRate: number
+    championsPlayed: number
+    /** Arena only: Riot counts a podium as a win, so these are the games taken. */
+    firstPlaces: number
+  }
 }
 
 export type GroupOverview = {
@@ -74,6 +81,7 @@ export class GroupService {
           wins: 0,
           winRate: 0,
           championsPlayed: 0,
+          firstPlaces: 0,
         },
       })),
     }
@@ -126,6 +134,10 @@ export class GroupService {
       .count('* as games')
       .sum({ wins: db.raw('case when p.win then 1 else 0 end') })
       .countDistinct('p.champion_id as champions')
+      .sum({
+        // Arena reports a finishing position; every other mode leaves it null.
+        firsts: db.raw('case when p.subteam_placement = 1 then 1 else 0 end'),
+      })
 
     applyScope(query, scope)
     const rows = await query
@@ -141,6 +153,7 @@ export class GroupService {
             wins,
             winRate: games === 0 ? 0 : Math.round((wins / games) * 1000) / 10,
             championsPlayed: Number(row.champions),
+            firstPlaces: Number(row.firsts),
           },
         ]
       })

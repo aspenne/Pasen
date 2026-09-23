@@ -74,11 +74,19 @@ function Dashboard() {
     const queueType = rankedQueueFor(scope)
     const entries = (overview?.members ?? []).map((member, index) => ({ member, index }))
 
+    /*
+     * Arena has no ladder, but it does have a standing: Riot counts any podium
+     * as a win there, so the win rate says little and the games actually taken
+     * say everything.
+     */
+    const standing = (entry: (typeof entries)[number]) =>
+      scope === 'arena'
+        ? entry.member.totals.firstPlaces
+        : rankScore(entry.member.ranks.find((rank) => rank.queueType === queueType))
+
     return entries.sort((a, b) => {
-      const standingOf = (entry: (typeof entries)[number]) =>
-        entry.member.ranks.find((rank) => rank.queueType === queueType)
-      const difference = rankScore(standingOf(b)) - rankScore(standingOf(a))
-      // Unranked members keep a stable order instead of shuffling on each load.
+      const difference = standing(b) - standing(a)
+      // Ties keep a stable order instead of shuffling on each load.
       return difference !== 0 ? difference : a.index - b.index
     })
   }, [overview, scope])

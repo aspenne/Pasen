@@ -76,7 +76,14 @@ export type GroupMember = {
   accentColor: string | null
   accounts: MemberAccount[]
   ranks: MemberRank[]
-  totals: { games: number; wins: number; winRate: number; championsPlayed: number }
+  totals: {
+    games: number
+    wins: number
+    winRate: number
+    championsPlayed: number
+    /** Arena only: Riot counts a podium as a win, so these are the games taken. */
+    firstPlaces: number
+  }
 }
 
 export type GroupOverview = {

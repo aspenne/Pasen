@@ -59,10 +59,24 @@ export function RosterCard({
           </span>
 
           <span className="text-right">
-            <span className="tnum block text-[13px] text-ink">{member.totals.winRate}%</span>
-            <span className="tnum block text-[11px] text-ink-muted">
-              {member.totals.games} games
-            </span>
+            {/* In Arena the win rate counts podiums, so the firsts lead instead. */}
+            {scope === 'arena' ? (
+              <>
+                <span className="tnum block text-[13px] text-win">
+                  {member.totals.firstPlaces} first
+                </span>
+                <span className="tnum block text-[11px] text-ink-muted">
+                  {member.totals.games} games
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="tnum block text-[13px] text-ink">{member.totals.winRate}%</span>
+                <span className="tnum block text-[11px] text-ink-muted">
+                  {member.totals.games} games
+                </span>
+              </>
+            )}
           </span>
         </Link>
       </HoverCardTrigger>
