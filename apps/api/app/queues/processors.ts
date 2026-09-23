@@ -10,6 +10,12 @@ import { MatchSyncService } from '#ingestion/match_sync_service'
 import { HOT_WINDOW_HOURS, selectLivePollTargets } from '#ingestion/live_poll_selection'
 import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
 import { RankService } from '#ingestion/rank_service'
+import {
+  pentakillAnnouncement,
+  rankAnnouncement,
+  streakAnnouncement,
+} from '#notifications/announcements'
+import { DiscordService } from '#notifications/discord_service'
 import { JOBS, type RecentSyncAccountPayload } from '#queues/jobs'
 import { queue } from '#queues/main'
 import { riot } from '#riot/service'
@@ -104,17 +110,73 @@ export async function processRecentSyncAccount(job: Job<RecentSyncAccountPayload
 
   const outcome = await new MatchSyncService(riot()).syncRecent(account)
   logger.info({ account: account.riotId, ...outcome }, 'post-game sync')
+
+  if (outcome.ingested > 0) await announceFrom(account)
 }
 
 export async function processRankSnapshot(): Promise<void> {
   const service = new RankService(riot())
+  const discord = new DiscordService()
+  const today = DateTime.utc().toISODate()!
 
   for (const account of await trackedAccounts()) {
     const result = await service.snapshot(account)
     if (result.recorded.length > 0) {
       logger.info({ account: account.riotId, queues: result.recorded }, 'rank moved')
     }
+
+    if (result.moves.length === 0) continue
+
+    await account.load('member')
+    for (const move of result.moves) {
+      const announcement = rankAnnouncement(account.member.displayName, account.id, move, today)
+      if (announcement) await discord.announce(announcement)
+    }
   }
+}
+
+/**
+ * What a freshly ingested game is worth telling the channel.
+ *
+ * Read from the database rather than from the ingest result, because a match
+ * shared by several members is ingested once and the others' rows are already
+ * there - and because the streak has to be counted over history anyway.
+ */
+async function announceFrom(account: RiotAccount): Promise<void> {
+  const discord = new DiscordService()
+  if (!(await discord.webhookUrl())) return
+
+  await account.load('member')
+  const name = account.member.displayName
+
+  const recent = await db
+    .from('match_participants as p')
+    .join('matches as m', 'm.match_id', 'p.match_id')
+    .where('p.puuid', account.puuid)
+    .andWhere('m.stats_eligible', true)
+    .orderBy('m.game_creation', 'desc')
+    .limit(20)
+    .select('p.match_id', 'p.win', 'p.penta_kills', 'p.champion_name')
+
+  if (recent.length === 0) return
+
+  for (const row of recent.slice(0, 3)) {
+    if (Number(row.penta_kills) > 0) {
+      await discord.announce(
+        pentakillAnnouncement(name, row.champion_name, row.match_id, account.puuid)
+      )
+    }
+  }
+
+  // Counted from the newest backwards; the run ends at the first defeat.
+  let streak = 0
+  for (const row of recent) {
+    if (!row.win) break
+    streak++
+  }
+
+  const announcement = streakAnnouncement(name, streak, recent[0].match_id, account.id)
+  if (announcement) await discord.announce(announcement)
 }
 
 export async function processBackfillStep(): Promise<void> {
