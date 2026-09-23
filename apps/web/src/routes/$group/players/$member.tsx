@@ -123,6 +123,12 @@ function MemberPage() {
           figure={
             rosterEntry ? <CountUp value={rosterEntry.totals.winRate} decimals={1} suffix="%" /> : '—'
           }
+          /*
+           * Riot marks any podium finish as a win in Arena, so calling that a
+           * win rate overstates it threefold - Nøah reads 73.7% there and takes
+           * first in 18.1% of his games.
+           */
+          figureCaption={scope === 'arena' ? 'podium rate' : undefined}
           figureLabel={`${rosterEntry?.totals.games ?? 0} games · ${SCOPE_LABELS[scope]}`}
           profileIconId={account?.profileIconId ?? null}
           championId={pool?.entries[0]?.championId}
@@ -143,10 +149,23 @@ function MemberPage() {
           value={totals ? <CountUp value={totals.kda} decimals={2} /> : '—'}
           detail={totals ? `${totals.kills}/${totals.deaths}/${totals.assists}` : undefined}
         />
-        <StatTile
-          label="CS per minute"
-          value={totals ? <CountUp value={totals.csPerMinute} decimals={1} /> : '—'}
-        />
+        {scope === 'arena' ? (
+          <StatTile
+            label="First places"
+            value={totals ? <CountUp value={totals.firstPlaces} /> : '—'}
+            detail={
+              totals && totals.games > 0
+                ? `${Math.round((totals.firstPlaces / totals.games) * 1000) / 10}% of games`
+                : undefined
+            }
+            tone="win"
+          />
+        ) : (
+          <StatTile
+            label="CS per minute"
+            value={totals ? <CountUp value={totals.csPerMinute} decimals={1} /> : '—'}
+          />
+        )}
         <StatTile
           label="Champion pool"
           value={pool ? <CountUp value={pool.played} /> : '—'}

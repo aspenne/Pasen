@@ -7,6 +7,8 @@ type PlayerBannerProps = {
   name: string
   subtitle: string
   figure: ReactNode
+  /** Names what the figure measures, where that is not obvious. */
+  figureCaption?: string
   figureLabel: string
   profileIconId: number | null
   /** Their most played champion; its splash art becomes the backdrop. */
@@ -29,6 +31,7 @@ export function PlayerBanner({
   name,
   subtitle,
   figure,
+  figureCaption,
   figureLabel,
   profileIconId,
   championId,
@@ -86,6 +89,11 @@ export function PlayerBanner({
           <div className="display text-[34px] font-bold leading-none" style={{ color: accent }}>
             {figure}
           </div>
+          {figureCaption && (
+            <div className="mt-1 text-[11px] uppercase tracking-[0.13em] text-ink-warm">
+              {figureCaption}
+            </div>
+          )}
           <div className="mt-1.5 text-[13px] text-ink-warm">{figureLabel}</div>
         </div>
       </div>

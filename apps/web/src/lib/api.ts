@@ -283,6 +283,8 @@ export type MemberTotals = {
   pentaKills: number
   lateNightGames: number
   championsPlayed: number
+  /** Arena only: Riot counts a podium as a win, so these are the games taken. */
+  firstPlaces: number
 }
 
 export type Board = {

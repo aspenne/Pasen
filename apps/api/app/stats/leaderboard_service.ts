@@ -22,6 +22,12 @@ export type MemberTotals = {
   pentaKills: number
   lateNightGames: number
   championsPlayed: number
+  /**
+   * Arena only, and zero everywhere else. Riot marks a podium finish as a win
+   * in that mode, so the win rate beside this is a podium rate - these are the
+   * games actually taken.
+   */
+  firstPlaces: number
 }
 
 export type Board = {
@@ -107,6 +113,10 @@ export class LeaderboardService {
       .sum({ cs: 'p.cs' })
       .sum({ vision: 'p.vision_score' })
       .sum({ pentas: 'p.penta_kills' })
+      .sum({
+        // Arena reports a finishing position; every other mode leaves it null.
+        firsts: db.raw('case when p.subteam_placement = 1 then 1 else 0 end'),
+      })
       .sum({ seconds: 'm.game_duration' })
       .countDistinct('p.champion_id as champions')
       .sum({
@@ -144,6 +154,7 @@ export class LeaderboardService {
           pentaKills: Number(row.pentas),
           lateNightGames: Number(row.late_night),
           championsPlayed: Number(row.champions),
+          firstPlaces: Number(row.firsts),
         }
       })
       .sort((a, b) => b.games - a.games)
