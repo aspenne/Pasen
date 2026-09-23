@@ -110,6 +110,8 @@ export type FeedMember = {
   visionScore: number
   goldEarned: number
   items: number[]
+  /** Raw perk selections; the UI reads the keystone and the secondary tree. */
+  perks: unknown
   summonerSpells: [number, number]
   subteamPlacement: number | null
 }
@@ -186,6 +188,8 @@ export type MatchDetailPlayer = {
   visionScore: number
   champLevel: number
   items: number[]
+  /** Raw perk selections; the UI reads the keystone and the secondary tree. */
+  perks: unknown
   summonerSpells: [number, number]
   memberSlug: string | null
   displayName: string | null
@@ -408,6 +412,8 @@ export type StaticData = {
   champions: Record<string, { slug: string; name: string; title: string; tags: string[] }>
   summonerSpells: Record<string, { slug: string; name: string }>
   queues: Record<string, { description: string | null; map: string | null }>
+  /** Styles and runes together, keyed by the id a match payload uses. */
+  runes: Record<string, { kind: 'style' | 'perk'; name: string; image: string }>
 }
 
 /** Every stats call takes the same scope, so one control drives the whole site. */

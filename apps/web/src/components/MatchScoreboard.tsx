@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
+import { RunePair } from '@/components/RunePair'
 import { Reveal } from '@/components/Reveal'
 import type { MatchDetail, MatchDetailSide, StaticData } from '@/lib/api'
 import { kda, positionLabel } from '@/lib/format'
@@ -75,6 +76,8 @@ export function MatchScoreboard({
                         ` · ${positionLabel(player.teamPosition)}`}
                     </span>
                   </div>
+
+                  <RunePair perks={player.perks} staticData={staticData} size={20} />
 
                   <div className="hidden shrink-0 xl:block">
                     <ItemRow items={player.items} staticData={staticData} />

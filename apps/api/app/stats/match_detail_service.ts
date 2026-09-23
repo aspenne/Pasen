@@ -20,6 +20,8 @@ export type MatchDetailPlayer = {
   visionScore: number
   champLevel: number
   items: number[]
+  /** Raw perk selections; the UI reads the keystone and the secondary tree. */
+  perks: unknown
   summonerSpells: [number, number]
   /** Set when this player is tracked by the group being viewed. */
   memberSlug: string | null
@@ -103,6 +105,7 @@ export class MatchDetailService {
         'p.vision_score',
         'p.champ_level',
         'p.items',
+        'p.perks',
         'p.summoner1_id',
         'p.summoner2_id',
         'p.riot_id_game_name',
@@ -150,6 +153,7 @@ export class MatchDetailService {
         visionScore: row.vision_score,
         champLevel: row.champ_level,
         items: row.items ?? [],
+        perks: row.perks ?? null,
         summonerSpells: [row.summoner1_id, row.summoner2_id],
         memberSlug: row.member_slug ?? null,
         displayName: row.display_name ?? null,

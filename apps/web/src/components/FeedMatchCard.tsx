@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
+import { RunePair } from '@/components/RunePair'
 import { MatchScoreboard } from '@/components/MatchScoreboard'
 import {
   Accordion,
@@ -128,6 +129,8 @@ export function FeedMatchCard({
                 {!shared && ` · ${queueLabel(match.queueGroup)}`}
               </div>
             </div>
+
+            <RunePair perks={member.perks} staticData={staticData} size={24} />
 
             <div className="hidden xl:block">
               <ItemRow items={member.items} staticData={staticData} />

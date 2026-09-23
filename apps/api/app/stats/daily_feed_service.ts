@@ -22,6 +22,8 @@ export type FeedMember = {
   visionScore: number
   goldEarned: number
   items: number[]
+  /** Raw perk selections; the UI reads the keystone and the secondary tree. */
+  perks: unknown
   summonerSpells: [number, number]
   subteamPlacement: number | null
 }
@@ -117,6 +119,7 @@ export class DailyFeedService {
         'p.vision_score',
         'p.gold_earned',
         'p.items',
+        'p.perks',
         'p.summoner1_id',
         'p.summoner2_id',
         'p.subteam_placement'
@@ -163,6 +166,7 @@ export class DailyFeedService {
         visionScore: row.vision_score,
         goldEarned: row.gold_earned,
         items: row.items,
+      perks: row.perks ?? null,
         summonerSpells: [row.summoner1_id, row.summoner2_id],
         subteamPlacement: row.subteam_placement,
       })

@@ -5,6 +5,7 @@ import Setting from '#models/setting'
 import StaticChampion from '#models/static_champion'
 import StaticItem from '#models/static_item'
 import StaticQueue from '#models/static_queue'
+import StaticRune from '#models/static_rune'
 import StaticSummonerSpell from '#models/static_summoner_spell'
 
 const DDRAGON = 'https://ddragon.leagueoflegends.com'
@@ -35,6 +36,14 @@ type SpellEntry = {
   image: { full: string }
 }
 
+type RuneStyleEntry = {
+  id: number
+  key: string
+  name: string
+  icon: string
+  slots: { runes: { id: number; key: string; name: string; icon: string }[] }[]
+}
+
 type QueueEntry = {
   queueId: number
   map: string | null
@@ -49,6 +58,7 @@ export type SyncResult = {
   items: number
   summonerSpells: number
   queues: number
+  runes: number
 }
 
 /**
@@ -93,16 +103,25 @@ export class DDragonService {
 
     if (current === version && !options.force) {
       this.#logger?.info({ version }, 'data dragon already current')
-      return { version, skipped: true, champions: 0, items: 0, summonerSpells: 0, queues: 0 }
+      return {
+        version,
+        skipped: true,
+        champions: 0,
+        items: 0,
+        summonerSpells: 0,
+        queues: 0,
+        runes: 0,
+      }
     }
 
     this.#logger?.info({ version, previous: current }, 'syncing data dragon')
 
-    const [champions, items, spells, queues] = await Promise.all([
+    const [champions, items, spells, queues, runes] = await Promise.all([
       this.#json<{ data: Record<string, ChampionEntry> }>(this.#cdn(version, 'champion')),
       this.#json<{ data: Record<string, ItemEntry> }>(this.#cdn(version, 'item')),
       this.#json<{ data: Record<string, SpellEntry> }>(this.#cdn(version, 'summoner')),
       this.#json<QueueEntry[]>(QUEUES_URL),
+      this.#json<RuneStyleEntry[]>(this.#cdn(version, 'runesReforged')),
     ])
 
     const championRows = Object.values(champions.data).map((champion) => ({
@@ -137,6 +156,26 @@ export class DDragonService {
       version,
     }))
 
+    /*
+     * Flattened: a style and the runes inside it are referred to the same way
+     * by a match payload, and every screen drawing one draws the other beside
+     * it. Icon paths live under Data Dragon's unversioned image root, so they
+     * are stored exactly as given.
+     */
+    const runeRows = runes.flatMap((style) => [
+      { id: style.id, kind: 'style' as const, name: style.name, slug: style.key, image: style.icon, version },
+      ...style.slots.flatMap((slot) =>
+        slot.runes.map((rune) => ({
+          id: rune.id,
+          kind: 'perk' as const,
+          name: rune.name,
+          slug: rune.key,
+          image: rune.icon,
+          version,
+        }))
+      ),
+    ])
+
     const queueRows = queues.map((queue) => ({
       queueId: queue.queueId,
       map: queue.map,
@@ -151,6 +190,7 @@ export class DDragonService {
       await StaticItem.updateOrCreateMany('id', itemRows, { client })
       await StaticSummonerSpell.updateOrCreateMany('id', spellRows, { client })
       await StaticQueue.updateOrCreateMany('queueId', queueRows, { client })
+      await StaticRune.updateOrCreateMany('id', runeRows, { client })
     })
 
     await Setting.updateOrCreate({ key: VERSION_SETTING }, { value: version })
@@ -162,10 +202,11 @@ export class DDragonService {
       items: itemRows.length,
       summonerSpells: spellRows.length,
       queues: queueRows.length,
+      runes: runeRows.length,
     }
   }
 
-  #cdn(version: string, file: 'champion' | 'item' | 'summoner') {
+  #cdn(version: string, file: 'champion' | 'item' | 'summoner' | 'runesReforged') {
     return `${DDRAGON}/cdn/${version}/data/${this.#locale}/${file}.json`
   }
 

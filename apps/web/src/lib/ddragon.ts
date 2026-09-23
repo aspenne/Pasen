@@ -59,3 +59,11 @@ export function useStaticData() {
     gcTime: 24 * 60 * 60 * 1000,
   })
 }
+
+/**
+ * Rune and style artwork. Like splash art this lives outside the versioned
+ * tree, and the stored path already names the tree it belongs to.
+ */
+export function runeIcon(image: string | undefined): string | null {
+  return image ? `${CDN}/img/${image}` : null
+}
