@@ -65,7 +65,12 @@ function GroupLayout() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
+          {/*
+            Wraps as well as the header around it. Held on one line, the three
+            controls together needed 326px and pushed the whole document into a
+            sideways scroll at 320 - the width WCAG asks a page to reflow at.
+          */}
+          <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
             <nav className="flex gap-4 text-[12px]">
               {NAV.map((entry) => (
                 <Link

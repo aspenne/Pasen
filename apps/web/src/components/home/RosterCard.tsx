@@ -37,7 +37,7 @@ export function RosterCard({
           to="/$group/players/$member"
           params={{ group: groupSlug, member: member.slug }}
           search={{ scope }}
-          className="tinted flex items-center gap-3 rounded-[6px] border border-line bg-panel px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-panel-raised"
+          className="tinted flex min-w-0 items-center gap-3 rounded-[6px] border border-line bg-panel px-3.5 py-3 transition-colors hover:border-line-strong hover:bg-panel-raised"
         >
           <span
             aria-hidden

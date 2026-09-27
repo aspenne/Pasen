@@ -63,12 +63,12 @@ function Insights() {
     <div className="space-y-8">
       {/* Filters sit in one row above what they filter. */}
       <Tabs value={period} onValueChange={(value) => setPeriod(value as Leaderboards['period'])}>
-        <TabsList className="h-auto gap-1.5 rounded-[6px] bg-panel p-1.5">
+        <TabsList className="h-auto max-w-full flex-wrap gap-1.5 rounded-[6px] bg-panel p-1.5">
           {PERIODS.map((entry) => (
             <TabsTrigger
               key={entry.key}
               value={entry.key}
-              className="rounded-[4px] px-4 py-1.5 text-[14px] text-ink-muted data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
+              className="rounded-[4px] px-3 py-1.5 text-[13px] text-ink-muted sm:px-4 sm:text-[14px] data-[state=active]:bg-accent data-[state=active]:text-on-accent dark:data-[state=active]:bg-accent dark:data-[state=active]:text-on-accent"
             >
               {entry.label}
             </TabsTrigger>
@@ -159,9 +159,15 @@ function Insights() {
                 members.find((m) => m.slug === slug)?.displayName ?? slug
 
               return (
+                /*
+                 * Four fixed columns and a bar on one line came to 472px of
+                 * minimum width, which is what dragged the whole page into a
+                 * sideways scroll on a phone. The names keep the first line;
+                 * the bar and its value take the second.
+                 */
                 <div
                   key={`${pair.a}-${pair.b}`}
-                  className="flex items-center gap-3 bg-panel px-3 py-2 text-[12px]"
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-panel px-3 py-2 text-[12px]"
                 >
                   <span className="flex shrink-0 gap-1">
                     <span
@@ -176,7 +182,7 @@ function Insights() {
                     />
                   </span>
 
-                  <span className="w-48 shrink-0 truncate text-ink">
+                  <span className="min-w-0 flex-1 truncate text-ink sm:w-48 sm:flex-none">
                     {nameOf(pair.a)} + {nameOf(pair.b)}
                   </span>
 
@@ -187,7 +193,7 @@ function Insights() {
 
                   {/* The bar carries the lift's direction and size at a glance;
                       the number beside it carries the value. */}
-                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:flex-1">
                     <span className="relative h-1.5 min-w-0 flex-1 bg-line">
                       <span
                         className={`absolute top-0 h-full ${lift >= 0 ? 'bg-win' : 'bg-loss'}`}
@@ -240,7 +246,12 @@ function Insights() {
           </p>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-px">
+            {/*
+              `min-w-0`, because a grid track is `min-width: auto` by default:
+              without it the column grows to its widest row and the truncation
+              below never gets the chance to fire.
+            */}
+            <div className="min-w-0 space-y-px">
               {pool.champions.slice(0, 10).map((champion) => (
                 <div
                   key={champion.championId}

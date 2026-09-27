@@ -180,7 +180,7 @@ function MemberPage() {
       </Reveal>
 
       <Tabs defaultValue="overview">
-        <TabsList className="h-auto w-full gap-1.5 rounded-[6px] bg-panel p-1.5">
+        <TabsList className="h-auto w-full flex-wrap gap-1.5 rounded-[6px] bg-panel p-1.5">
           {[
             ['overview', 'Overview'],
             ['champions', 'Champions'],
