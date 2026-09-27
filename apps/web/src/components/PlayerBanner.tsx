@@ -67,7 +67,7 @@ export function PlayerBanner({
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(100deg, #0A0C10F5 0%, #0A0C10E0 34%, #0A0C10A6 62%, #0A0C1066 100%)',
+            'linear-gradient(100deg, #070C17F5 0%, #070C17E0 34%, #070C17A6 62%, #070C1766 100%)',
         }}
       />
 

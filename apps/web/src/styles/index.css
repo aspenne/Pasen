@@ -4,66 +4,69 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * The palette the app writes against. Orange carries the brand - the mark, the
- * active tab, the headline figure, the primary button - and never says whether
- * something went well. Blue and red mean won and lost, and nothing else.
+ * Direction B - broadcast dressing.
  *
- * That separation is not taste. Orange and red sit at deltaE 11.8 in normal
- * vision, under the 15 floor: put them side by side as competing signals and
- * people cannot tell them apart, colourblind or not. Blue against red measures
- * 26.4 even under protanopia, so the result is always legible.
+ * One rule governs the whole palette: a colour has exactly one job. Gold is
+ * identity and never says whether something went well. Green and red mean won
+ * and lost, and nothing else. Grey is everything that is neither a name, a
+ * figure, nor a result.
+ *
+ * The defeat red is #ff3e29 rather than the softer coral the direction was
+ * drawn with. Measured against the green: OKLab deltaE 34.6 in normal vision
+ * but only 11.5 under deuteranopia, under the 15 floor - the classic green/red
+ * collapse, and a real regression from the blue/red it replaces, which held at
+ * 28.5. Saturating and darkening the red restores the lightness separation
+ * that hue loses: 16.8 under deuteranopia, 32.1 under protanopia, and 5.18:1
+ * against a panel.
  */
 @theme {
   /*
-   * Near-black ground with a faint cool bias, and surfaces made of translucent
-   * white rather than opaque fills. Two opaque panels seven points of lightness
-   * apart merge into one mass; layered white keeps the edges readable and lets
-   * anything painted underneath - splash art, a tier tint - show through.
+   * Deep navy rather than neutral charcoal, and opaque panels rather than
+   * translucent white. Broadcast graphics sit on a coloured ground; a wash of
+   * white over black reads as a settings screen. Two values only - anything
+   * needing a third level of depth is being asked to do too much.
    */
-  --color-ground: #0a0c10;
-  --color-panel: rgb(255 255 255 / 0.035);
-  --color-panel-raised: rgb(255 255 255 / 0.065);
+  --color-ground: #070c17;
+  --color-panel: #0d1526;
+  --color-panel-raised: #121d33;
   /* Anything that floats over the page - menus, dialogs - must be opaque. */
-  --color-panel-solid: #151920;
-  --color-line: rgb(255 255 255 / 0.09);
-  --color-line-strong: rgb(255 255 255 / 0.17);
+  --color-panel-solid: #121d33;
+  --color-line: #1b2942;
+  --color-line-strong: #2a3d61;
 
-  --color-ink: #eceef3;
-  --color-ink-muted: #a3aab6;
+  --color-ink: #eef2fa;
+  --color-ink-muted: #aab6cc;
   /*
-   * The dimmest text the site is allowed to use. The previous #6a7280 measured
-   * 4.04:1 on the ground and 3.52:1 on a raised panel, under the 4.5 floor -
-   * and it is used almost exclusively at 11-12px, a size that gets no
-   * large-text exemption. Same hue, same saturation, lifted until it passes on
-   * the lightest surface it ever sits on: 4.53:1 on panel-raised, 5.19:1 on
-   * the ground.
+   * The dimmest text the site is allowed to use, and it still has to clear 4.5
+   * on the lightest surface it ever sits on, because it is used almost
+   * exclusively at 11-12px - a size that gets no large-text exemption.
+   * 4.67:1 on panel-raised, 5.76:1 on the ground.
    */
-  --color-ink-dim: #7c8492;
-  /* Sits on warm surfaces - the player banner - where cool grey turns muddy. */
-  --color-ink-warm: #b09c88;
+  --color-ink-dim: #7e8ca6;
+  /* Sits over splash art, where a cool grey disappears into the image. */
+  --color-ink-warm: #c3cadb;
 
   /*
-   * Orange carries the brand - the mark, the active tab, the headline figure,
-   * the primary button - and never says whether something went well. Blue and
-   * red mean won and lost, and nothing else.
-   *
-   * That separation is not taste. Orange and red sit at deltaE 11.8 in normal
-   * vision, under the 15 floor: put them side by side as competing signals and
-   * people cannot tell them apart, colourblind or not. Blue against red
-   * measures 26.4 even under protanopia, so the result is always legible.
-   *
-   * This is also as hot as the orange gets. Every brighter candidate - #ff6b1a,
-   * #f2670d, #ff6a00 - measures past the 0.67 ceiling of the dark lightness
-   * band and floats off the background. Contrast here comes from the ground
-   * being darker, not from the accent being louder.
+   * The one key. It marks identity - the wordmark, the active tab, a date
+   * plate, a rank figure - and it is deliberately rare: one filled gold shape
+   * per screen plus the active tab. A colour of identity that turns up
+   * everywhere goes back to being decoration.
    */
-  --color-accent: #e8650c;
-  --color-accent-soft: #46301e;
-  /* Orange is light; text on a filled orange button has to be near-black. */
-  --color-on-accent: #2a1305;
+  --color-accent: #ffc247;
+  --color-accent-soft: #2a2412;
+  /* Gold is light; text on a filled gold plate has to be the dark ground. */
+  --color-on-accent: #10182a;
 
-  --color-win: #4c8dff;
-  --color-loss: #e5484d;
+  --color-win: #43d9a3;
+  --color-loss: #ff3e29;
+
+  /*
+   * The angle. One value for the whole site, applied only to a date plate, the
+   * active tab and a verdict - never to a container, never to an image, and
+   * never alongside a second value. That single constant is the difference
+   * between a broadcast dressing and a theme.
+   */
+  --cut: 9px;
 
 
   /*
@@ -81,10 +84,15 @@
   --color-member-7: #9085e9;
   --color-member-8: #e66767;
 
-  /* Chakra Petch carries names and figures, Barlow the interface around them. */
-  --font-sans: 'Barlow', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Chakra Petch', 'Barlow', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /*
+   * One family at two widths. The condensed carries everything that is a name
+   * or a figure; the normal carries sentences. Six sizes in the whole site -
+   * the hierarchy comes from the distance between 62 and 12, not from the
+   * number of steps between them.
+   */
+  --font-sans: 'Saira', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Saira Condensed', 'Saira', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /*
    * Small radii. The previous 16-22px read as a settings panel rather than a
@@ -121,7 +129,7 @@
   --color-tier-grandmaster: #e5646a;
   --color-tier-challenger: #f0cb6b;
   /* Tracks --color-ink-dim: unranked is written as dim text, not as a crest. */
-  --color-tier-unranked: #7c8492;
+  --color-tier-unranked: #7e8ca6;
 }
 
 /* What shadcn components read. Every value points back at the palette above. */
@@ -215,10 +223,12 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Names and figures. Applied by class so the interface stays on Barlow. */
+  /* Names and figures. Applied by class so the interface stays on Saira. */
+  /* Names and figures. Condensed type closes up on its own; it wants a touch
+     of positive tracking, where the old humanist face wanted negative. */
   .display {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.01em;
   }
 
   /* Columns of numbers only. A large standalone figure uses proportional
@@ -232,7 +242,7 @@
    * One focus ring for everything the site builds itself. Written with
    * :where() so it carries zero specificity: the shadcn components that ship
    * their own focus-visible ring keep it, and this only fills the gap left by
-   * every hand-written link, row and trigger - which on a #0a0c10 ground meant
+   * every hand-written link, row and trigger - which on a #070c17 ground meant
    * the browser's own dark outline, effectively invisible.
    */
   :where(a, button, summary, [role='button'], [tabindex]):focus-visible {
@@ -273,7 +283,7 @@
   overflow: hidden;
   isolation: isolate;
   border: 1px solid var(--color-line-strong);
-  background: #0d1016;
+  background: var(--color-panel);
   transform-style: preserve-3d;
   will-change: transform;
   transform: perspective(950px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
@@ -319,9 +329,9 @@
   pointer-events: none;
   background: linear-gradient(
     177deg,
-    rgb(10 12 16 / 0.06) 0%,
-    rgb(10 12 16 / 0.7) 40%,
-    rgb(10 12 16 / 0.97) 72%
+    rgb(7 12 23 / 0.06) 0%,
+    rgb(7 12 23 / 0.7) 40%,
+    rgb(7 12 23 / 0.97) 72%
   );
 }
 
@@ -396,15 +406,15 @@
  */
 @keyframes pasen-pulse {
   70% {
-    box-shadow: 0 0 0 9px rgb(229 72 77 / 0);
+    box-shadow: 0 0 0 9px rgb(255 62 41 / 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgb(229 72 77 / 0);
+    box-shadow: 0 0 0 0 rgb(255 62 41 / 0);
   }
 }
 
 .live-dot {
-  box-shadow: 0 0 0 0 rgb(229 72 77 / 0.55);
+  box-shadow: 0 0 0 0 rgb(255 62 41 / 0.55);
   animation: pasen-pulse 2.2s infinite;
 }
 
@@ -417,32 +427,39 @@
 /*
  * The tint.
  *
- * Measured on dpm.lol, whose panels are not grey: they carry a wash of the
- * profile's own hue at five percent, fading to nothing by the bottom. That one
- * gradient is most of why their pages read as coloured while ours read as
- * charcoal - our panels are neutral white at three and a half percent, with no
- * hue at all.
+ * Under the previous charcoal palette every panel carried a wash of the page's
+ * hue, because neutral white over black read as flat. A navy panel does not
+ * need it, and the default key is now gold: a seven-percent gold wash on every
+ * surface would break the rule that gold appears once per screen.
  *
- * `--tint` defaults to the brand and is overridden per page: a player's pages
- * take their tier, so froslass is violet, Azizes blue and LORIS green, and no
- * two members' pages look alike.
+ * So the mechanism stays and the default is nothing. A player's page still
+ * sets `--tint` to their tier, which is the one place the wash earns itself.
  */
 :root {
-  --tint: var(--color-accent);
+  --tint: transparent;
 }
 
 .tinted {
   background-image: linear-gradient(
-    color-mix(in srgb, var(--tint) 7%, transparent),
-    color-mix(in srgb, var(--tint) 1%, transparent) 88%
+    color-mix(in srgb, var(--tint) 9%, transparent),
+    color-mix(in srgb, var(--tint) 0%, transparent) 76%
   );
 }
 
 /*
- * A rule that fades out rather than stopping dead. Another dpm detail: an
- * edge-to-edge hairline announces a box, and most of these are separating
- * things inside one.
+ * The angle, as two utilities - the only sanctioned way to use `--cut`.
+ * `cut-plate` bevels the trailing edge (a date plate, a verdict); `cut-tab`
+ * bevels both (a tab in a strip of tabs). Anything that needs a third shape is
+ * a sign the geometry is being stretched past what it says.
  */
+.cut-plate {
+  clip-path: polygon(0 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);
+}
+
+.cut-tab {
+  clip-path: polygon(var(--cut) 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%);
+}
+
 .rule-fade {
   height: 1px;
   border: 0;

@@ -95,7 +95,9 @@ function Insights() {
                 key={title.key}
                 className="rounded-[8px] px-[17px] py-[15px]"
                 style={{
-                  background: 'linear-gradient(120deg, #2a1c10, #101318 70%)',
+                  // Reads from the tokens, so the ground never drifts from the page again.
+                  background:
+                    'linear-gradient(120deg, var(--color-panel-raised), var(--color-ground) 72%)',
                   borderLeft: `3px solid ${colorFor(title.memberSlug)}`,
                 }}
               >

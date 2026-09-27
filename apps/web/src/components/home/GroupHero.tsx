@@ -67,7 +67,7 @@ export function GroupHero({
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(183deg, #0A0C1000 6%, #0A0C1066 36%, #0A0C10E6 72%, #0A0C10 100%)',
+            'linear-gradient(183deg, #070C1700 6%, #070C1766 36%, #070C17E6 72%, #070C17 100%)',
         }}
       />
 

@@ -1,20 +1,20 @@
 /**
  * One theme, read by every chart, so a hue means the same thing everywhere.
  *
- * Orange is the series colour: it ties a chart to the brand without adding a
- * palette of its own. Blue and red stay reserved for results, so a chart never
- * has to explain whether its orange means "good".
+ * Gold is the series colour: it ties a chart to the identity without adding a
+ * palette of its own. Green and red stay reserved for results, so a chart never
+ * has to explain whether its gold means "good".
  */
 export const CHART = {
-  /* The panel is translucent white over the ground; this is what it composites to. */
-  surface: '#14161b',
-  ink: '#eceef3',
-  inkMuted: '#a3aab6',
-  inkDim: '#6a7280',
-  line: 'rgba(255, 255, 255, 0.09)',
-  accent: '#e8650c',
-  win: '#4c8dff',
-  loss: '#e5484d',
+  /* The panel is opaque now, so this is simply its value. */
+  surface: '#0d1526',
+  ink: '#eef2fa',
+  inkMuted: '#aab6cc',
+  inkDim: '#7e8ca6',
+  line: '#1b2942',
+  accent: '#ffc247',
+  win: '#43d9a3',
+  loss: '#ff3e29',
 } as const
 
 /**
@@ -22,15 +22,16 @@ export const CHART = {
  * rainbow. The lowest step sits almost on the card so an empty day in the
  * activity calendar reads as absence rather than as a small value.
  */
-export const SEQUENTIAL_ACCENT = ['#191c22', '#4a2e14', '#7a4718', '#b0591a', '#e8650c']
+export const SEQUENTIAL_ACCENT = ['#101a2c', '#44413c', '#7e6a47', '#bc954b', '#ffc247']
 
 /**
- * Diverging ramp for polarity, anchored on a neutral midpoint. Blue and red
- * rather than the brand orange: a duo above or below even is a result, and
- * results wear the result colours. The pair measures deltaE 26.4 under
- * protanopia, so which side of even a duo sits on is never in doubt.
+ * Diverging ramp for polarity, anchored on a neutral midpoint, stepped in OKLab
+ * so the two halves move at the same pace. Green and red rather than the gold:
+ * a duo above or below even is a result, and results wear the result colours.
+ * The two ends measure deltaE 16.8 under deuteranopia - the tightest view for
+ * this pair, and the reason the red is the saturated one rather than a coral.
  */
-export const DIVERGING_WINRATE = ['#e5484d', '#7a3d47', '#272b34', '#3a6ba8', '#4c8dff']
+export const DIVERGING_WINRATE = ['#ff3e29', '#904347', '#26304a', '#3a8077', '#43d9a3']
 
 /**
  * Thresholds for a win rate, centred on 50 rather than on the data, so the
@@ -52,7 +53,7 @@ export const WIN_RATE_PIECES = [
  */
 export const baseOptions = {
   backgroundColor: 'transparent',
-  textStyle: { color: CHART.inkMuted, fontSize: 12, fontFamily: 'Barlow, sans-serif' },
+  textStyle: { color: CHART.inkMuted, fontSize: 12, fontFamily: 'Saira, sans-serif' },
   /*
    * Explicit margins, not containLabel and not outerBounds. ECharts 6
    * deprecated containLabel, and outerBounds only clamps a grid still using its
@@ -60,7 +61,7 @@ export const baseOptions = {
    */
   grid: { left: 40, right: 16, top: 16, bottom: 28 },
   tooltip: {
-    backgroundColor: '#151920',
+    backgroundColor: '#121d33',
     borderColor: CHART.line,
     borderWidth: 1,
     padding: [9, 12],
