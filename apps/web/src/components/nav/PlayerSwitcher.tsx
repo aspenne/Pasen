@@ -56,7 +56,14 @@ export function PlayerSwitcher({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 border border-line px-2 py-1 text-[12px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+        /*
+         * Named explicitly, because below `sm` the only thing left in the
+         * button is an aria-hidden icon - a screen reader announced "button"
+         * and nothing else. The label matches the visible one word for word so
+         * the two never disagree where both are present.
+         */
+        aria-label="Jump to…"
+        className="tap flex items-center justify-center gap-2 border border-line px-2 py-1 text-[12px] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
       >
         <SearchIcon className="size-3" aria-hidden />
         <span className="hidden sm:inline">Jump to…</span>

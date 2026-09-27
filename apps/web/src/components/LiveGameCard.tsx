@@ -127,7 +127,7 @@ export function LiveGameCard({
           ten-player line-up on every card would bury the day underneath the
           few games happening right now.
         */}
-        <AccordionTrigger className="items-center gap-3 rounded-none px-4 py-3 hover:no-underline data-[state=open]:border-b data-[state=open]:border-line">
+        <AccordionTrigger className="min-w-0 items-center gap-3 rounded-none px-4 py-3 hover:no-underline data-[state=open]:border-b data-[state=open]:border-line">
           <span className="min-w-0 flex-1 text-left">
             {/*
               Who, and on what. The champion is the first thing anyone wants

@@ -193,12 +193,18 @@ function Dashboard() {
             {selected === today ? 'Today' : selected}
           </h2>
           <div className="flex items-center gap-1 text-[11px]">
-            <Button variant="ghost" size="sm" onClick={() => setDate(shiftDate(selected, -1))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="tap"
+              onClick={() => setDate(shiftDate(selected, -1))}
+            >
               ← Previous
             </Button>
             <Button
               variant="ghost"
               size="sm"
+              className="tap"
               onClick={() => setDate(null)}
               disabled={selected === today}
             >
@@ -207,6 +213,7 @@ function Dashboard() {
             <Button
               variant="ghost"
               size="sm"
+              className="tap"
               onClick={() => setDate(shiftDate(selected, 1))}
               disabled={selected >= today}
             >
@@ -248,7 +255,7 @@ function Dashboard() {
         </Reveal>
 
         {hiddenMatches > 0 && (
-          <Button variant="outline" className="mt-2 w-full" onClick={() => setShowAll(true)}>
+          <Button variant="outline" className="tap mt-2 w-full" onClick={() => setShowAll(true)}>
             See the {hiddenMatches} other {hiddenMatches === 1 ? 'game' : 'games'}
           </Button>
         )}

@@ -47,7 +47,9 @@ export function MatchHistoryRow({
 
   return (
     <div className={`border-l-2 bg-panel ${entry.win ? 'border-win' : 'border-loss'}`}>
-      <div className="flex items-center gap-3 px-3 py-2">
+      {/* Same wrap as the daily feed: on a phone the figures take a line of
+          their own rather than squeezing the champion and the queue out. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
         <ChampionIcon
           championId={entry.championId}
           championName={entry.championName}
@@ -64,24 +66,25 @@ export function MatchHistoryRow({
           </div>
         </div>
 
-        <div className="hidden sm:block">
-          <ItemRow items={entry.items} staticData={staticData} />
-        </div>
-
-        <div className="w-[124px] shrink-0 text-right">
-          <div className="tnum text-[12px] text-ink">
-            {entry.kills}/{entry.deaths}/{entry.assists}
+        <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+          <div className="hidden sm:block">
+            <ItemRow items={entry.items} staticData={staticData} />
           </div>
-          <div className="tnum text-[11px] text-ink-muted">
-            {kda(entry.kills, entry.deaths, entry.assists)} · {entry.cs} cs
+
+          <div className="w-[124px] shrink-0 text-right">
+            <div className="tnum text-[12px] text-ink">
+              {entry.kills}/{entry.deaths}/{entry.assists}
+            </div>
+            <div className="tnum text-[11px] text-ink-muted">
+              {kda(entry.kills, entry.deaths, entry.assists)} · {entry.cs} cs
+            </div>
+          </div>
+
+          <div className="w-[70px] shrink-0 text-right">
+            <div className="tnum text-[11px] text-ink-dim">{duration(entry.gameDuration)}</div>
+            <div className="text-[11px] text-ink-dim">{timeAgo(entry.gameCreation)}</div>
           </div>
         </div>
-
-        <div className="w-[70px] shrink-0 text-right">
-          <div className="tnum text-[11px] text-ink-dim">{duration(entry.gameDuration)}</div>
-          <div className="text-[11px] text-ink-dim">{timeAgo(entry.gameCreation)}</div>
-        </div>
-
       </div>
 
       <Accordion
@@ -91,7 +94,7 @@ export function MatchHistoryRow({
         onValueChange={(value) => setOpen(value === 'board')}
       >
         <AccordionItem value="board" className="border-b-0">
-          <AccordionTrigger className="items-center justify-center gap-1.5 rounded-none px-3 py-1.5 text-[11px] font-normal text-ink-dim hover:text-ink hover:no-underline">
+          <AccordionTrigger className="tap items-center justify-center gap-1.5 rounded-none px-3 py-1.5 text-[11px] font-normal text-ink-dim hover:text-ink hover:no-underline">
             {open ? 'Hide the scoreboard' : 'Who else was in this game'}
           </AccordionTrigger>
 

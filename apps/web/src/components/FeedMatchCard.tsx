@@ -96,7 +96,18 @@ export function FeedMatchCard({
 
       <div className="divide-y divide-white/5">
         {match.members.map((member) => (
-          <div key={member.memberSlug} className="flex items-center gap-3.5 px-4 py-3">
+          /*
+           * Wraps rather than squeezes. With the figures and the result both
+           * held at a fixed width, the name between them was the only column
+           * that could give - and on a 375px screen it gave all of it, leaving
+           * a row that showed a champion and a KDA but never said who played.
+           * Below `sm` the numbers drop to a line of their own and the name
+           * keeps the first one.
+           */
+          <div
+            key={member.memberSlug}
+            className="flex flex-wrap items-center gap-x-3.5 gap-y-2 px-4 py-3"
+          >
             <span
               aria-hidden
               className="h-9 w-[3px] shrink-0 rounded-full"
@@ -118,7 +129,7 @@ export function FeedMatchCard({
                 // Carries the active scope, so following a link does not
                 // silently change the question being asked.
                 search={{ scope }}
-                className="display block truncate text-[15px] font-semibold text-ink transition-colors hover:text-accent"
+                className="display block truncate text-[15px] leading-6 font-semibold text-ink transition-colors hover:text-accent"
               >
                 {member.displayName}
               </Link>
@@ -130,22 +141,11 @@ export function FeedMatchCard({
               </div>
             </div>
 
-            <RunePair perks={member.perks} staticData={staticData} size={24} />
-
-            <div className="hidden xl:block">
-              <ItemRow items={member.items} staticData={staticData} />
-            </div>
-
-            <div className="w-[118px] shrink-0 text-right">
-              <div className="display tnum text-[16px] font-bold text-ink">
-                {member.kills} / {member.deaths} / {member.assists}
-              </div>
-              <div className="tnum mt-0.5 text-[11px] text-ink-muted">
-                {kda(member.kills, member.deaths, member.assists)} KDA · {member.cs} cs
-              </div>
-            </div>
-
-            <div className="w-[104px] shrink-0 text-right">
+            {/*
+              Closes the first line on a phone, beside the name it belongs to;
+              back at the end of the row from `sm` up.
+            */}
+            <div className="shrink-0 text-right sm:order-1 sm:w-[104px]">
               <span
                 className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${
                   member.win ? 'bg-win/15 text-win' : 'bg-loss/15 text-loss'
@@ -159,6 +159,23 @@ export function FeedMatchCard({
                 </div>
               )}
             </div>
+
+            <div className="flex w-full items-center justify-between gap-3.5 sm:w-auto sm:justify-end">
+              <RunePair perks={member.perks} staticData={staticData} size={24} />
+
+              <div className="hidden xl:block">
+                <ItemRow items={member.items} staticData={staticData} />
+              </div>
+
+              <div className="w-[118px] shrink-0 text-right">
+                <div className="display tnum text-[16px] font-bold text-ink">
+                  {member.kills} / {member.deaths} / {member.assists}
+                </div>
+                <div className="tnum mt-0.5 text-[11px] text-ink-muted">
+                  {kda(member.kills, member.deaths, member.assists)} KDA · {member.cs} cs
+                </div>
+              </div>
+            </div>
           </div>
         ))}
       </div>
@@ -170,7 +187,7 @@ export function FeedMatchCard({
         onValueChange={(value) => setOpen(value === 'board')}
       >
         <AccordionItem value="board" className="border-b-0">
-          <AccordionTrigger className="items-center justify-center gap-1.5 rounded-none border-t border-white/5 px-4 py-2 text-[12px] font-normal text-ink-dim hover:text-ink hover:no-underline">
+          <AccordionTrigger className="tap items-center justify-center gap-1.5 rounded-none border-t border-white/5 px-4 py-2 text-[12px] font-normal text-ink-dim hover:text-ink hover:no-underline">
             {open ? 'Hide scoreboard' : 'Who else was in this game'}
           </AccordionTrigger>
 

@@ -38,7 +38,7 @@ export function SignatureChampions({
           to="/$group/insights"
           params={{ group: groupSlug }}
           search={{ scope }}
-          className="text-[11px] text-ink-dim transition-colors hover:text-ink"
+          className="tap inline-flex items-center justify-end text-[11px] text-ink-dim transition-colors hover:text-ink"
         >
           All champions
         </Link>

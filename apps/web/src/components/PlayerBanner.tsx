@@ -71,7 +71,12 @@ export function PlayerBanner({
         }}
       />
 
-      <div className="relative flex items-center gap-[18px] px-6 py-[26px]">
+      {/*
+        The figure block holds its own width, so on a phone the name between it
+        and the avatar was squeezed to a single letter - on the page whose whole
+        subject is that name. Below `sm` the figure takes a line of its own.
+      */}
+      <div className="relative flex flex-wrap items-center gap-x-[18px] gap-y-4 px-6 py-[26px]">
         <div
           className="size-[74px] shrink-0 overflow-hidden rounded-[8px] bg-accent-soft"
           style={{ border: `2px solid ${accent}` }}
@@ -85,7 +90,7 @@ export function PlayerBanner({
           {children}
         </div>
 
-        <div className="shrink-0 text-right">
+        <div className="w-full shrink-0 text-right sm:w-auto">
           <div className="display text-[34px] font-bold leading-none" style={{ color: accent }}>
             {figure}
           </div>

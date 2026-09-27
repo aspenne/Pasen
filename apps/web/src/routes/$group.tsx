@@ -52,7 +52,10 @@ function GroupLayout() {
       <header className="sticky top-0 z-30 border-b border-line bg-ground/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <div className="flex items-baseline gap-3">
-            <Link to="/" className="text-[13px] tracking-[0.14em] text-accent">
+            <Link
+              to="/"
+              className="tap inline-flex items-center text-[13px] tracking-[0.14em] text-accent"
+            >
               PASEN
             </Link>
             {isPending ? (
@@ -71,6 +74,7 @@ function GroupLayout() {
                   params={{ group }}
                   search={{ scope }}
                   activeOptions={{ exact: entry.exact }}
+                  className="tap inline-flex items-center justify-center"
                   activeProps={{ className: 'text-ink' }}
                   inactiveProps={{ className: 'text-ink-muted hover:text-ink' }}
                 >

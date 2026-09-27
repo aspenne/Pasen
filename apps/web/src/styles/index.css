@@ -30,7 +30,15 @@
 
   --color-ink: #eceef3;
   --color-ink-muted: #a3aab6;
-  --color-ink-dim: #6a7280;
+  /*
+   * The dimmest text the site is allowed to use. The previous #6a7280 measured
+   * 4.04:1 on the ground and 3.52:1 on a raised panel, under the 4.5 floor -
+   * and it is used almost exclusively at 11-12px, a size that gets no
+   * large-text exemption. Same hue, same saturation, lifted until it passes on
+   * the lightest surface it ever sits on: 4.53:1 on panel-raised, 5.19:1 on
+   * the ground.
+   */
+  --color-ink-dim: #7c8492;
   /* Sits on warm surfaces - the player banner - where cool grey turns muddy. */
   --color-ink-warm: #b09c88;
 
@@ -112,7 +120,8 @@
   --color-tier-master: #c89bff;
   --color-tier-grandmaster: #e5646a;
   --color-tier-challenger: #f0cb6b;
-  --color-tier-unranked: #6a7280;
+  /* Tracks --color-ink-dim: unranked is written as dim text, not as a crest. */
+  --color-tier-unranked: #7c8492;
 }
 
 /* What shadcn components read. Every value points back at the palette above. */
@@ -217,6 +226,39 @@
      loose at display sizes. */
   .tnum {
     font-variant-numeric: tabular-nums;
+  }
+
+  /*
+   * One focus ring for everything the site builds itself. Written with
+   * :where() so it carries zero specificity: the shadcn components that ship
+   * their own focus-visible ring keep it, and this only fills the gap left by
+   * every hand-written link, row and trigger - which on a #0a0c10 ground meant
+   * the browser's own dark outline, effectively invisible.
+   */
+  :where(a, button, summary, [role='button'], [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/*
+ * A 44px hit area on touch, and nothing at all under a mouse.
+ *
+ * The controls this is applied to are deliberately small on desktop - a stats
+ * page is read at a glance and dense is the point. `pointer: coarse` is what
+ * separates the two cases, so the phone gets a thumb-sized target without the
+ * desktop layout gaining a single pixel.
+ *
+ * Only the box is grown - the element keeps whatever display it already had,
+ * so this can be dropped on a full-width trigger and on an inline link alike.
+ * Inline elements need `inline-flex items-center` beside it for min-height to
+ * mean anything.
+ */
+@media (pointer: coarse) {
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
