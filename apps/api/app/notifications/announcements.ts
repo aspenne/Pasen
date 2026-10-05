@@ -1,5 +1,6 @@
 import type { Announcement } from '#notifications/discord_service'
 import type { RankMove } from '#ingestion/rank_service'
+import type { DecayStatus } from '#stats/decay_service'
 
 const QUEUE_NAMES: Record<string, string> = {
   RANKED_SOLO_5x5: 'solo queue',
@@ -69,5 +70,36 @@ export function streakAnnouncement(
     key: `streak:${accountId}:${length}:${matchId}`,
     kind: 'streak',
     text: `**${displayName}** has won ${length} in a row.`,
+  }
+}
+
+/** Close enough that playing tonight still fixes it, far enough to act on. */
+export const DECAY_WARNING_DAYS = 2
+
+/**
+ * A standing about to start losing LP.
+ *
+ * Keyed on the day, not on the number of days left: the estimate is recomputed
+ * every hour and would otherwise post again the moment anything nudged it. One
+ * warning a day per queue, and only while the number is one we trust - an
+ * estimate drawn from too little history is not worth waking a channel for.
+ */
+export function decayAnnouncement(
+  displayName: string,
+  accountId: number,
+  queueType: string,
+  decay: DecayStatus,
+  day: string
+): Announcement | null {
+  if (!decay.confident) return null
+  if (decay.daysLeft === 0 || decay.daysLeft > DECAY_WARNING_DAYS) return null
+
+  const queue = QUEUE_NAMES[queueType] ?? queueType.replace(/_/g, ' ').toLowerCase()
+  const when = decay.daysLeft === 1 ? 'tomorrow' : `in ${decay.daysLeft} days`
+
+  return {
+    key: `decay:${accountId}:${queueType}:${day}`,
+    kind: 'decay',
+    text: `**${displayName}** starts decaying ${when} in ${queue} — that is ${decay.lpPerDay} LP a day until they play one.`,
   }
 }

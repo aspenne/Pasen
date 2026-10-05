@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 
-import type { GroupOverview } from '@/lib/api'
+import { DecayNote } from '@/components/DecayNote'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import type { GroupOverview } from '@/lib/api'
 import { memberColor, rankedQueueFor, rankLabel, tierColor, tierCrest } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
 
@@ -56,6 +57,9 @@ export function RosterCard({
             >
               {standing ? rankLabel(standing) : 'Unranked'}
             </span>
+            {/* Only when it is about to cost them something: twenty-six lines
+                of "decays in 27 days" would say nothing at all. */}
+            <DecayNote decay={standing?.decay ?? null} urgentOnly />
           </span>
 
           <span className="text-right">

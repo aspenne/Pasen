@@ -52,6 +52,20 @@ export type HealthResponse = {
   checks: { database: { ok: boolean }; redis: { ok: boolean } }
 }
 
+/**
+ * Riot publishes no decay countdown, so this is derived from the games we hold.
+ * Null for every tier that does not decay - Emerald and below.
+ */
+export type DecayStatus = {
+  daysLeft: number
+  cap: number
+  lpPerDay: number
+  /** False while the history is too short for the number to mean much. */
+  confident: boolean
+  /** Riot's own flag. When it is set, the standing is already losing LP. */
+  inactive: boolean
+}
+
 export type MemberRank = {
   queueType: string
   tier: string | null
@@ -59,6 +73,7 @@ export type MemberRank = {
   leaguePoints: number
   wins: number
   losses: number
+  decay: DecayStatus | null
 }
 
 export type MemberAccount = {

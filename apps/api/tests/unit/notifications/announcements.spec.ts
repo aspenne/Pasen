@@ -1,11 +1,13 @@
 import { test } from '@japa/runner'
 
 import {
+  decayAnnouncement,
   pentakillAnnouncement,
   rankAnnouncement,
   streakAnnouncement,
 } from '#notifications/announcements'
 import type { RankMove } from '#ingestion/rank_service'
+import type { DecayStatus } from '#stats/decay_service'
 
 const move = (over: Partial<RankMove> = {}): RankMove => ({
   queueType: 'RANKED_SOLO_5x5',
@@ -70,5 +72,91 @@ test.group('announcements', () => {
     assert.isNotNull(streakAnnouncement('MATIOU GOAT', 5, 'EUW1_1', 1))
     assert.isNull(streakAnnouncement('MATIOU GOAT', 7, 'EUW1_1', 1))
     assert.isNotNull(streakAnnouncement('MATIOU GOAT', 10, 'EUW1_1', 1))
+  })
+})
+
+const decay = (over: Partial<DecayStatus> = {}): DecayStatus => ({
+  daysLeft: 2,
+  cap: 14,
+  lpPerDay: 75,
+  confident: true,
+  inactive: false,
+  ...over,
+})
+
+test.group('decayAnnouncement', () => {
+  test('warns two days out, and says what it will cost', ({ assert }) => {
+    const announcement = decayAnnouncement('froslass', 7, 'RANKED_SOLO_5x5', decay(), '2026-10-05')
+
+    assert.equal(announcement?.kind, 'decay')
+    assert.include(announcement?.text ?? '', 'in 2 days')
+    assert.include(announcement?.text ?? '', '75 LP a day')
+  })
+
+  test('reads as tomorrow at one day rather than "in 1 days"', ({ assert }) => {
+    const announcement = decayAnnouncement(
+      'froslass',
+      7,
+      'RANKED_SOLO_5x5',
+      decay({ daysLeft: 1 }),
+      '2026-10-05'
+    )
+
+    assert.include(announcement?.text ?? '', 'tomorrow')
+  })
+
+  test('stays quiet while there is still time', ({ assert }) => {
+    const announcement = decayAnnouncement(
+      'froslass',
+      7,
+      'RANKED_SOLO_5x5',
+      decay({ daysLeft: 3 }),
+      '2026-10-05'
+    )
+
+    assert.isNull(announcement)
+  })
+
+  /* Already decaying is not a warning, and the warning already went out. */
+  test('says nothing once the LP is already going', ({ assert }) => {
+    const announcement = decayAnnouncement(
+      'froslass',
+      7,
+      'RANKED_SOLO_5x5',
+      decay({ daysLeft: 0, inactive: true }),
+      '2026-10-05'
+    )
+
+    assert.isNull(announcement)
+  })
+
+  test('will not wake a channel over a number it does not trust', ({ assert }) => {
+    const announcement = decayAnnouncement(
+      'froslass',
+      7,
+      'RANKED_SOLO_5x5',
+      decay({ confident: false }),
+      '2026-10-05'
+    )
+
+    assert.isNull(announcement)
+  })
+
+  /*
+   * The key carries the day, not the countdown. The estimate is recomputed
+   * hourly; keyed on daysLeft, a standing drifting from two days to one would
+   * post twice for the same piece of news.
+   */
+  test('keys on the day so an hourly recount posts once', ({ assert }) => {
+    const twoDays = decayAnnouncement('f', 7, 'RANKED_SOLO_5x5', decay(), '2026-10-05')
+    const oneDay = decayAnnouncement(
+      'f',
+      7,
+      'RANKED_SOLO_5x5',
+      decay({ daysLeft: 1 }),
+      '2026-10-05'
+    )
+
+    assert.equal(twoDays?.key, oneDay?.key)
   })
 })

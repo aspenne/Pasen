@@ -59,7 +59,9 @@ export class RankService {
         latest.tier !== entry.tier ||
         latest.rank !== entry.rank ||
         latest.wins !== entry.wins ||
-        latest.losses !== entry.losses
+        latest.losses !== entry.losses ||
+        // Entering or leaving decay is a change even when the LP has not moved.
+        latest.inactive !== entry.inactive
 
       if (!moved) {
         unchanged++
@@ -75,6 +77,7 @@ export class RankService {
         wins: entry.wins,
         losses: entry.losses,
         hotStreak: entry.hotStreak,
+        inactive: entry.inactive,
         capturedAt: now,
       })
 

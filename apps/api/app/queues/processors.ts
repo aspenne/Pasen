@@ -11,6 +11,7 @@ import { HOT_WINDOW_HOURS, selectLivePollTargets } from '#ingestion/live_poll_se
 import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
 import { RankService } from '#ingestion/rank_service'
 import {
+  decayAnnouncement,
   pentakillAnnouncement,
   rankAnnouncement,
   streakAnnouncement,
@@ -19,6 +20,7 @@ import { DiscordService } from '#notifications/discord_service'
 import { JOBS, type RecentSyncAccountPayload } from '#queues/jobs'
 import { queue } from '#queues/main'
 import { riot } from '#riot/service'
+import { DecayService, decayKey } from '#stats/decay_service'
 import { RiotKeyRejectedError } from '#riot/errors'
 import type { RedisLike } from '#riot/redis'
 import { DDragonService } from '#static_data/ddragon_service'
@@ -132,6 +134,61 @@ export async function processRankSnapshot(): Promise<void> {
       const announcement = rankAnnouncement(account.member.displayName, account.id, move, today)
       if (announcement) await discord.announce(announcement)
     }
+  }
+
+  await announceDecay(discord)
+}
+
+/**
+ * Warns the channel before a standing starts bleeding LP.
+ *
+ * Runs off the snapshot that has just been written rather than off its own
+ * schedule, because the standings it reads are only as fresh as that snapshot.
+ * One query for every account at once: the countdown is cheap to derive but not
+ * cheap to derive twenty-six times.
+ */
+async function announceDecay(discord: DiscordService): Promise<void> {
+  if (!(await discord.webhookUrl())) return
+
+  const rows = await db.rawQuery(
+    `SELECT DISTINCT ON (e.riot_account_id, e.queue_type)
+            e.riot_account_id, e.queue_type, e.tier, e.inactive,
+            a.puuid, m.display_name, COALESCE(g.timezone, 'Europe/Paris') AS timezone
+     FROM league_entries e
+     JOIN riot_accounts a ON a.id = e.riot_account_id
+     JOIN members m ON m.id = a.member_id
+     LEFT JOIN group_members gm ON gm.member_id = m.id
+     LEFT JOIN groups g ON g.id = gm.group_id
+     ORDER BY e.riot_account_id, e.queue_type, e.captured_at DESC`
+  )
+
+  if (rows.rows.length === 0) return
+
+  const timezone = rows.rows[0].timezone as string
+  const estimates = await new DecayService().forAccounts(
+    rows.rows.map((row: any) => ({
+      accountId: row.riot_account_id,
+      puuid: row.puuid,
+      queueType: row.queue_type,
+      tier: row.tier,
+    })),
+    timezone
+  )
+
+  const day = DateTime.utc().setZone(timezone).toFormat('yyyy-MM-dd')
+
+  for (const row of rows.rows) {
+    const estimate = estimates.get(decayKey(row.riot_account_id, row.queue_type))
+    if (!estimate) continue
+
+    const announcement = decayAnnouncement(
+      row.display_name,
+      row.riot_account_id,
+      row.queue_type,
+      DecayService.reconcile(estimate, row.inactive),
+      day
+    )
+    if (announcement) await discord.announce(announcement)
   }
 }
 

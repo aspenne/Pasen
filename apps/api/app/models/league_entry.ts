@@ -35,6 +35,10 @@ export default class LeagueEntry extends BaseModel {
   @column()
   declare hotStreak: boolean
 
+  /** Riot's own decay flag: true once this standing is already losing LP. */
+  @column()
+  declare inactive: boolean
+
   @column.dateTime()
   declare capturedAt: DateTime
 

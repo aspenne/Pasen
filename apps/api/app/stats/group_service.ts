@@ -1,6 +1,7 @@
 import db from '@adonisjs/lucid/services/db'
 
 import Group from '#models/group'
+import { DecayService, decayKey, type DecayStatus } from '#stats/decay_service'
 import { DEFAULT_SCOPE, applyScope, type QueueScope } from '#stats/scope'
 
 export type MemberRank = {
@@ -10,6 +11,8 @@ export type MemberRank = {
   leaguePoints: number
   wins: number
   losses: number
+  /** Null for every tier that does not decay, and for queues that have none. */
+  decay: DecayStatus | null
 }
 
 export type MemberAccount = {
@@ -55,7 +58,7 @@ export class GroupService {
     }
 
     const [ranks, totals] = await Promise.all([
-      this.#latestRanks(memberIds),
+      this.#latestRanks(memberIds, group.timezone),
       this.#totals(memberIds, scope),
     ])
 
@@ -92,10 +95,11 @@ export class GroupService {
    * current value is the newest row - DISTINCT ON picks it in one pass instead
    * of a correlated subquery per account.
    */
-  async #latestRanks(memberIds: number[]): Promise<Map<number, MemberRank[]>> {
+  async #latestRanks(memberIds: number[], timezone: string): Promise<Map<number, MemberRank[]>> {
     const rows = await db.rawQuery(
       `SELECT DISTINCT ON (a.member_id, e.queue_type)
-              a.member_id, e.queue_type, e.tier, e.rank, e.league_points, e.wins, e.losses
+              a.member_id, a.id AS account_id, a.puuid,
+              e.queue_type, e.tier, e.rank, e.league_points, e.wins, e.losses, e.inactive
        FROM league_entries e
        JOIN riot_accounts a ON a.id = e.riot_account_id
        WHERE a.member_id = ANY(?)
@@ -103,8 +107,19 @@ export class GroupService {
       [memberIds]
     )
 
+    const decay = await new DecayService().forAccounts(
+      rows.rows.map((row: any) => ({
+        accountId: row.account_id,
+        puuid: row.puuid,
+        queueType: row.queue_type,
+        tier: row.tier,
+      })),
+      timezone
+    )
+
     const byMember = new Map<number, MemberRank[]>()
     for (const row of rows.rows) {
+      const estimate = decay.get(decayKey(row.account_id, row.queue_type)) ?? null
       const list = byMember.get(row.member_id) ?? []
       list.push({
         queueType: row.queue_type,
@@ -113,6 +128,7 @@ export class GroupService {
         leaguePoints: row.league_points,
         wins: row.wins,
         losses: row.losses,
+        decay: estimate && DecayService.reconcile(estimate, row.inactive),
       })
       byMember.set(row.member_id, list)
     }

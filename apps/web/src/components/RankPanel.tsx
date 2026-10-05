@@ -1,3 +1,4 @@
+import { DecayNote } from '@/components/DecayNote'
 import type { LpPoint, MemberRank } from '@/lib/api'
 import { rankLabel, tierColor, tierCrest } from '@/lib/format'
 
@@ -47,6 +48,9 @@ export function RankPanel({ ranks, points }: RankPanelProps) {
               <div className="display mt-1 truncate text-[17px] font-semibold" style={{ color }}>
                 {rankLabel(rank)}
               </div>
+              {/* Belongs to the standing, so it sits with it rather than in the
+                  column of figures to the right. */}
+              <DecayNote decay={rank.decay} />
             </div>
 
             <dl className="flex shrink-0 gap-5 text-right">
