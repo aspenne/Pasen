@@ -8,11 +8,18 @@ captures is gone for good — hence a small watcher that runs beside the game.
 
 ## Running it
 
-Needs Node 24 (the version in `.nvmrc`) and nothing else installed.
+Needs Node 20 or newer and nothing else installed - no dependencies, no build.
 
 ```bash
-node apps/agent/agent.js
+node apps/agent/agent.mjs
 ```
+
+The `.mjs` extension is deliberate: the file is meant to be copied onto the
+machine that runs the game, and an `.js` of this shape only works while it sits
+beside a `package.json` saying `"type": "module"`. On its own it would fail
+with "Cannot use import statement outside a module".
+
+Captures land in a `captures/` folder next to wherever the command is run.
 
 Start it before or during the game and leave it. It polls
 `https://127.0.0.1:2999/liveclientdata/allgamedata` every five seconds, holds

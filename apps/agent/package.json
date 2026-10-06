@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Captures a custom game from the League client before it disappears",
-  "bin": { "pasen-agent": "./agent.js" },
+  "bin": {
+    "pasen-agent": "./agent.mjs"
+  },
   "scripts": {
-    "watch": "node agent.js"
+    "watch": "node agent.mjs"
   }
 }
