@@ -8,6 +8,7 @@ const MembersController = () => import('#controllers/members_controller')
 const StaticController = () => import('#controllers/static_controller')
 const SessionController = () => import('#controllers/admin/session_controller')
 const AdminController = () => import('#controllers/admin/admin_controller')
+const CustomsController = () => import('#controllers/admin/customs_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -56,6 +57,15 @@ router
         router.delete('/admin/accounts/:id', [AdminController, 'removeAccount'])
         router.post('/admin/accounts/:id/resync', [AdminController, 'resync'])
         router.patch('/admin/members/:slug', [AdminController, 'updateMember'])
+
+        /*
+         * Customs come in by hand. They exist nowhere but the capture, so the
+         * upload is the only way in - and keeping it behind the session means
+         * the agent never has to hold a credential on a gaming PC.
+         */
+        router.get('/admin/groups/:slug/customs', [CustomsController, 'index'])
+        router.post('/admin/groups/:slug/customs', [CustomsController, 'store'])
+        router.delete('/admin/customs/:id', [CustomsController, 'destroy'])
       })
       .use(middleware.auth())
   })

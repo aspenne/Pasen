@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { KeyRoundIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 
+import { CustomGames } from '@/components/admin/CustomGames'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -147,6 +148,7 @@ function Console() {
       <RiotKeyCard status={status.data.riotKey} budget={status.data.budget} />
       <AddAccountCard accounts={status.data.accounts} />
       <AccountsCard accounts={status.data.accounts} />
+      <CustomGames group={DEFAULT_GROUP} />
     </div>
   )
 }

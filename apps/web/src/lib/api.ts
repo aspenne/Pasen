@@ -76,6 +76,17 @@ export type MemberRank = {
   decay: DecayStatus | null
 }
 
+/** A custom game captured by the agent, as the admin list shows it. */
+export type CustomGameSummary = {
+  id: number
+  label: string | null
+  playedAt: string
+  duration: number
+  gameMode: string
+  mapName: string | null
+  playerCount: number
+}
+
 export type MemberAccount = {
   riotId: string
   platform: string
@@ -495,6 +506,19 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(payload),
     }),
+
+  customs: (group: string) =>
+    apiFetch<CustomGameSummary[]>(`/api/admin/groups/${group}/customs`),
+  uploadCustom: (
+    group: string,
+    payload: { capture: unknown; fileName: string; capturedAt: string; label?: string }
+  ) =>
+    apiFetch<CustomGameSummary & { duplicate: boolean }>(
+      `/api/admin/groups/${group}/customs`,
+      { method: 'POST', body: JSON.stringify(payload) }
+    ),
+  removeCustom: (id: number) =>
+    apiFetch<void>(`/api/admin/customs/${id}`, { method: 'DELETE' }),
 }
 
 function searchOf(params: Record<string, string | number | undefined>): string {
