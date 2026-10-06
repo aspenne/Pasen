@@ -76,6 +76,64 @@ export type MemberRank = {
   decay: DecayStatus | null
 }
 
+/**
+ * A captured custom game, as the page draws it. Built from the agent's Live
+ * Client capture, which has no match id, no champion ids and no winning team -
+ * all three are reconstructed server-side.
+ */
+export type CustomSide = 'ORDER' | 'CHAOS'
+
+export type CustomPlayer = {
+  riotId: string
+  name: string
+  isBot: boolean
+  memberSlug: string | null
+  displayName: string | null
+  championId: number
+  championName: string
+  position: string | null
+  level: number
+  kills: number
+  deaths: number
+  assists: number
+  cs: number
+  wardScore: number
+  items: number[]
+  perks: unknown
+  summonerSpells: [number, number]
+  bestMultikill: number
+}
+
+export type CustomTeam = {
+  side: CustomSide
+  /** Null when the capture ended without a GameEnd event. */
+  won: boolean | null
+  kills: number
+  objectives: {
+    turrets: number
+    inhibitors: number
+    dragons: number
+    grubs: number
+    heralds: number
+    barons: number
+  }
+  players: CustomPlayer[]
+}
+
+export type CustomGame = {
+  id: number
+  label: string | null
+  playedAt: string
+  duration: number
+  gameMode: string
+  mapName: string | null
+  capturedBy: string | null
+  resultKnown: boolean
+  againstBots: boolean
+  firstBlood: string | null
+  teams: CustomTeam[]
+}
+
 /** A custom game captured by the agent, as the admin list shows it. */
 export type CustomGameSummary = {
   id: number
@@ -472,6 +530,10 @@ export const api = {
     apiFetch<ProfileCardStats>(`/api/members/${slug}/card${searchOf(params)}`),
   match: (slug: string, matchId: string) =>
     apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
+  customGames: (slug: string) =>
+    apiFetch<{ games: CustomGame[] }>(`/api/groups/${slug}/customs`),
+  customGame: (slug: string, id: number) =>
+    apiFetch<CustomGame>(`/api/groups/${slug}/customs/${id}`),
   activity: (slug: string, params: Scoped = {}) =>
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 

@@ -1,4 +1,5 @@
 import { test } from '@japa/runner'
+import { readFile } from 'node:fs/promises'
 import testUtils from '@adonisjs/core/services/test_utils'
 
 import User from '#models/user'
@@ -114,5 +115,41 @@ test.group('Custom game uploads', (group) => {
 
     const list = await client.get('/api/admin/groups/arigafion/customs').loginAs(admin)
     assert.lengthOf(list.body(), 0)
+  })
+})
+
+test.group('Custom games, read side', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  test('serves an uploaded capture to anyone, resolved for the page', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    const raw = JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+
+    const stored = await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: raw, fileName: 'custom-2026-10-06T19-37-52-000Z.json' })
+      .loginAs(admin)
+    stored.assertStatus(201)
+
+    // No session: reading is public, like every other page of the site.
+    const list = await client.get('/api/groups/arigafion/customs')
+    list.assertStatus(200)
+    assert.lengthOf(list.body().games, 1)
+
+    const detail = await client.get(`/api/groups/arigafion/customs/${stored.body().id}`)
+    detail.assertStatus(200)
+    assert.lengthOf(detail.body().teams, 2)
+    assert.isTrue(detail.body().againstBots)
+    assert.isTrue(detail.body().resultKnown)
+  })
+
+  test('does not serve a custom from another group, or one that does not exist', async ({ client }) => {
+    await seedGroup()
+
+    const missing = await client.get('/api/groups/arigafion/customs/999999')
+    missing.assertStatus(404)
   })
 })

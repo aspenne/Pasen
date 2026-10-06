@@ -14,6 +14,8 @@ import { Route as GroupRouteImport } from './routes/$group'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
 import { Route as GroupInsightsRouteImport } from './routes/$group/insights'
+import { Route as GroupCustomsIndexRouteImport } from './routes/$group/customs/index'
+import { Route as GroupCustomsIdRouteImport } from './routes/$group/customs/$id'
 import { Route as GroupPlayersMemberRouteImport } from './routes/$group/players/$member'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +43,16 @@ const GroupInsightsRoute = GroupInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => GroupRoute,
 } as any)
+const GroupCustomsIndexRoute = GroupCustomsIndexRouteImport.update({
+  id: '/customs/',
+  path: '/customs/',
+  getParentRoute: () => GroupRoute,
+} as any)
+const GroupCustomsIdRoute = GroupCustomsIdRouteImport.update({
+  id: '/customs/$id',
+  path: '/customs/$id',
+  getParentRoute: () => GroupRoute,
+} as any)
 const GroupPlayersMemberRoute = GroupPlayersMemberRouteImport.update({
   id: '/players/$member',
   path: '/players/$member',
@@ -53,14 +65,18 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
+  '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
+  '/$group/customs/': typeof GroupCustomsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group': typeof GroupIndexRoute
+  '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
+  '/$group/customs': typeof GroupCustomsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,7 +85,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
+  '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
+  '/$group/customs/': typeof GroupCustomsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -79,10 +97,18 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$group/insights'
     | '/$group/'
+    | '/$group/customs/$id'
     | '/$group/players/$member'
+    | '/$group/customs/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/admin' | '/$group/insights' | '/$group' | '/$group/players/$member'
+    | '/'
+    | '/admin'
+    | '/$group/insights'
+    | '/$group'
+    | '/$group/customs/$id'
+    | '/$group/players/$member'
+    | '/$group/customs'
   id:
     | '__root__'
     | '/'
@@ -90,7 +116,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$group/insights'
     | '/$group/'
+    | '/$group/customs/$id'
     | '/$group/players/$member'
+    | '/$group/customs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -136,6 +164,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupInsightsRouteImport
       parentRoute: typeof GroupRoute
     }
+    '/$group/customs/': {
+      id: '/$group/customs/'
+      path: '/customs'
+      fullPath: '/$group/customs/'
+      preLoaderRoute: typeof GroupCustomsIndexRouteImport
+      parentRoute: typeof GroupRoute
+    }
+    '/$group/customs/$id': {
+      id: '/$group/customs/$id'
+      path: '/customs/$id'
+      fullPath: '/$group/customs/$id'
+      preLoaderRoute: typeof GroupCustomsIdRouteImport
+      parentRoute: typeof GroupRoute
+    }
     '/$group/players/$member': {
       id: '/$group/players/$member'
       path: '/players/$member'
@@ -149,13 +191,17 @@ declare module '@tanstack/react-router' {
 interface GroupRouteChildren {
   GroupInsightsRoute: typeof GroupInsightsRoute
   GroupIndexRoute: typeof GroupIndexRoute
+  GroupCustomsIdRoute: typeof GroupCustomsIdRoute
   GroupPlayersMemberRoute: typeof GroupPlayersMemberRoute
+  GroupCustomsIndexRoute: typeof GroupCustomsIndexRoute
 }
 
 const GroupRouteChildren: GroupRouteChildren = {
   GroupInsightsRoute: GroupInsightsRoute,
   GroupIndexRoute: GroupIndexRoute,
+  GroupCustomsIdRoute: GroupCustomsIdRoute,
   GroupPlayersMemberRoute: GroupPlayersMemberRoute,
+  GroupCustomsIndexRoute: GroupCustomsIndexRoute,
 }
 
 const GroupRouteWithChildren = GroupRoute._addFileChildren(GroupRouteChildren)

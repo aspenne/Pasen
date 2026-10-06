@@ -1,0 +1,1659 @@
+{
+ "events": {
+  "Events": [
+   {
+    "EventID": 0,
+    "EventName": "GameStart",
+    "EventTime": 0.037375498563051224
+   },
+   {
+    "EventID": 1,
+    "EventName": "MinionsSpawning",
+    "EventTime": 30.04271697998047
+   },
+   {
+    "EventID": 2,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 149.57276916503906,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 3,
+    "EventName": "FirstBlood",
+    "EventTime": 149.57276916503906,
+    "Recipient": "3C Patate Chaude"
+   },
+   {
+    "EventID": 4,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 157.7618865966797,
+    "KillerName": "Ahri Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 5,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 197.90138244628906,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 6,
+    "Assisters": [
+     "Darius Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 246.23983764648438,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 7,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 259.2525329589844,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 8,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 261.5451354980469,
+    "KillerName": "Lux Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 9,
+    "Assisters": [
+     "Darius Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 296.75347900390625,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 10,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 317.3455505371094,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 11,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 322.92767333984375,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 12,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 329.3701171875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 13,
+    "Assisters": [
+     "3C Patate Chaude"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 391.61639404296875,
+    "KillerName": "Lux Bot",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 14,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 397.4862365722656,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 15,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 444.2827453613281,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 16,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 462.4960632324219,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 17,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 511.3563232421875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "Stolen": "False",
+    "EventID": 18,
+    "Assisters": [
+     "Teemo Bot"
+    ],
+    "EventName": "HordeKill",
+    "EventTime": 523.9334106445312,
+    "KillerName": "Darius Bot"
+   },
+   {
+    "Stolen": "False",
+    "EventID": 19,
+    "Assisters": [
+     "Teemo Bot",
+     "Anivia Bot"
+    ],
+    "EventName": "HordeKill",
+    "EventTime": 533.9815063476562,
+    "KillerName": "Darius Bot"
+   },
+   {
+    "EventID": 20,
+    "Assisters": [
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 538.3401489257812,
+    "KillerName": "Darius Bot",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 21,
+    "Assisters": [
+     "Ahri Bot",
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 545.9738159179688,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "Stolen": "False",
+    "EventID": 22,
+    "Assisters": [
+     "Teemo Bot"
+    ],
+    "EventName": "HordeKill",
+    "EventTime": 546.9072875976562,
+    "KillerName": "Darius Bot"
+   },
+   {
+    "EventID": 23,
+    "Assisters": [
+     "3C Patate Chaude",
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 554.987060546875,
+    "KillerName": "Ahri Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 24,
+    "Assisters": [
+     "3C Patate Chaude",
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 563.6458129882812,
+    "KillerName": "Lux Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 25,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 580.3470458984375,
+    "KillerName": "3C Patate Chaude",
+    "TurretKilled": "Turret_TChaos_L1_P3_2254202041_0"
+   },
+   {
+    "EventID": 26,
+    "EventName": "FirstBrick",
+    "EventTime": 580.3470458984375,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 27,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 586.2105102539062,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "Stolen": "False",
+    "EventID": 28,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "DragonKill",
+    "EventTime": 618.3032836914062,
+    "DragonType": "Hextech",
+    "KillerName": "Darius Bot"
+   },
+   {
+    "EventID": 29,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 630.4326171875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 30,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 674.2646484375,
+    "KillerName": "3C Patate Chaude",
+    "TurretKilled": "Turret_TChaos_L1_P2_2237424422_0"
+   },
+   {
+    "EventID": 31,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 689.0975952148438,
+    "KillerName": "Lux Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 32,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 692.2119140625,
+    "KillerName": "Lux Bot",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 33,
+    "EventName": "Multikill",
+    "EventTime": 692.2119140625,
+    "KillStreak": 2,
+    "KillerName": "Lux Bot"
+   },
+   {
+    "EventID": 34,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 703.40673828125,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 35,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 714.0826416015625,
+    "KillerName": "3C Patate Chaude",
+    "TurretKilled": "Turret_TChaos_L1_P1_2220646803_0"
+   },
+   {
+    "EventID": 36,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 722.053955078125,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 37,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 729.13037109375,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 38,
+    "EventName": "Multikill",
+    "EventTime": 729.13037109375,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 39,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 738.6947631835938,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 40,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 743.5883178710938,
+    "KillerName": "Ahri Bot",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 41,
+    "Assisters": [],
+    "EventName": "InhibKilled",
+    "EventTime": 752.2498779296875,
+    "KillerName": "3C Patate Chaude",
+    "InhibKilled": "Inhib_TChaos_L1_P1_1931666598_0"
+   },
+   {
+    "EventID": 42,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 761.8065185546875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 43,
+    "Assisters": [
+     "Galio Bot",
+     "Anivia Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 800.7510375976562,
+    "KillerName": "Galio Bot",
+    "VictimName": "Ahri Bot"
+   },
+   {
+    "EventID": 44,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 801.055419921875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 45,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 806.7742919921875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 46,
+    "EventName": "Multikill",
+    "EventTime": 806.7742919921875,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 47,
+    "Assisters": [],
+    "EventName": "TurretKilled",
+    "EventTime": 807.7330322265625,
+    "KillerName": "Lux Bot",
+    "TurretKilled": "Turret_TChaos_L0_P3_511845594_0"
+   },
+   {
+    "EventID": 48,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 808.6739501953125,
+    "KillerName": "Darius Bot",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 49,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 840.8599243164062,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 50,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 845.5711669921875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 51,
+    "EventName": "Multikill",
+    "EventTime": 845.5711669921875,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 52,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 849.8126831054688,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 53,
+    "EventName": "Multikill",
+    "EventTime": 849.8126831054688,
+    "KillStreak": 3,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 54,
+    "Assisters": [
+     "Cassiopeia Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 852.0543823242188,
+    "KillerName": "Galio Bot",
+    "VictimName": "Ahri Bot"
+   },
+   {
+    "EventID": 55,
+    "Assisters": [
+     "Ahri Bot",
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 854.4432983398438,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 56,
+    "EventName": "Multikill",
+    "EventTime": 854.4432983398438,
+    "KillStreak": 4,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 57,
+    "Assisters": [
+     "Ahri Bot",
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 860.68603515625,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 58,
+    "EventName": "Multikill",
+    "EventTime": 860.68603515625,
+    "KillStreak": 5,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 59,
+    "Assisters": [
+     "Galio Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 869.4203491210938,
+    "KillerName": "Master Yi Bot",
+    "VictimName": "Teemo Bot"
+   },
+   {
+    "EventID": 60,
+    "Assisters": [
+     "Lux Bot",
+     "Teemo Bot"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 873.630126953125,
+    "KillerName": "3C Patate Chaude",
+    "TurretKilled": "Turret_TChaos_L1_P5_342097928_0"
+   },
+   {
+    "EventID": 61,
+    "Assisters": [
+     "Master Yi Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 876.2080078125,
+    "KillerName": "Galio Bot",
+    "VictimName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 62,
+    "Assisters": [
+     "Galio Bot",
+     "Anivia Bot",
+     "Master Yi Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 896.3192138671875,
+    "KillerName": "Cassiopeia Bot",
+    "VictimName": "Lux Bot"
+   },
+   {
+    "EventID": 63,
+    "Assisters": [
+     "Galio Bot",
+     "Cassiopeia Bot",
+     "Galio Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 922.5165405273438,
+    "KillerName": "Master Yi Bot",
+    "VictimName": "Ahri Bot"
+   },
+   {
+    "EventID": 64,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 927.0552368164062,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 65,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 928.8214111328125,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 66,
+    "EventName": "Multikill",
+    "EventTime": 928.8214111328125,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 67,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 933.0716552734375,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 68,
+    "EventName": "Multikill",
+    "EventTime": 933.0716552734375,
+    "KillStreak": 3,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 69,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 940.9917602539062,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 70,
+    "EventName": "Multikill",
+    "EventTime": 940.9917602539062,
+    "KillStreak": 4,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 71,
+    "Assisters": [
+     "3C Patate Chaude"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 962.7839965820312,
+    "KillerName": "Teemo Bot",
+    "TurretKilled": "Turret_TChaos_L1_P4_392430785_0"
+   },
+   {
+    "EventID": 72,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 968.2337646484375,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 73,
+    "Assisters": [
+     "Galio Bot",
+     "Galio Bot",
+     "Anivia Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 977.5894165039062,
+    "KillerName": "Master Yi Bot",
+    "VictimName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 74,
+    "Assisters": [
+     "Galio Bot",
+     "Anivia Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 997.9365234375,
+    "KillerName": "Galio Bot",
+    "VictimName": "Ahri Bot"
+   },
+   {
+    "Stolen": "False",
+    "EventID": 75,
+    "Assisters": [
+     "Lux Bot"
+    ],
+    "EventName": "DragonKill",
+    "EventTime": 1008.3355102539062,
+    "DragonType": "Water",
+    "KillerName": "Darius Bot"
+   },
+   {
+    "EventID": 76,
+    "Assisters": [],
+    "EventName": "TurretKilled",
+    "EventTime": 1032.6473388671875,
+    "KillerName": "Lux Bot",
+    "TurretKilled": "Turret_TChaos_L0_P2_528623213_0"
+   },
+   {
+    "EventID": 77,
+    "Assisters": [
+     "Darius Bot",
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1043.814697265625,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 78,
+    "EventName": "InhibRespawned",
+    "EventTime": 1052.269287109375,
+    "InhibRespawned": "Inhib_TChaos_L1_P1_1931666598_0"
+   },
+   {
+    "EventID": 79,
+    "Assisters": [
+     "Ahri Bot",
+     "Teemo Bot"
+    ],
+    "EventName": "InhibKilled",
+    "EventTime": 1061.5228271484375,
+    "KillerName": "3C Patate Chaude",
+    "InhibKilled": "Inhib_TChaos_L1_P1_1931666598_0"
+   },
+   {
+    "EventID": 80,
+    "Assisters": [
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1065.67529296875,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 81,
+    "Assisters": [
+     "Cassiopeia Bot",
+     "Anivia Bot",
+     "Master Yi Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1069.9918212890625,
+    "KillerName": "Galio Bot",
+    "VictimName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 82,
+    "Assisters": [
+     "3C Patate Chaude"
+    ],
+    "EventName": "TurretKilled",
+    "EventTime": 1070.0279541015625,
+    "KillerName": "Teemo Bot",
+    "TurretKilled": "Turret_TChaos_L1_P5_342097928_0"
+   },
+   {
+    "EventID": 83,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1075.8402099609375,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 84,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1077.1060791015625,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 85,
+    "EventName": "Multikill",
+    "EventTime": 1077.1060791015625,
+    "KillStreak": 2,
+    "KillerName": "Teemo Bot"
+   },
+   {
+    "EventID": 86,
+    "Assisters": [
+     "Ahri Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1077.5963134765625,
+    "KillerName": "Teemo Bot",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 87,
+    "EventName": "Multikill",
+    "EventTime": 1077.5963134765625,
+    "KillStreak": 3,
+    "KillerName": "Teemo Bot"
+   },
+   {
+    "EventID": 88,
+    "Assisters": [
+     "Darius Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1095.2774658203125,
+    "KillerName": "Ahri Bot",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 89,
+    "Assisters": [
+     "Galio Bot",
+     "Cassiopeia Bot",
+     "Master Yi Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1113.4327392578125,
+    "KillerName": "Anivia Bot",
+    "VictimName": "Darius Bot"
+   },
+   {
+    "EventID": 90,
+    "Assisters": [
+     "Cassiopeia Bot",
+     "Anivia Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1122.225341796875,
+    "KillerName": "Galio Bot",
+    "VictimName": "Lux Bot"
+   },
+   {
+    "EventID": 91,
+    "Assisters": [
+     "Galio Bot",
+     "Galio Bot",
+     "Anivia Bot",
+     "Master Yi Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1137.4344482421875,
+    "KillerName": "Cassiopeia Bot",
+    "VictimName": "Teemo Bot"
+   },
+   {
+    "EventID": 92,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 1139.7032470703125,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Cassiopeia Bot"
+   },
+   {
+    "EventID": 93,
+    "Assisters": [
+     "Teemo Bot"
+    ],
+    "EventName": "ChampionKill",
+    "EventTime": 1143.9964599609375,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 94,
+    "EventName": "Multikill",
+    "EventTime": 1143.9964599609375,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 95,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 1157.357666015625,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Master Yi Bot"
+   },
+   {
+    "EventID": 96,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 1160.936767578125,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Galio Bot"
+   },
+   {
+    "EventID": 97,
+    "EventName": "Multikill",
+    "EventTime": 1160.936767578125,
+    "KillStreak": 2,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "EventID": 98,
+    "Assisters": [],
+    "EventName": "TurretKilled",
+    "EventTime": 1167.076171875,
+    "KillerName": "3C Patate Chaude",
+    "TurretKilled": "Turret_TChaos_L1_P4_392430785_0"
+   },
+   {
+    "EventID": 99,
+    "Assisters": [],
+    "EventName": "ChampionKill",
+    "EventTime": 1169.4525146484375,
+    "KillerName": "3C Patate Chaude",
+    "VictimName": "Anivia Bot"
+   },
+   {
+    "EventID": 100,
+    "EventName": "Multikill",
+    "EventTime": 1169.4525146484375,
+    "KillStreak": 3,
+    "KillerName": "3C Patate Chaude"
+   },
+   {
+    "Acer": "3C Patate Chaude",
+    "EventID": 101,
+    "AcingTeam": "ORDER",
+    "EventName": "Ace",
+    "EventTime": 1169.4525146484375
+   },
+   {
+    "Result": "Win",
+    "EventID": 102,
+    "EventName": "GameEnd",
+    "EventTime": 1195.5787353515625
+   }
+  ]
+ },
+ "gameData": {
+  "mapName": "Map11",
+  "gameMode": "CLASSIC",
+  "gameTime": 1197.737060546875,
+  "mapNumber": 11,
+  "mapTerrain": "Default"
+ },
+ "allPlayers": [
+  {
+   "team": "ORDER",
+   "isBot": false,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1055
+    },
+    {
+     "slot": 1,
+     "itemID": 3074
+    },
+    {
+     "slot": 2,
+     "itemID": 3009
+    },
+    {
+     "slot": 3,
+     "itemID": 3078
+    },
+    {
+     "slot": 4,
+     "itemID": 3161
+    },
+    {
+     "slot": 5,
+     "itemID": 2055
+    },
+    {
+     "slot": 6,
+     "itemID": 3340
+    }
+   ],
+   "level": 15,
+   "runes": {
+    "keystone": {
+     "id": 8437
+    },
+    "primaryRuneTree": {
+     "id": 8400
+    },
+    "secondaryRuneTree": {
+     "id": 8300
+    }
+   },
+   "isDead": false,
+   "riotId": "3C Patate Chaude#CCC",
+   "scores": {
+    "kills": 36,
+    "deaths": 3,
+    "assists": 3,
+    "wardScore": 11.695579528808594,
+    "creepScore": 110
+   },
+   "skinID": 32,
+   "position": "TOP",
+   "skinName": "Prestige Winterblessed Camille",
+   "rawSkinName": "game_character_skin_displayname_Camille_32",
+   "championName": "Camille",
+   "respawnTimer": 0,
+   "summonerName": "3C Patate Chaude#CCC",
+   "riotIdTagLine": "CCC",
+   "riotIdGameName": "3C Patate Chaude",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerHaste_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Camille"
+  },
+  {
+   "team": "ORDER",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1056
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 3118
+    },
+    {
+     "slot": 3,
+     "itemID": 3175
+    },
+    {
+     "slot": 4,
+     "itemID": 3145
+    },
+    {
+     "slot": 6,
+     "itemID": 3363
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8229
+    },
+    "primaryRuneTree": {
+     "id": 8200
+    },
+    "secondaryRuneTree": {
+     "id": 8100
+    }
+   },
+   "isDead": false,
+   "riotId": "Ahri#BOT",
+   "scores": {
+    "kills": 4,
+    "deaths": 4,
+    "assists": 13,
+    "wardScore": 1.8558897972106934,
+    "creepScore": 30
+   },
+   "skinID": 0,
+   "position": "MIDDLE",
+   "skinName": "Ahri",
+   "rawSkinName": "game_character_displayname_Ahri",
+   "championName": "Ahri",
+   "respawnTimer": 0,
+   "summonerName": "Ahri Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Ahri",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_S12_SummonerTeleportUpgrade_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Ahri"
+  },
+  {
+   "team": "ORDER",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 3871
+    },
+    {
+     "slot": 1,
+     "itemID": 3020
+    },
+    {
+     "slot": 2,
+     "itemID": 6655
+    },
+    {
+     "slot": 3,
+     "itemID": 3145
+    },
+    {
+     "slot": 4,
+     "itemID": 3113
+    },
+    {
+     "slot": 6,
+     "itemID": 3364
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8229
+    },
+    "primaryRuneTree": {
+     "id": 8200
+    },
+    "secondaryRuneTree": {
+     "id": 8100
+    }
+   },
+   "isDead": false,
+   "riotId": "Lux#BOT",
+   "scores": {
+    "kills": 5,
+    "deaths": 2,
+    "assists": 9,
+    "wardScore": 0.3333333432674408,
+    "creepScore": 30
+   },
+   "skinID": 0,
+   "position": "UTILITY",
+   "skinName": "Lux",
+   "rawSkinName": "game_character_displayname_Lux",
+   "championName": "Lux",
+   "respawnTimer": 0,
+   "summonerName": "Lux Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Lux",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Lux"
+  },
+  {
+   "team": "ORDER",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1057
+    },
+    {
+     "slot": 1,
+     "itemID": 3142
+    },
+    {
+     "slot": 2,
+     "itemID": 3009
+    },
+    {
+     "slot": 3,
+     "itemID": 3066
+    },
+    {
+     "slot": 4,
+     "itemID": 2055
+    },
+    {
+     "slot": 6,
+     "itemID": 3340
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8437
+    },
+    "primaryRuneTree": {
+     "id": 8400
+    },
+    "secondaryRuneTree": {
+     "id": 8200
+    }
+   },
+   "isDead": false,
+   "riotId": "Darius#BOT",
+   "scores": {
+    "kills": 2,
+    "deaths": 1,
+    "assists": 4,
+    "wardScore": 8.818329811096191,
+    "creepScore": 90
+   },
+   "skinID": 0,
+   "position": "JUNGLE",
+   "skinName": "Darius",
+   "rawSkinName": "game_character_displayname_Darius",
+   "championName": "Darius",
+   "respawnTimer": 0,
+   "summonerName": "Darius Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Darius",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerSmiteAvatarDefensive_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Darius"
+  },
+  {
+   "team": "ORDER",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1055
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 3009
+    },
+    {
+     "slot": 3,
+     "itemID": 3802
+    },
+    {
+     "slot": 4,
+     "itemID": 3087
+    },
+    {
+     "slot": 5,
+     "itemID": 1026
+    },
+    {
+     "slot": 6,
+     "itemID": 3363
+    }
+   ],
+   "level": 13,
+   "runes": {
+    "keystone": {
+     "id": 8229
+    },
+    "primaryRuneTree": {
+     "id": 8200
+    },
+    "secondaryRuneTree": {
+     "id": 8100
+    }
+   },
+   "isDead": false,
+   "riotId": "Teemo#BOT",
+   "scores": {
+    "kills": 6,
+    "deaths": 2,
+    "assists": 6,
+    "wardScore": 0.6666666865348816,
+    "creepScore": 60
+   },
+   "skinID": 0,
+   "position": "TOP",
+   "skinName": "Teemo",
+   "rawSkinName": "game_character_displayname_Teemo",
+   "championName": "Teemo",
+   "respawnTimer": 0,
+   "summonerName": "Teemo Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Teemo",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Teemo"
+  },
+  {
+   "team": "CHAOS",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1056
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 3173
+    },
+    {
+     "slot": 3,
+     "itemID": 6664
+    },
+    {
+     "slot": 4,
+     "itemID": 1052
+    },
+    {
+     "slot": 5,
+     "itemID": 1004
+    },
+    {
+     "slot": 6,
+     "itemID": 3340
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8437
+    },
+    "primaryRuneTree": {
+     "id": 8400
+    },
+    "secondaryRuneTree": {
+     "id": 8200
+    }
+   },
+   "isDead": false,
+   "riotId": "Galio#BOT",
+   "scores": {
+    "kills": 4,
+    "deaths": 9,
+    "assists": 6,
+    "wardScore": 0,
+    "creepScore": 50
+   },
+   "skinID": 0,
+   "position": "MIDDLE",
+   "skinName": "Galio",
+   "rawSkinName": "game_character_displayname_Galio",
+   "championName": "Galio",
+   "respawnTimer": 0,
+   "summonerName": "Galio Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Galio",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_S12_SummonerTeleportUpgrade_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Galio"
+  },
+  {
+   "team": "CHAOS",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1056
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 6657
+    },
+    {
+     "slot": 3,
+     "itemID": 3003
+    },
+    {
+     "slot": 4,
+     "itemID": 1028
+    },
+    {
+     "slot": 6,
+     "itemID": 3363
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8229
+    },
+    "primaryRuneTree": {
+     "id": 8200
+    },
+    "secondaryRuneTree": {
+     "id": 8100
+    }
+   },
+   "isDead": false,
+   "riotId": "Cassiopeia#BOT",
+   "scores": {
+    "kills": 2,
+    "deaths": 13,
+    "assists": 5,
+    "wardScore": 0,
+    "creepScore": 70
+   },
+   "skinID": 0,
+   "position": "BOTTOM",
+   "skinName": "Cassiopeia",
+   "rawSkinName": "game_character_displayname_Cassiopeia",
+   "championName": "Cassiopeia",
+   "respawnTimer": 0,
+   "summonerName": "Cassiopeia Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Cassiopeia",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerHaste_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Cassiopeia"
+  },
+  {
+   "team": "CHAOS",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 3876
+    },
+    {
+     "slot": 1,
+     "itemID": 3190
+    },
+    {
+     "slot": 2,
+     "itemID": 3047
+    },
+    {
+     "slot": 3,
+     "itemID": 4642
+    },
+    {
+     "slot": 4,
+     "itemID": 1052
+    },
+    {
+     "slot": 5,
+     "itemID": 1052
+    },
+    {
+     "slot": 6,
+     "itemID": 3364
+    }
+   ],
+   "level": 9,
+   "runes": {
+    "keystone": {
+     "id": 8437
+    },
+    "primaryRuneTree": {
+     "id": 8400
+    },
+    "secondaryRuneTree": {
+     "id": 8200
+    }
+   },
+   "isDead": false,
+   "riotId": "Galio#BOT",
+   "scores": {
+    "kills": 2,
+    "deaths": 15,
+    "assists": 5,
+    "wardScore": 0.3333333432674408,
+    "creepScore": 20
+   },
+   "skinID": 0,
+   "position": "UTILITY",
+   "skinName": "Galio",
+   "rawSkinName": "game_character_displayname_Galio",
+   "championName": "Galio",
+   "respawnTimer": 0,
+   "summonerName": "Galio Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Galio",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerDot_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Galio"
+  },
+  {
+   "team": "CHAOS",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 3070
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 3009
+    },
+    {
+     "slot": 3,
+     "itemID": 2022
+    },
+    {
+     "slot": 4,
+     "itemID": 1052
+    },
+    {
+     "slot": 5,
+     "itemID": 6657
+    },
+    {
+     "slot": 6,
+     "itemID": 3363
+    }
+   ],
+   "level": 11,
+   "runes": {
+    "keystone": {
+     "id": 8229
+    },
+    "primaryRuneTree": {
+     "id": 8200
+    },
+    "secondaryRuneTree": {
+     "id": 8100
+    }
+   },
+   "isDead": true,
+   "riotId": "Anivia#BOT",
+   "scores": {
+    "kills": 1,
+    "deaths": 7,
+    "assists": 7,
+    "wardScore": 0.5333333611488342,
+    "creepScore": 50
+   },
+   "skinID": 0,
+   "position": "TOP",
+   "skinName": "Anivia",
+   "rawSkinName": "game_character_displayname_Anivia",
+   "championName": "Anivia",
+   "respawnTimer": 8.051263809204102,
+   "summonerName": "Anivia Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "Anivia",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_S12_SummonerTeleportUpgrade_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_Anivia"
+  },
+  {
+   "team": "CHAOS",
+   "isBot": true,
+   "items": [
+    {
+     "slot": 0,
+     "itemID": 1102
+    },
+    {
+     "slot": 1,
+     "itemID": 2055
+    },
+    {
+     "slot": 2,
+     "itemID": 1053
+    },
+    {
+     "slot": 3,
+     "itemID": 6672
+    },
+    {
+     "slot": 4,
+     "itemID": 3006
+    },
+    {
+     "slot": 5,
+     "itemID": 1043
+    },
+    {
+     "slot": 6,
+     "itemID": 3340
+    }
+   ],
+   "level": 10,
+   "runes": {
+    "keystone": {
+     "id": 8005
+    },
+    "primaryRuneTree": {
+     "id": 8000
+    },
+    "secondaryRuneTree": {
+     "id": 8200
+    }
+   },
+   "isDead": false,
+   "riotId": "MasterYi#BOT",
+   "scores": {
+    "kills": 3,
+    "deaths": 9,
+    "assists": 5,
+    "wardScore": 4.807767868041992,
+    "creepScore": 30
+   },
+   "skinID": 0,
+   "position": "JUNGLE",
+   "skinName": "Master Yi",
+   "rawSkinName": "game_character_displayname_MasterYi",
+   "championName": "Master Yi",
+   "respawnTimer": 0,
+   "summonerName": "Master Yi Bot",
+   "riotIdTagLine": "BOT",
+   "riotIdGameName": "MasterYi",
+   "summonerSpells": {
+    "summonerSpellOne": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName"
+    },
+    "summonerSpellTwo": {
+     "rawDisplayName": "GeneratedTip_SummonerSpell_S5_SummonerSmitePlayerGanker_DisplayName"
+    }
+   },
+   "rawChampionName": "game_character_displayname_MasterYi"
+  }
+ ],
+ "activePlayer": {
+  "riotId": "3C Patate Chaude#CCC"
+ }
+}
