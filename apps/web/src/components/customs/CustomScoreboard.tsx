@@ -101,8 +101,13 @@ export function CustomScoreboard({
                 size={34}
               />
 
-              <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-2">
+              {/*
+                A floor under the name, so on a narrow panel it is the score
+                that drops to a second line - not the name that shrinks to a
+                few letters.
+              */}
+              <div className="min-w-[8rem] flex-1">
+                <div className="flex min-w-0 items-baseline gap-2">
                   {player.memberSlug ? (
                     <Link
                       to="/$group/players/$member"
@@ -145,7 +150,7 @@ export function CustomScoreboard({
                 <ItemRow items={player.items} staticData={staticData} />
               </div>
 
-              <div className="w-[96px] shrink-0 text-right">
+              <div className="ml-auto w-[96px] shrink-0 text-right">
                 <div className="display tnum text-[15px] font-bold text-ink">
                   {player.kills} / {player.deaths} / {player.assists}
                 </div>
