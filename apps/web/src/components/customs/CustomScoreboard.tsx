@@ -54,8 +54,14 @@ export function CustomScoreboard({
   const taken = OBJECTIVES.filter(([key]) => team.objectives[key] > 0)
 
   return (
+    /*
+     * A container, because the question is how wide this panel is, not how
+     * wide the screen is: two panels side by side on a 1280px screen are each
+     * narrower than one alone on a tablet, and the item row is the first thing
+     * that should give.
+     */
     <section
-      className={`min-w-0 border-l-[3px] bg-panel ${
+      className={`@container min-w-0 border-l-[3px] bg-panel ${
         team.won === null ? 'border-l-line-strong' : team.won ? 'border-l-win' : 'border-l-loss'
       }`}
     >
@@ -135,7 +141,7 @@ export function CustomScoreboard({
 
               <RunePair perks={player.perks} staticData={staticData} size={20} />
 
-              <div className="hidden shrink-0 xl:block">
+              <div className="hidden shrink-0 @xl:block">
                 <ItemRow items={player.items} staticData={staticData} />
               </div>
 
