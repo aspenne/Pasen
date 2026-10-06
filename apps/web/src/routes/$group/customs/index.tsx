@@ -2,20 +2,11 @@ import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-rou
 import { useQuery } from '@tanstack/react-query'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { api, type CustomGame } from '@/lib/api'
+import { api } from '@/lib/api'
+import { customResult, customTitle } from '@/lib/customs'
 import { duration } from '@/lib/format'
 
 export const Route = createFileRoute('/$group/customs/')({ component: CustomsPage })
-
-/** The side that won, or an honest blank when the capture ended without saying. */
-function resultOf(game: CustomGame): { text: string; tone: string } {
-  const winner = game.teams.find((team) => team.won)
-  if (!game.resultKnown || !winner) return { text: 'Result not captured', tone: 'text-ink-dim' }
-  return {
-    text: winner.side === 'ORDER' ? 'Blue side won' : 'Red side won',
-    tone: winner.side === 'ORDER' ? 'text-win' : 'text-loss',
-  }
-}
 
 function CustomsPage() {
   const { group } = useParams({ from: '/$group/customs/' })
@@ -56,7 +47,7 @@ function CustomsPage() {
       ) : (
         <ul className="space-y-2">
           {data.games.map((game) => {
-            const result = resultOf(game)
+            const result = customResult(game)
             const humans = game.teams.flatMap((team) => team.players).filter((p) => !p.isBot)
 
             return (
@@ -70,7 +61,7 @@ function CustomsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
                       <span className="display truncate text-[17px] font-semibold text-ink">
-                        {game.label ?? `Custom · ${game.mapName ?? game.gameMode}`}
+                        {customTitle(game)}
                       </span>
                       {game.againstBots && (
                         <span className="shrink-0 rounded-[3px] border border-line-strong px-1 text-[10px] uppercase tracking-[0.1em] text-ink-dim">

@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { DuoHighlights } from '@/components/home/DuoHighlights'
+import { LatestCustoms } from '@/components/home/LatestCustoms'
 import { GroupHero } from '@/components/home/GroupHero'
 import { RosterCard } from '@/components/home/RosterCard'
 import { GroupRhythm } from '@/components/home/GroupRhythm'
@@ -125,6 +126,11 @@ function Dashboard() {
   const { data: activity } = useQuery({
     queryKey: ['activity', group, scope],
     queryFn: () => api.activity(group, { scope }),
+  })
+  // Same key as the customs page, so following the link opens on a warm cache.
+  const { data: customs } = useQuery({
+    queryKey: ['customs', group],
+    queryFn: () => api.customGames(group),
   })
 
   const nameOf = (slug: string) =>
@@ -299,6 +305,15 @@ function Dashboard() {
           colorFor={colorFor}
           groupSlug={group}
           scope={scope}
+        />
+      )}
+
+      {customs && (
+        <LatestCustoms
+          games={customs.games}
+          groupSlug={group}
+          scope={scope}
+          timezone={timezone}
         />
       )}
 
