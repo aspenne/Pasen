@@ -2,6 +2,7 @@ import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-rou
 import { useQuery } from '@tanstack/react-query'
 
 import { CustomScoreboard } from '@/components/customs/CustomScoreboard'
+import { WinnerControl } from '@/components/customs/WinnerControl'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
@@ -18,6 +19,8 @@ function CustomGamePage() {
     queryKey: ['group', group, scope],
     queryFn: () => api.group(group, { scope }),
   })
+  // Shares the admin page's key: signed in there, the control shows up here.
+  const { data: session } = useQuery({ queryKey: ['session'], queryFn: api.session })
   const { data: game, isPending, error } = useQuery({
     queryKey: ['custom', group, id],
     queryFn: () => api.customGame(group, Number(id)),
@@ -108,11 +111,15 @@ function CustomGamePage() {
         */}
         <p className="text-[12px] text-ink-dim">
           {game.resultKnown && winner
-            ? `${winner.side === 'ORDER' ? 'Blue' : 'Red'} side won`
+            ? `${winner.side === 'ORDER' ? 'Blue' : 'Red'} side won${
+                game.resultSource === 'manual' ? ' · decided by hand' : ' · from the capture'
+              }`
             : 'The capture ended before the game did, so the result is unknown'}
           {game.capturedBy && ` · captured by ${game.capturedBy.split('#')[0]}`}
         </p>
       </header>
+
+      {session?.authenticated && <WinnerControl game={game} group={group} />}
 
       <div className="grid gap-3 lg:grid-cols-2">
         {game.teams.map((team) => (

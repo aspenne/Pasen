@@ -56,6 +56,7 @@ function stored(game: CustomGame) {
   return {
     id: game.id,
     label: game.label,
+    winnerOverride: game.winnerOverride,
     playedAt: game.playedAt.toUTC().toISO()!,
     duration: game.duration,
     gameMode: game.gameMode,

@@ -42,6 +42,13 @@ export default class CustomGame extends BaseModel {
   @column()
   declare label: string | null
 
+  /**
+   * The winning side as decided by a person, which beats whatever the capture
+   * implies. Null means "go by the capture".
+   */
+  @column()
+  declare winnerOverride: 'ORDER' | 'CHAOS' | null
+
   @column()
   declare raw: Record<string, unknown>
 

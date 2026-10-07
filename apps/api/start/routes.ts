@@ -68,6 +68,7 @@ router
          */
         router.get('/admin/groups/:slug/customs', [CustomsController, 'index'])
         router.post('/admin/groups/:slug/customs', [CustomsController, 'store'])
+        router.patch('/admin/customs/:id', [CustomsController, 'update'])
         router.delete('/admin/customs/:id', [CustomsController, 'destroy'])
       })
       .use(middleware.auth())

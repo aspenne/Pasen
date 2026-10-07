@@ -59,8 +59,10 @@ export type CustomGameView = {
   mapName: string | null
   /** Who ran the agent: the result in the capture is from their point of view. */
   capturedBy: string | null
-  /** False when the capture came from the window closing, with no GameEnd in it. */
+  /** False when nothing settles it: no GameEnd in the capture, and nobody decided by hand. */
   resultKnown: boolean
+  /** Where the result came from - the capture, a person, or nowhere. */
+  resultSource: 'capture' | 'manual' | null
   /** True when every player but the capturer is a bot - practice, not an inhouse. */
   againstBots: boolean
   firstBlood: string | null
@@ -79,6 +81,8 @@ export type ViewLookups = {
 export type StoredCustom = {
   id: number
   label: string | null
+  /** A winner decided by hand, which beats whatever the capture implies. */
+  winnerOverride?: Side | null
   playedAt: string
   duration: number
   gameMode: string
@@ -166,7 +170,14 @@ export function viewCustomGame(game: StoredCustom, lookups: ViewLookups): Custom
     }
   }
 
-  const winner = winningSide(raw, players, events)
+  /*
+   * A person's decision beats the capture's. The capture only ever knew the
+   * result from the seat of whoever ran the agent - and nothing at all when it
+   * was saved from the window closing.
+   */
+  const captured = winningSide(raw, players, events)
+  const winner = game.winnerOverride ?? captured
+  const resultSource = game.winnerOverride ? 'manual' : captured ? 'capture' : null
   const capturer = raw.activePlayer?.riotId ?? null
 
   const teams: CustomTeamView[] = (['ORDER', 'CHAOS'] as const).map((side) => {
@@ -193,6 +204,7 @@ export function viewCustomGame(game: StoredCustom, lookups: ViewLookups): Custom
     mapName: game.mapName ? (MAP_NAMES[game.mapName] ?? game.mapName) : null,
     capturedBy: capturer,
     resultKnown: winner !== null,
+    resultSource,
     againstBots: humans.length <= 1 && players.length > 1,
     firstBlood: events.find((event) => event.EventName === 'FirstBlood')?.Recipient ?? null,
     teams,

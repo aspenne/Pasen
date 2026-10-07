@@ -153,3 +153,68 @@ test.group('Custom games, read side', (group) => {
     missing.assertStatus(404)
   })
 })
+
+test.group('Custom games, deciding the winner', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  async function upload(client: any) {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    const raw = JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+    const stored = await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: raw })
+      .loginAs(admin)
+    return { admin, id: stored.body().id as number }
+  }
+
+  test('only an admin can decide', async ({ client }) => {
+    const { id } = await upload(client)
+
+    const anonymous = await client.patch(`/api/admin/customs/${id}`).json({ winner: 'CHAOS' })
+    anonymous.assertStatus(401)
+  })
+
+  test('a decision shows on the public page, and clearing it restores the capture', async ({
+    client,
+    assert,
+  }) => {
+    const { admin, id } = await upload(client)
+
+    const decided = await client
+      .patch(`/api/admin/customs/${id}`)
+      .json({ winner: 'CHAOS' })
+      .loginAs(admin)
+    decided.assertStatus(200)
+
+    const after = await client.get(`/api/groups/arigafion/customs/${id}`)
+    assert.equal(after.body().resultSource, 'manual')
+    assert.isTrue(after.body().teams.find((t: any) => t.side === 'CHAOS').won)
+
+    await client.patch(`/api/admin/customs/${id}`).json({ winner: null }).loginAs(admin)
+
+    const restored = await client.get(`/api/groups/arigafion/customs/${id}`)
+    assert.equal(restored.body().resultSource, 'capture')
+    assert.isTrue(restored.body().teams.find((t: any) => t.side === 'ORDER').won)
+  })
+
+  test('renames without touching the result', async ({ client, assert }) => {
+    const { admin, id } = await upload(client)
+
+    await client.patch(`/api/admin/customs/${id}`).json({ label: 'Inhouse du vendredi' }).loginAs(admin)
+
+    const after = await client.get(`/api/groups/arigafion/customs/${id}`)
+    assert.equal(after.body().label, 'Inhouse du vendredi')
+    assert.equal(after.body().resultSource, 'capture')
+  })
+
+  test('refuses a side that does not exist', async ({ client }) => {
+    const { admin, id } = await upload(client)
+
+    const bad = await client.patch(`/api/admin/customs/${id}`).json({ winner: 'PURPLE' }).loginAs(admin)
+    bad.assertStatus(422)
+  })
+})
+

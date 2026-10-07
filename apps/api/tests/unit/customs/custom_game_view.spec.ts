@@ -126,4 +126,36 @@ test.group('viewCustomGame', () => {
     assert.equal(view.firstBlood, '3C Patate Chaude')
     assert.isAtLeast(camille.bestMultikill, 3)
   })
+
+  /*
+   * The capture says ORDER won. A person who was there says otherwise, and
+   * the person wins - the capture only ever saw the game from one seat.
+   */
+  test('lets a decision by hand overrule the capture', async ({ assert }) => {
+    const view = viewCustomGame({ ...(await realCapture()), winnerOverride: 'CHAOS' }, lookups)
+
+    assert.equal(view.resultSource, 'manual')
+    assert.isTrue(view.teams.find((team) => team.side === 'CHAOS')!.won)
+    assert.isFalse(view.teams.find((team) => team.side === 'ORDER')!.won)
+  })
+
+  test('settles a capture that never saw the end', async ({ assert }) => {
+    const game = await realCapture()
+    game.raw.events.Events = game.raw.events.Events.filter(
+      (event: { EventName: string }) => event.EventName !== 'GameEnd'
+    )
+
+    const view = viewCustomGame({ ...game, winnerOverride: 'ORDER' }, lookups)
+
+    assert.isTrue(view.resultKnown)
+    assert.equal(view.resultSource, 'manual')
+    assert.isTrue(view.teams.find((team) => team.side === 'ORDER')!.won)
+  })
+
+  test('goes back to the capture once the decision is cleared', async ({ assert }) => {
+    const view = viewCustomGame({ ...(await realCapture()), winnerOverride: null }, lookups)
+
+    assert.equal(view.resultSource, 'capture')
+    assert.isTrue(view.teams.find((team) => team.side === 'ORDER')!.won)
+  })
 })

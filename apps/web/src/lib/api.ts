@@ -129,6 +129,8 @@ export type CustomGame = {
   mapName: string | null
   capturedBy: string | null
   resultKnown: boolean
+  /** Where the result came from: the capture, a decision by hand, or nowhere. */
+  resultSource: 'capture' | 'manual' | null
   againstBots: boolean
   firstBlood: string | null
   teams: CustomTeam[]
@@ -581,6 +583,12 @@ export const api = {
     ),
   removeCustom: (id: number) =>
     apiFetch<void>(`/api/admin/customs/${id}`, { method: 'DELETE' }),
+  /** `winner: null` hands the result back to the capture. */
+  updateCustom: (id: number, patch: { winner?: CustomSide | null; label?: string | null }) =>
+    apiFetch<{ id: number; label: string | null; winnerOverride: CustomSide | null }>(
+      `/api/admin/customs/${id}`,
+      { method: 'PATCH', body: JSON.stringify(patch) }
+    ),
 }
 
 function searchOf(params: Record<string, string | number | undefined>): string {

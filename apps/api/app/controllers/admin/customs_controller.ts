@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import vine from '@vinejs/vine'
 
 import CustomGame from '#models/custom_game'
 import Group from '#models/group'
@@ -12,6 +13,17 @@ import { CustomCaptureService, InvalidCaptureError } from '#customs/custom_captu
  * carries around on a gaming PC is a token that leaks, and one custom a week
  * does not justify it. The agent writes a file; a person uploads it.
  */
+/**
+ * `winner: null` hands the result back to the capture, so a wrong decision can
+ * be undone without remembering what the capture said in the first place.
+ */
+const customPatch = vine.compile(
+  vine.object({
+    winner: vine.enum(['ORDER', 'CHAOS'] as const).nullable().optional(),
+    label: vine.string().trim().maxLength(80).nullable().optional(),
+  })
+)
+
 export default class CustomsController {
   async index({ params, response }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
@@ -70,6 +82,21 @@ export default class CustomsController {
       }
       throw error
     }
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    const game = await CustomGame.findOrFail(params.id)
+    const patch = await customPatch.validate(request.all())
+
+    if (patch.winner !== undefined) game.winnerOverride = patch.winner
+    if (patch.label !== undefined) game.label = patch.label || null
+    await game.save()
+
+    return response.ok({
+      id: game.id,
+      label: game.label,
+      winnerOverride: game.winnerOverride,
+    })
   }
 
   async destroy({ params, response }: HttpContext) {
