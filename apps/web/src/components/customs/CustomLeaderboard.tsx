@@ -20,6 +20,19 @@ export function CustomLeaderboard({
   scope: QueueScope
 }) {
   const { standings, skipped } = data
+
+  /*
+   * Shared places for a real tie. Five players on the same record shown as
+   * 1 to 5 states an order that only the alphabet decided; "1" for all five,
+   * then 6, is what a table of equals actually says.
+   */
+  const place = standings.map((row) => {
+    const first = standings.findIndex(
+      (other) =>
+        other.wins === row.wins && other.winRate === row.winRate && other.games === row.games
+    )
+    return first + 1
+  })
   const left = [
     skipped.againstBots > 0 &&
       `${skipped.againstBots} game${skipped.againstBots === 1 ? '' : 's'} against bots`,
@@ -47,10 +60,10 @@ export function CustomLeaderboard({
             <li key={row.key} className="flex items-center gap-3 px-4 py-2.5">
               <span
                 className={`display tnum w-6 shrink-0 text-[17px] font-bold ${
-                  index === 0 ? 'text-accent' : 'text-ink-dim'
+                  place[index] === 1 ? 'text-accent' : 'text-ink-dim'
                 }`}
               >
-                {index + 1}
+                {place[index] === place[index - 1] ? '' : place[index]}
               </span>
 
               <span className="min-w-0 flex-1">
