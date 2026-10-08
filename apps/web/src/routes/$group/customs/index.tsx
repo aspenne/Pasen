@@ -1,6 +1,7 @@
 import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
+import { CustomLeaderboard } from '@/components/customs/CustomLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { customResult, customTitle } from '@/lib/customs'
@@ -21,6 +22,15 @@ function CustomsPage() {
     queryFn: () => api.customGames(group),
   })
 
+  /*
+   * Under the list's key, so deciding a winner on a game's page - which
+   * invalidates ['customs', group] - refreshes the table too.
+   */
+  const { data: standings } = useQuery({
+    queryKey: ['customs', group, 'standings'],
+    queryFn: () => api.customStandings(group),
+  })
+
   const timezone = overview?.timezone ?? 'Europe/Paris'
 
   return (
@@ -34,6 +44,8 @@ function CustomsPage() {
           it and uploaded what it caught.
         </p>
       </header>
+
+      {standings && <CustomLeaderboard data={standings} groupSlug={group} scope={scope} />}
 
       {isPending ? (
         <div className="space-y-2">

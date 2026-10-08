@@ -218,3 +218,58 @@ test.group('Custom games, deciding the winner', (group) => {
   })
 })
 
+test.group('Custom games, standings', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  async function fixture() {
+    return JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+  }
+
+  test('keeps practice against bots out, and says it did', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: await fixture() })
+      .loginAs(admin)
+
+    const response = await client.get('/api/groups/arigafion/customs/standings')
+    response.assertStatus(200)
+    assert.lengthOf(response.body().standings, 0)
+    assert.equal(response.body().skipped.againstBots, 1)
+  })
+
+  test('credits every human in an inhouse, on whichever side won', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+
+    // The same game with two friends on each side instead of bots.
+    const raw = await fixture()
+    const humans: Record<number, string> = { 1: 'Bea', 5: 'Cyd', 6: 'Dan' }
+    for (const [index, name] of Object.entries(humans)) {
+      const player = raw.allPlayers[Number(index)]
+      player.isBot = false
+      player.riotId = `${name}#EUW`
+      player.riotIdGameName = name
+      player.summonerName = name
+    }
+
+    await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: raw })
+      .loginAs(admin)
+
+    const { standings, counted } = (await client.get('/api/groups/arigafion/customs/standings')).body()
+
+    assert.equal(counted, 1)
+    assert.lengthOf(standings, 4)
+    // 3C Patate Chaude and Bea were on ORDER, which the capture says won.
+    assert.sameMembers(
+      standings.filter((row: any) => row.wins === 1).map((row: any) => row.name),
+      ['3C Patate Chaude', 'Bea']
+    )
+  })
+})
+

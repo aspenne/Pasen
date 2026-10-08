@@ -4,6 +4,7 @@ import RiotAccount from '#models/riot_account'
 import StaticChampion from '#models/static_champion'
 import StaticSummonerSpell from '#models/static_summoner_spell'
 import { viewCustomGame, type CustomGameView, type ViewLookups } from '#customs/custom_game_view'
+import { customStandings, type CustomStandings } from '#customs/custom_standings'
 
 /**
  * Reads stored customs back out for the site, resolving what the capture
@@ -20,6 +21,18 @@ export class CustomGameReader {
 
     const lookups = await this.#lookups(group)
     return games.map((game) => viewCustomGame(stored(game), lookups))
+  }
+
+  /**
+   * Every custom the group has ever uploaded, not the latest fifty the list
+   * shows: a win from last spring is still a win.
+   */
+  async standings(group: Group): Promise<CustomStandings> {
+    const games = await CustomGame.query().where('group_id', group.id).orderBy('played_at', 'asc')
+    if (games.length === 0) return customStandings([])
+
+    const lookups = await this.#lookups(group)
+    return customStandings(games.map((game) => viewCustomGame(stored(game), lookups)))
   }
 
   async find(group: Group, id: number): Promise<CustomGameView | null> {

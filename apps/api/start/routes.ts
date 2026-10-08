@@ -29,6 +29,7 @@ router
     router.get('/groups/:slug/activity', [GroupsController, 'activity'])
     router.get('/groups/:slug/matches/:matchId', [GroupsController, 'match'])
     router.get('/groups/:slug/customs', [CustomGamesController, 'index'])
+    router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
     router.get('/groups/:slug/customs/:id', [CustomGamesController, 'show']).where('id', /^\d+$/)
 
     router.get('/members/:slug', [MembersController, 'show'])

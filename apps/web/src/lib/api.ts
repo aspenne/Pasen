@@ -136,6 +136,23 @@ export type CustomGame = {
   teams: CustomTeam[]
 }
 
+/** One line of the customs leaderboard: a member, or a friend keyed by Riot ID. */
+export type CustomStanding = {
+  key: string
+  memberSlug: string | null
+  name: string
+  wins: number
+  losses: number
+  games: number
+  winRate: number
+}
+
+export type CustomStandings = {
+  standings: CustomStanding[]
+  counted: number
+  skipped: { againstBots: number; unknownResult: number }
+}
+
 /** A custom game captured by the agent, as the admin list shows it. */
 export type CustomGameSummary = {
   id: number
@@ -534,6 +551,8 @@ export const api = {
     apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
   customGames: (slug: string) =>
     apiFetch<{ games: CustomGame[] }>(`/api/groups/${slug}/customs`),
+  customStandings: (slug: string) =>
+    apiFetch<CustomStandings>(`/api/groups/${slug}/customs/standings`),
   customGame: (slug: string, id: number) =>
     apiFetch<CustomGame>(`/api/groups/${slug}/customs/${id}`),
   activity: (slug: string, params: Scoped = {}) =>
