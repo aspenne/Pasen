@@ -123,6 +123,7 @@ test.group('customDashboard', () => {
     assert.equal(dashboard.players.find((line) => line.name === 'Aki')!.games, 2)
     assert.lengthOf(dashboard.duos, 0)
     assert.equal(dashboard.overview.blueWins + dashboard.overview.redWins, 0)
+    // Annie, picked by both in both games: a pick, with no result to rate.
     assert.isNull(dashboard.champions[0].winRate)
   })
 
@@ -167,5 +168,13 @@ test.group('customDashboard', () => {
     assert.equal(dashboard.overview.blueWins, 1)
     assert.equal(dashboard.overview.redWins, 2)
     assert.equal(dashboard.overview.averageDuration, 2000)
+  })
+
+  test('leaves out a champion picked only once', ({ assert }) => {
+    const dashboard = customDashboard([
+      game([player('Aki', { championId: 157, championName: 'Yasuo' })], [player('Bea', { championId: 99, championName: 'Lux' })], 'ORDER'),
+    ])
+
+    assert.lengthOf(dashboard.champions, 0)
   })
 })

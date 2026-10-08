@@ -212,9 +212,13 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
 
       <div className="grid gap-7 lg:grid-cols-2">
         {/* ---- champions ---- */}
-        {data.champions.length > 0 && (
-          <section className="min-w-0">
-            <SectionTitle>Most picked</SectionTitle>
+        <section className="min-w-0">
+          <SectionTitle aside="Picked twice at least">Most picked</SectionTitle>
+          {data.champions.length === 0 ? (
+            <p className="bg-panel px-4 py-3 text-[13px] text-ink-muted">
+              No champion has been picked twice yet.
+            </p>
+          ) : (
             <ul className="divide-y divide-line bg-panel">
               {data.champions.map((champion) => (
                 <li key={champion.championId} className="flex items-center gap-3 px-4 py-2">
@@ -245,8 +249,8 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
                 </li>
               ))}
             </ul>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* ---- duos ---- */}
         <section className="min-w-0">

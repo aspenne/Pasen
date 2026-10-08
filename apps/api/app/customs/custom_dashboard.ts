@@ -81,6 +81,13 @@ export type CustomDashboard = {
 /** Two games together is the least that is not just coincidence. */
 const DUO_MINIMUM = 2
 
+/**
+ * A champion picked once is not a pick anyone can read anything into: with
+ * thirty different champions in three inhouses, the list was ten singletons in
+ * alphabetical order.
+ */
+const CHAMPION_MINIMUM = 2
+
 const round = (value: number, digits = 1) => {
   const factor = 10 ** digits
   return Math.round(value * factor) / factor
@@ -232,6 +239,7 @@ export function customDashboard(games: CustomGameView[]): CustomDashboard {
         winRate: decided > 0 ? round((wins / decided) * 100) : null,
         players: pickers.size,
       }))
+      .filter((champion) => champion.games >= CHAMPION_MINIMUM)
       .sort((a, b) => b.games - a.games || b.players - a.players || a.championName.localeCompare(b.championName))
       .slice(0, 10),
     duos: [...duos.values()]
