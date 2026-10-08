@@ -2,6 +2,7 @@ import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-rou
 import { useQuery } from '@tanstack/react-query'
 
 import { CustomScoreboard } from '@/components/customs/CustomScoreboard'
+import { CustomTitle } from '@/components/customs/CustomTitle'
 import { WinnerControl } from '@/components/customs/WinnerControl'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
@@ -87,9 +88,7 @@ function CustomGamePage() {
           )}
         </div>
 
-        <h1 className="display text-[clamp(28px,6vw,46px)] font-extrabold uppercase leading-[0.95] tracking-[0.01em] text-ink">
-          {game.label ?? 'Custom game'}
-        </h1>
+        <CustomTitle game={game} group={group} editable={Boolean(session?.authenticated)} />
 
         <p className="tnum text-[13px] text-ink-muted">
           {game.mapName ?? game.gameMode}
