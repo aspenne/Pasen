@@ -11,6 +11,8 @@ importers:
 
   .: {}
 
+  apps/agent: {}
+
   apps/api:
     dependencies:
       '@adonisjs/auth':

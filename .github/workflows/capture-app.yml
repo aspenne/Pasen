@@ -1,0 +1,74 @@
+# Builds Pasen Capture for Windows and macOS on their own systems.
+#
+# Run it by hand (Actions -> Capture app -> Run workflow) to get the
+# installers as downloadable artifacts, or push a tag like `capture-v0.1.0`
+# to also publish them as a GitHub release.
+name: Capture app
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['capture-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: --win
+          - os: macos-latest
+            target: --mac
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: apps/capture
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/capture/package-lock.json
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Unsigned: there is no signing certificate. Windows shows a SmartScreen
+      # warning on first launch and macOS asks to confirm the app in Settings.
+      - run: npx electron-builder ${{ matrix.target }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pasen-capture-${{ runner.os }}
+          path: |
+            apps/capture/dist/*.exe
+            apps/capture/dist/*.dmg
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/capture-v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" installers/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Pasen Capture ${GITHUB_REF_NAME#capture-v}" \
+            --notes "Download the .exe for Windows or the .dmg for your Mac (arm64 for Apple Silicon, x64 for Intel)."

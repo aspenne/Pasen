@@ -1,3 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  # The desktop capture app keeps its own npm lockfile: electron-builder
+  # packages node_modules as it finds them, and pnpm's symlinked layout is
+  # exactly what it handles worst.
+  - '!apps/capture'

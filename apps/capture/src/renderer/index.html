@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <!--
+      Scripts from this folder only. Fonts may come from Google, and fall back
+      to the system's sans when offline; nothing else leaves the machine from
+      the page itself - uploads go through the app, not through here.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'"
+    />
+    <title>Pasen Capture</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600&family=Saira+Condensed:wght@600;700;800&display=swap" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="top">
+      <span class="mark">PASEN <i>/</i> CAPTURE</span>
+      <span id="link-state" class="link-state"></span>
+    </header>
+
+    <main>
+      <section id="pair" class="card" hidden>
+        <h2>Link this PC</h2>
+        <p class="muted">
+          In the Pasen admin, open <b>Capture app</b>, pair this PC, and paste the code here. It can
+          only send games to your group.
+        </p>
+        <form id="pair-form">
+          <input id="pair-code" type="password" autocomplete="off" spellcheck="false" placeholder="pasen_…" />
+          <details>
+            <summary>Server</summary>
+            <input id="pair-server" type="url" placeholder="https://aspenne.tech" />
+          </details>
+          <button type="submit" class="primary">Link</button>
+          <p id="pair-error" class="error" role="alert"></p>
+        </form>
+      </section>
+
+      <section class="card live" aria-live="polite">
+        <span id="live-dot" class="dot"></span>
+        <div>
+          <div id="live-title" class="live-title">Waiting for a game</div>
+          <div id="live-detail" class="muted small">Leave this open; it watches by itself.</div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="label">Captured games</h2>
+        <p class="muted small hint">
+          Every game you play shows up here, ranked ones too. Send the customs; ranked games are
+          already on Pasen.
+        </p>
+        <ul id="captures" class="captures"></ul>
+        <p id="captures-empty" class="muted small" hidden>Nothing captured yet.</p>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <label class="check">
+        <input id="open-at-login" type="checkbox" />
+        Start with my computer
+      </label>
+      <button id="unpair" class="link" hidden>Unlink this PC</button>
+    </footer>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
