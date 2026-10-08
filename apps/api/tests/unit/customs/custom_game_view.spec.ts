@@ -158,4 +158,18 @@ test.group('viewCustomGame', () => {
     assert.equal(view.resultSource, 'capture')
     assert.isTrue(view.teams.find((team) => team.side === 'ORDER')!.won)
   })
+
+  /*
+   * The capture reports a streak as it grows - the penta at 860s arrives as
+   * 2, 3, 4 and 5. Each run counts once, where it stops.
+   */
+  test('counts each multikill once, at its peak', async ({ assert }) => {
+    const view = viewCustomGame(await realCapture(), lookups)
+    const camille = view.teams[0].players.find((player) => player.championName === 'Camille')!
+
+    assert.deepEqual(camille.multikills, { double: 3, triple: 1, quadra: 1, penta: 1 })
+    assert.equal(camille.bestMultikill, 5)
+    assert.isTrue(camille.firstBlood)
+  })
 })
+

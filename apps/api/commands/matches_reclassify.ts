@@ -25,6 +25,12 @@ export default class MatchesReclassify extends BaseCommand {
     const rows = await db
       .from('matches')
       .select('match_id', 'queue_id', 'game_mode', 'queue_group', 'stats_eligible')
+      /*
+       * Mirrored inhouses are classified by where they came from, not by a
+       * queue id: they carry queue 0, which would read as a practice lobby and
+       * drop every one of them out of the Customs filter.
+       */
+      .whereNot('queue_group', 'custom')
 
     const changes: { matchId: string; from: string; to: string }[] = []
 

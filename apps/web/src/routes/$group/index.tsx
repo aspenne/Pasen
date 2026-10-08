@@ -83,7 +83,14 @@ function Dashboard() {
     const standing = (entry: (typeof entries)[number]) =>
       scope === 'arena'
         ? entry.member.totals.firstPlaces
-        : rankScore(entry.member.ranks.find((rank) => rank.queueType === queueType))
+        : scope === 'custom'
+          ? /*
+             * Inhouses have no ladder either. Most wins leads, as on the
+             * customs leaderboard; the rate breaks a tie, and the fraction
+             * keeps it from ever outweighing a whole win.
+             */
+            entry.member.totals.wins + entry.member.totals.winRate / 1000
+          : rankScore(entry.member.ranks.find((rank) => rank.queueType === queueType))
 
     return entries.sort((a, b) => {
       const difference = standing(b) - standing(a)

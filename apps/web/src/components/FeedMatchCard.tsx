@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/accordion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type FeedMatch, type StaticData } from '@/lib/api'
+import { customGameIdOf } from '@/lib/customs'
 import type { QueueScope } from '@pasen/shared'
 
 import { clockTime, duration, kda, positionLabel, queueLabel } from '@/lib/format'
@@ -46,6 +47,7 @@ export function FeedMatchCard({
   scope,
 }: FeedMatchCardProps) {
   const [open, setOpen] = useState(false)
+  const customId = customGameIdOf(match.matchId)
 
   /*
    * A finished match never changes, so it is fetched once and kept: reopening
@@ -54,7 +56,7 @@ export function FeedMatchCard({
   const { data: detail, isPending: detailPending } = useQuery({
     queryKey: ['match', groupSlug, match.matchId],
     queryFn: () => api.match(groupSlug, match.matchId),
-    enabled: open,
+    enabled: open && !customId,
     staleTime: Number.POSITIVE_INFINITY,
   })
 
@@ -180,33 +182,48 @@ export function FeedMatchCard({
         ))}
       </div>
 
-      <Accordion
-        type="single"
-        collapsible
-        value={open ? 'board' : ''}
-        onValueChange={(value) => setOpen(value === 'board')}
-      >
-        <AccordionItem value="board" className="border-b-0">
-          <AccordionTrigger className="tap items-center justify-center gap-1.5 rounded-none border-t border-white/5 px-4 py-2 text-[12px] font-normal text-ink-dim hover:text-ink hover:no-underline">
-            {open ? 'Hide scoreboard' : 'Who else was in this game'}
-          </AccordionTrigger>
+      {/*
+        An inhouse has its own page with the scoreboard the capture can fill -
+        the match one would print zero gold for all ten players.
+      */}
+      {customId ? (
+        <Link
+          to="/$group/customs/$id"
+          params={{ group: groupSlug, id: customId }}
+          search={{ scope }}
+          className="tap flex items-center justify-center border-t border-white/5 px-4 py-2 text-[12px] text-ink-dim transition-colors hover:text-ink"
+        >
+          See the inhouse →
+        </Link>
+      ) : (
+        <Accordion
+          type="single"
+          collapsible
+          value={open ? 'board' : ''}
+          onValueChange={(value) => setOpen(value === 'board')}
+        >
+          <AccordionItem value="board" className="border-b-0">
+            <AccordionTrigger className="tap items-center justify-center gap-1.5 rounded-none border-t border-white/5 px-4 py-2 text-[12px] font-normal text-ink-dim hover:text-ink hover:no-underline">
+              {open ? 'Hide scoreboard' : 'Who else was in this game'}
+            </AccordionTrigger>
 
-          <AccordionContent className="px-[18px] pb-3.5">
-            {detailPending ? (
-              <Skeleton className="h-[184px] rounded-[6px]" />
-            ) : detail ? (
-              <MatchScoreboard
-                detail={detail}
-                staticData={staticData}
-                groupSlug={groupSlug}
-                scope={scope}
-              />
-            ) : (
-              <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
-            )}
+            <AccordionContent className="px-[18px] pb-3.5">
+              {detailPending ? (
+                <Skeleton className="h-[184px] rounded-[6px]" />
+              ) : detail ? (
+                <MatchScoreboard
+                  detail={detail}
+                  staticData={staticData}
+                  groupSlug={groupSlug}
+                  scope={scope}
+                />
+              ) : (
+                <p className="text-[12px] text-ink-dim">Scoreboard unavailable for this game.</p>
+      )}
           </AccordionContent>
         </AccordionItem>
       </Accordion>
+      )}
     </article>
   )
 }

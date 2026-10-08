@@ -311,3 +311,77 @@ test.group('Custom games, dashboard', (group) => {
     assert.equal(dashboard.overview.blueWins, 1)
   })
 })
+
+test.group('Custom games, in the queue filter', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  /** The real capture with the seeded member as the human and two bots made friends. */
+  async function inhouse() {
+    const raw = JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+    const capturer = raw.allPlayers[0]
+    Object.assign(capturer, { riotId: 'Patate#CCC', riotIdGameName: 'Patate', summonerName: 'Patate' })
+    raw.activePlayer.riotId = 'Patate#CCC'
+    for (const [index, name] of [[1, 'Bea'], [5, 'Cyd']] as const) {
+      Object.assign(raw.allPlayers[index], {
+        isBot: false,
+        riotId: `${name}#EUW`,
+        riotIdGameName: name,
+        summonerName: name,
+      })
+    }
+    return raw
+  }
+
+  test("an inhouse counts in the member's totals under the Customs filter, and nowhere else", async ({
+    client,
+    assert,
+  }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    await client.post('/api/admin/groups/arigafion/customs').json({ capture: await inhouse() }).loginAs(admin)
+
+    const customs = (await client.get('/api/groups/arigafion?scope=custom')).body()
+    const patate = customs.members.find((member: any) => member.slug === 'patate')
+    assert.equal(patate.totals.games, 1)
+    assert.equal(patate.totals.wins, 1)
+
+    // The Rift filter, the default, must not see it.
+    const rift = (await client.get('/api/groups/arigafion?scope=rift')).body()
+    assert.equal(rift.members.find((member: any) => member.slug === 'patate').totals.games, 0)
+  })
+
+  test('practice against bots stays out of the match tables', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    const raw = JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+    Object.assign(raw.allPlayers[0], { riotId: 'Patate#CCC', riotIdGameName: 'Patate' })
+    raw.activePlayer.riotId = 'Patate#CCC'
+    await client.post('/api/admin/groups/arigafion/customs').json({ capture: raw }).loginAs(admin)
+
+    const customs = (await client.get('/api/groups/arigafion?scope=custom')).body()
+    assert.equal(customs.members.find((member: any) => member.slug === 'patate').totals.games, 0)
+  })
+
+  test('deciding the winner rewrites the mirror, and deleting removes it', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    const stored = await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: await inhouse() })
+      .loginAs(admin)
+    const id = stored.body().id
+
+    // The capture says Patate's side won; the admin says otherwise.
+    await client.patch(`/api/admin/customs/${id}`).json({ winner: 'CHAOS' }).loginAs(admin)
+    const flipped = (await client.get('/api/groups/arigafion?scope=custom')).body()
+    assert.equal(flipped.members.find((member: any) => member.slug === 'patate').totals.wins, 0)
+
+    await client.delete(`/api/admin/customs/${id}`).loginAs(admin)
+    const gone = (await client.get('/api/groups/arigafion?scope=custom')).body()
+    assert.equal(gone.members.find((member: any) => member.slug === 'patate').totals.games, 0)
+  })
+})

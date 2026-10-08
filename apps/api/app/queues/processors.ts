@@ -211,6 +211,8 @@ async function announceFrom(account: RiotAccount): Promise<void> {
     .join('matches as m', 'm.match_id', 'p.match_id')
     .where('p.puuid', account.puuid)
     .andWhere('m.stats_eligible', true)
+    // A streak or a penta announced from Riot's games, not from an inhouse uploaded days later.
+    .andWhereNot('m.queue_group', 'custom')
     .orderBy('m.game_creation', 'desc')
     .limit(20)
     .select('p.match_id', 'p.win', 'p.penta_kills', 'p.champion_name')

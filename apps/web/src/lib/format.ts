@@ -72,6 +72,7 @@ const QUEUE_LABELS: Record<string, string> = {
   normal: 'Normal',
   aram: 'ARAM',
   arena: 'Arena',
+  custom: 'Inhouse',
   other: 'Other',
 }
 

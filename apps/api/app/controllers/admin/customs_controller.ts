@@ -4,6 +4,7 @@ import vine from '@vinejs/vine'
 import CustomGame from '#models/custom_game'
 import Group from '#models/group'
 import { CustomCaptureService, InvalidCaptureError } from '#customs/custom_capture_service'
+import { CustomMatchMirror } from '#customs/custom_match_mirror'
 
 /**
  * Uploading and listing captured customs.
@@ -62,6 +63,12 @@ export default class CustomsController {
       })
 
       /*
+       * Synced on a duplicate too: it is idempotent, and it means re-uploading
+       * the file is how anyone repairs a game whose first mirror failed.
+       */
+      await new CustomMatchMirror().sync(game)
+
+      /*
        * A duplicate is not an error - someone re-uploading the same file is
        * being careful, not wrong - so it answers 200 with what is already
        * stored rather than 409 with nothing.
@@ -92,6 +99,9 @@ export default class CustomsController {
     if (patch.label !== undefined) game.label = patch.label || null
     await game.save()
 
+    // A decided winner is what brings an unresolved inhouse into the match tables.
+    await new CustomMatchMirror().sync(game)
+
     return response.ok({
       id: game.id,
       label: game.label,
@@ -101,6 +111,7 @@ export default class CustomsController {
 
   async destroy({ params, response }: HttpContext) {
     const game = await CustomGame.findOrFail(params.id)
+    await new CustomMatchMirror().remove(game.id)
     await game.delete()
     return response.noContent()
   }

@@ -73,6 +73,15 @@ export function RosterCard({
                   {member.totals.games} games
                 </span>
               </>
+            ) : scope === 'custom' ? (
+              <>
+                <span className="tnum block text-[13px] text-win">
+                  {member.totals.wins} {member.totals.wins === 1 ? 'win' : 'wins'}
+                </span>
+                <span className="tnum block text-[11px] text-ink-muted">
+                  {member.totals.games} inhouse{member.totals.games === 1 ? '' : 's'}
+                </span>
+              </>
             ) : (
               <>
                 <span className="tnum block text-[13px] text-ink">{member.totals.winRate}%</span>

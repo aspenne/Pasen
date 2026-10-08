@@ -17,3 +17,9 @@ export function customResult(game: CustomGame): { text: string; tone: string } {
 export function customTitle(game: CustomGame): string {
   return game.label ?? `Custom · ${game.mapName ?? game.gameMode}`
 }
+
+/** The custom behind a mirrored match id ("CUSTOM_12"), or null for a Riot game. */
+export function customGameIdOf(matchId: string): string | null {
+  const match = /^CUSTOM_(\d+)$/.exec(matchId)
+  return match ? match[1] : null
+}

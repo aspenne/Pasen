@@ -25,6 +25,8 @@ function player(name: string, over: Partial<CustomPlayerView> = {}): CustomPlaye
     perks: { styles: [] },
     summonerSpells: [0, 0],
     bestMultikill: 0,
+    multikills: { double: 0, triple: 0, quadra: 0, penta: 0 },
+    firstBlood: false,
     ...over,
   }
 }

@@ -32,6 +32,9 @@ export type CustomPlayerView = {
   summonerSpells: [number, number]
   /** Longest multikill, 0 when none. 5 is a pentakill. */
   bestMultikill: number
+  /** Each multikill counted once, at its peak - a penta is not also a quadra. */
+  multikills: { double: number; triple: number; quadra: number; penta: number }
+  firstBlood: boolean
 }
 
 export type CustomTeamView = {
@@ -160,15 +163,8 @@ export function viewCustomGame(game: StoredCustom, lookups: ViewLookups): Custom
     }
   }
 
-  const bestStreak = new Map<string, number>()
-  for (const event of events) {
-    if (event.EventName === 'Multikill' && event.KillerName) {
-      bestStreak.set(
-        event.KillerName,
-        Math.max(bestStreak.get(event.KillerName) ?? 0, event.KillStreak ?? 0)
-      )
-    }
-  }
+  const streaks = multikillsByName(events)
+  const firstBlood = events.find((event) => event.EventName === 'FirstBlood')?.Recipient ?? null
 
   /*
    * A person's decision beats the capture's. The capture only ever knew the
@@ -182,7 +178,7 @@ export function viewCustomGame(game: StoredCustom, lookups: ViewLookups): Custom
 
   const teams: CustomTeamView[] = (['ORDER', 'CHAOS'] as const).map((side) => {
     const own = players.filter((player) => sideOf(player.team) === side)
-    const viewed = own.map((player) => viewPlayer(player, lookups, bestStreak))
+    const viewed = own.map((player) => viewPlayer(player, lookups, streaks, firstBlood))
 
     return {
       side,
@@ -206,7 +202,7 @@ export function viewCustomGame(game: StoredCustom, lookups: ViewLookups): Custom
     resultKnown: winner !== null,
     resultSource,
     againstBots: humans.length <= 1 && players.length > 1,
-    firstBlood: events.find((event) => event.EventName === 'FirstBlood')?.Recipient ?? null,
+    firstBlood,
     teams,
   }
 }
@@ -239,7 +235,8 @@ function winningSide(raw: RawCapture, players: RawPlayer[], events: RawEvent[]):
 function viewPlayer(
   player: RawPlayer,
   lookups: ViewLookups,
-  bestStreak: Map<string, number>
+  streaks: Map<string, Multikills>,
+  firstBlood: string | null
 ): CustomPlayerView {
   const riotId = player.riotId ?? player.summonerName ?? 'Unknown'
   const member = player.isBot ? undefined : lookups.memberByRiotId.get(riotId.toLowerCase())
@@ -257,6 +254,8 @@ function viewPlayer(
   const secondary = player.runes?.secondaryRuneTree?.id ?? 0
 
   const gameName = player.riotIdGameName ?? riotId.split('#')[0]
+  // How events refer to this player: a human by game name, a bot as "Ahri Bot".
+  const eventName = player.isBot ? `${player.championName} Bot` : gameName
 
   return {
     riotId,
@@ -285,8 +284,61 @@ function viewPlayer(
       spellIdOf(player.summonerSpells?.summonerSpellOne?.rawDisplayName, lookups),
       spellIdOf(player.summonerSpells?.summonerSpellTwo?.rawDisplayName, lookups),
     ],
-    bestMultikill: bestStreak.get(player.isBot ? `${player.championName} Bot` : gameName) ?? 0,
+    ...multikillFields(streaks.get(eventName)),
+    firstBlood: !player.isBot && firstBlood === gameName,
   }
+}
+
+type Multikills = { double: number; triple: number; quadra: number; penta: number }
+
+function multikillFields(counts: Multikills | undefined) {
+  const multikills = counts ?? { double: 0, triple: 0, quadra: 0, penta: 0 }
+  const bestMultikill = multikills.penta
+    ? 5
+    : multikills.quadra
+      ? 4
+      : multikills.triple
+        ? 3
+        : multikills.double
+          ? 2
+          : 0
+  return { multikills, bestMultikill }
+}
+
+/**
+ * Multikills by the name events use, each counted once at its peak.
+ *
+ * The client reports a streak as it grows: a pentakill arrives as 2, 3, 4,
+ * then 5, a few seconds apart. Counting every event would also credit a
+ * double, a triple and a quadra inside the one penta - so a run that climbs by
+ * one for the same killer is a single multikill, recorded where it stops.
+ */
+function multikillsByName(events: RawEvent[]): Map<string, Multikills> {
+  const counts = new Map<string, Multikills>()
+  const open = new Map<string, number>()
+
+  const close = (name: string) => {
+    const peak = open.get(name)
+    if (!peak) return
+    open.delete(name)
+    const tally = counts.get(name) ?? { double: 0, triple: 0, quadra: 0, penta: 0 }
+    if (peak === 2) tally.double++
+    else if (peak === 3) tally.triple++
+    else if (peak === 4) tally.quadra++
+    else if (peak >= 5) tally.penta++
+    counts.set(name, tally)
+  }
+
+  for (const event of events) {
+    if (event.EventName !== 'Multikill' || !event.KillerName) continue
+    const streak = event.KillStreak ?? 0
+    const current = open.get(event.KillerName)
+    if (current !== undefined && streak !== current + 1) close(event.KillerName)
+    open.set(event.KillerName, streak)
+  }
+  for (const name of [...open.keys()]) close(name)
+
+  return counts
 }
 
 /**

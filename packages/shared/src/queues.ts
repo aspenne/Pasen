@@ -15,6 +15,12 @@ export const QUEUE_GROUPS = [
   'clash',
   'aram',
   'arena',
+  /*
+   * Inhouses captured by the agent and uploaded, mirrored into the match
+   * tables. Riot's own custom games (queue 0) never land here: `queueGroupFor`
+   * cannot return this group, so only a capture we hold can be a custom.
+   */
+  'custom',
   'other',
 ] as const
 
@@ -75,6 +81,7 @@ export const QUEUE_GROUP_LABELS: Record<QueueGroup, string> = {
   clash: 'Clash',
   aram: 'ARAM',
   arena: 'Arena',
+  custom: 'Custom',
   other: 'Other',
 }
 
@@ -94,6 +101,7 @@ export const QUEUE_SCOPES = [
   'clash',
   'aram',
   'arena',
+  'custom',
   'all',
 ] as const
 
@@ -107,6 +115,7 @@ export const SCOPE_LABELS: Record<QueueScope, string> = {
   clash: 'Clash',
   aram: 'ARAM',
   arena: 'Arena',
+  custom: 'Customs',
   all: 'Every queue',
 }
 
