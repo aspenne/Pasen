@@ -5,6 +5,7 @@ import StaticChampion from '#models/static_champion'
 import StaticSummonerSpell from '#models/static_summoner_spell'
 import { viewCustomGame, type CustomGameView, type ViewLookups } from '#customs/custom_game_view'
 import { customStandings, type CustomStandings } from '#customs/custom_standings'
+import { customDashboard, type CustomDashboard } from '#customs/custom_dashboard'
 
 /**
  * Reads stored customs back out for the site, resolving what the capture
@@ -28,11 +29,20 @@ export class CustomGameReader {
    * shows: a win from last spring is still a win.
    */
   async standings(group: Group): Promise<CustomStandings> {
+    return customStandings(await this.#all(group))
+  }
+
+  async dashboard(group: Group): Promise<CustomDashboard> {
+    return customDashboard(await this.#all(group))
+  }
+
+  /** Oldest first, so a record belongs to whoever set it first. */
+  async #all(group: Group): Promise<CustomGameView[]> {
     const games = await CustomGame.query().where('group_id', group.id).orderBy('played_at', 'asc')
-    if (games.length === 0) return customStandings([])
+    if (games.length === 0) return []
 
     const lookups = await this.#lookups(group)
-    return customStandings(games.map((game) => viewCustomGame(stored(game), lookups)))
+    return games.map((game) => viewCustomGame(stored(game), lookups))
   }
 
   async find(group: Group, id: number): Promise<CustomGameView | null> {

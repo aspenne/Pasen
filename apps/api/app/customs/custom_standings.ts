@@ -1,4 +1,18 @@
-import type { CustomGameView } from '#customs/custom_game_view'
+import type { CustomGameView, CustomPlayerView } from '#customs/custom_game_view'
+
+/**
+ * Who a line belongs to. A member is one line however many accounts they
+ * played on; anyone else is keyed by Riot ID, so a friend who is not on the
+ * roster still gets theirs. Shared by every customs table, so the leaderboard
+ * and the stats can never split or merge the same person differently.
+ */
+export function identityOf(player: CustomPlayerView) {
+  return {
+    key: player.memberSlug ?? player.riotId.toLowerCase(),
+    memberSlug: player.memberSlug,
+    name: player.displayName ?? player.name,
+  }
+}
 
 /**
  * Who has won the most customs.
@@ -54,16 +68,10 @@ export function customStandings(games: CustomGameView[]): CustomStandings {
       for (const player of team.players) {
         if (player.isBot) continue
 
-        /*
-         * A member is one row however many accounts they played on; anyone
-         * else is keyed by Riot ID, so a friend who is not on the roster still
-         * gets their line.
-         */
-        const key = player.memberSlug ?? player.riotId.toLowerCase()
+        const who = identityOf(player)
+        const key = who.key
         const row = table.get(key) ?? {
-          key,
-          memberSlug: player.memberSlug,
-          name: player.displayName ?? player.name,
+          ...who,
           wins: 0,
           losses: 0,
           games: 0,

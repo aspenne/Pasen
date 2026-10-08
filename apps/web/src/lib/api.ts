@@ -153,6 +153,49 @@ export type CustomStandings = {
   skipped: { againstBots: number; unknownResult: number }
 }
 
+/** A member, or a friend keyed by Riot ID - the same identity every customs table uses. */
+export type CustomIdentity = { key: string; memberSlug: string | null; name: string }
+
+export type CustomPlayerLine = CustomIdentity & {
+  games: number
+  kills: number
+  deaths: number
+  assists: number
+  kda: number
+  killsPerGame: number
+  deathsPerGame: number
+  assistsPerGame: number
+  csPerMinute: number
+  visionPerGame: number
+  firstBloods: number
+  bestMultikill: number
+}
+
+export type CustomRecordLine = CustomIdentity & {
+  kind: 'kills' | 'assists' | 'deaths' | 'cs'
+  value: number
+  championId: number
+  championName: string
+  gameId: number
+  gameLabel: string | null
+}
+
+export type CustomDashboard = {
+  counted: number
+  resolved: number
+  overview: { kills: number; averageDuration: number; blueWins: number; redWins: number }
+  players: CustomPlayerLine[]
+  records: CustomRecordLine[]
+  champions: {
+    championId: number
+    championName: string
+    games: number
+    winRate: number | null
+    players: number
+  }[]
+  duos: { a: CustomIdentity; b: CustomIdentity; games: number; wins: number; winRate: number }[]
+}
+
 /** A custom game captured by the agent, as the admin list shows it. */
 export type CustomGameSummary = {
   id: number
@@ -551,6 +594,8 @@ export const api = {
     apiFetch<MatchDetail>(`/api/groups/${slug}/matches/${matchId}`),
   customGames: (slug: string) =>
     apiFetch<{ games: CustomGame[] }>(`/api/groups/${slug}/customs`),
+  customDashboard: (slug: string) =>
+    apiFetch<CustomDashboard>(`/api/groups/${slug}/customs/dashboard`),
   customStandings: (slug: string) =>
     apiFetch<CustomStandings>(`/api/groups/${slug}/customs/standings`),
   customGame: (slug: string, id: number) =>

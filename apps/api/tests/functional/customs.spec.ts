@@ -273,3 +273,41 @@ test.group('Custom games, standings', (group) => {
   })
 })
 
+
+test.group('Custom games, dashboard', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  test('builds the stats from a real capture turned into an inhouse', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    const raw = JSON.parse(
+      await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
+    )
+
+    // Practice first: it must not reach the stats.
+    await client.post('/api/admin/groups/arigafion/customs').json({ capture: raw }).loginAs(admin)
+    const empty = (await client.get('/api/groups/arigafion/customs/dashboard')).body()
+    assert.equal(empty.counted, 0)
+
+    // The same game with a friend on each side instead of bots.
+    for (const [index, name] of [[1, 'Bea'], [5, 'Cyd']] as const) {
+      const player = raw.allPlayers[index]
+      player.isBot = false
+      player.riotId = `${name}#EUW`
+      player.riotIdGameName = name
+      player.summonerName = name
+    }
+    await client.post('/api/admin/groups/arigafion/customs').json({ capture: raw }).loginAs(admin)
+
+    const response = await client.get('/api/groups/arigafion/customs/dashboard')
+    response.assertStatus(200)
+    const dashboard = response.body()
+
+    assert.equal(dashboard.counted, 1)
+    assert.lengthOf(dashboard.players, 3)
+    const kills = dashboard.records.find((record: any) => record.kind === 'kills')
+    assert.equal(kills.name, '3C Patate Chaude')
+    assert.equal(kills.value, 36)
+    assert.equal(dashboard.overview.blueWins, 1)
+  })
+})

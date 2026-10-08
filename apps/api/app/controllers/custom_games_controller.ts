@@ -18,6 +18,11 @@ export default class CustomGamesController {
     return response.ok(await new CustomGameReader().standings(group))
   }
 
+  async dashboard({ params, response }: HttpContext) {
+    const group = await Group.findByOrFail('slug', params.slug)
+    return response.ok(await new CustomGameReader().dashboard(group))
+  }
+
   async show({ params, response }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
     const game = await new CustomGameReader().find(group, Number(params.id))

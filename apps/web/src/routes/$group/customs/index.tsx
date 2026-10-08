@@ -1,9 +1,11 @@
 import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
+import { CustomDashboard } from '@/components/customs/CustomDashboard'
 import { CustomLeaderboard } from '@/components/customs/CustomLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { useStaticData } from '@/lib/ddragon'
 import { customResult, customTitle } from '@/lib/customs'
 import { duration } from '@/lib/format'
 
@@ -31,6 +33,12 @@ function CustomsPage() {
     queryFn: () => api.customStandings(group),
   })
 
+  const { data: dashboard } = useQuery({
+    queryKey: ['customs', group, 'dashboard'],
+    queryFn: () => api.customDashboard(group),
+  })
+  const { data: staticData } = useStaticData()
+
   const timezone = overview?.timezone ?? 'Europe/Paris'
 
   return (
@@ -46,6 +54,12 @@ function CustomsPage() {
       </header>
 
       {standings && <CustomLeaderboard data={standings} groupSlug={group} scope={scope} />}
+
+      {dashboard && (
+        <CustomDashboard data={dashboard} staticData={staticData} groupSlug={group} scope={scope} />
+      )}
+
+      <h2 className="text-[11px] uppercase tracking-[0.15em] text-ink-dim">Every custom</h2>
 
       {isPending ? (
         <div className="space-y-2">
