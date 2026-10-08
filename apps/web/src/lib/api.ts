@@ -196,6 +196,15 @@ export type CustomDashboard = {
   duos: { a: CustomIdentity; b: CustomIdentity; games: number; wins: number; winRate: number }[]
 }
 
+/** A PC paired to send captured customs. The token itself is never in this. */
+export type CaptureDevice = {
+  id: number
+  name: string
+  createdAt: string
+  lastUsedAt: string | null
+  revokedAt: string | null
+}
+
 /** A custom game captured by the agent, as the admin list shows it. */
 export type CustomGameSummary = {
   id: number
@@ -647,6 +656,17 @@ export const api = {
     ),
   removeCustom: (id: number) =>
     apiFetch<void>(`/api/admin/customs/${id}`, { method: 'DELETE' }),
+  captureDevices: (group: string) =>
+    apiFetch<CaptureDevice[]>(`/api/admin/groups/${group}/devices`),
+  /** The one response that carries the token - it is not stored and cannot be shown again. */
+  pairCaptureDevice: (group: string, name: string) =>
+    apiFetch<{ id: number; name: string; token: string }>(`/api/admin/groups/${group}/devices`, {
+      method: 'POST',
+      body: JSON.stringify({ name }),
+    }),
+  revokeCaptureDevice: (id: number) =>
+    apiFetch<void>(`/api/admin/devices/${id}`, { method: 'DELETE' }),
+
   /** `winner: null` hands the result back to the capture. */
   updateCustom: (id: number, patch: { winner?: CustomSide | null; label?: string | null }) =>
     apiFetch<{ id: number; label: string | null; winnerOverride: CustomSide | null }>(

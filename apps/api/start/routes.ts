@@ -10,6 +10,8 @@ const CustomGamesController = () => import('#controllers/custom_games_controller
 const SessionController = () => import('#controllers/admin/session_controller')
 const AdminController = () => import('#controllers/admin/admin_controller')
 const CustomsController = () => import('#controllers/admin/customs_controller')
+const CaptureDevicesController = () => import('#controllers/admin/capture_devices_controller')
+const CaptureController = () => import('#controllers/capture_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -28,6 +30,13 @@ router
     router.get('/groups/:slug/champions', [GroupsController, 'champions'])
     router.get('/groups/:slug/activity', [GroupsController, 'activity'])
     router.get('/groups/:slug/matches/:matchId', [GroupsController, 'match'])
+    /*
+     * The capture app. Not behind the admin session: it carries its own token,
+     * which the controller checks and which can do nothing but send a custom.
+     */
+    router.get('/capture/whoami', [CaptureController, 'whoami'])
+    router.post('/capture/customs', [CaptureController, 'store'])
+
     router.get('/groups/:slug/customs', [CustomGamesController, 'index'])
     router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
     router.get('/groups/:slug/customs/dashboard', [CustomGamesController, 'dashboard'])
@@ -72,6 +81,10 @@ router
         router.post('/admin/groups/:slug/customs', [CustomsController, 'store'])
         router.patch('/admin/customs/:id', [CustomsController, 'update'])
         router.delete('/admin/customs/:id', [CustomsController, 'destroy'])
+
+        router.get('/admin/groups/:slug/devices', [CaptureDevicesController, 'index'])
+        router.post('/admin/groups/:slug/devices', [CaptureDevicesController, 'store'])
+        router.delete('/admin/devices/:id', [CaptureDevicesController, 'destroy'])
       })
       .use(middleware.auth())
   })

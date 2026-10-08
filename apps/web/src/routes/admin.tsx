@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { KeyRoundIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 
+import { CaptureDevices } from '@/components/admin/CaptureDevices'
 import { CustomGames } from '@/components/admin/CustomGames'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -149,6 +150,7 @@ function Console() {
       <AddAccountCard accounts={status.data.accounts} />
       <AccountsCard accounts={status.data.accounts} />
       <CustomGames group={DEFAULT_GROUP} />
+      <CaptureDevices group={DEFAULT_GROUP} />
     </div>
   )
 }
