@@ -39,9 +39,6 @@ et prends **un seul** fichier, selon ton ordinateur :
 gauche de l'écran, puis **À propos de ce Mac**. Si tu lis « Puce Apple M… », prends
 `arm64`. Si tu lis « Processeur Intel », prends `x64`.
 
-> **La page affiche « 404 » ?** Le projet est privé sur GitHub. Demande
-> directement le fichier à la personne qui gère le site.
-
 ---
 
 ## 2. L'installer
