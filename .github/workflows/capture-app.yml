@@ -71,4 +71,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" installers/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "Pasen Capture ${GITHUB_REF_NAME#capture-v}" \
-            --notes "Download the .exe for Windows or the .dmg for your Mac (arm64 for Apple Silicon, x64 for Intel)."
+            --notes "Windows : prends le .exe. Mac : le .dmg arm64 pour une puce Apple (M1, M2…), x64 pour un Mac Intel. Installation et utilisation pas à pas : https://github.com/${GITHUB_REPOSITORY}/blob/main/apps/capture/README.md"

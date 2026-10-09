@@ -2,6 +2,12 @@
 
 League of Legends stats for a group of friends. First group: **ARIGAFION**, at `/arigafion`.
 
+> **Tu cherches juste à installer l'app pour enregistrer vos customs ?**
+> Tout est expliqué pas à pas, sans jargon, dans le
+> **[guide de Pasen Capture](apps/capture/README.md)** : téléchargement,
+> installation sur Windows et Mac, liaison de ton PC, utilisation, et quoi faire
+> si quelque chose coince. Le reste de cette page s'adresse aux développeurs.
+
 Where dpm.lol and op.gg are built around one player, Pasen is built around a roster:
 today's games for everyone at a glance, who is in a game right now and against
 whom, duo synergies, internal leaderboards, and a shared champion pool.
@@ -117,6 +123,8 @@ through a single gateway with a Redis token bucket — nothing calls Riot direct
 ```
 apps/api          AdonisJS — HTTP server and worker
 apps/web          Vite + React SPA
+apps/capture      Pasen Capture, the Electron desktop app that sends customs
+apps/agent        The command-line capture agent it replaced, kept as a fallback
 packages/shared   Types and constants used by both (compiled to dist/)
 ```
 
