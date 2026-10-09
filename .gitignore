@@ -1,4 +1,6 @@
 node_modules/
+# pnpm's package cache. It once landed in a commit and weighed 147 MB of history.
+.pnpm-store/
 dist/
 build/
 coverage/
