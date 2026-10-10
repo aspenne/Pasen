@@ -38,7 +38,18 @@ test('tells a changed lobby from the same one polled again', () => {
   assert.equal(sameTeams(null, a), false)
 })
 
-test('ignores Practice Tool and a custom with fewer than two players', () => {
+test('takes a custom of one player against bots, the way to try the roulette alone', () => {
+  const lobby = structuredClone(custom)
+  const bot = (team, champion) => ({ isBot: true, botId: `Bot_${champion}`, teamId: team, puuid: '', summonerName: '' })
+  lobby.gameConfig.customTeam100 = [lobby.gameConfig.customTeam100[0], ...['Annie', 'Lux', 'Garen', 'Ashe'].map((c) => bot(100, c))]
+  lobby.gameConfig.customTeam200 = ['Darius', 'Ahri', 'Jinx', 'Leona', 'Warwick'].map((c) => bot(200, c))
+  const teams = teamsFromLobby(lobby)
+  assert.equal(teams.blue.length, 5)
+  assert.equal(teams.red.length, 5)
+  assert.deepEqual(teams.red[0], { puuid: null, name: 'Darius bot', bot: true })
+})
+
+test('ignores Practice Tool and someone alone in a custom', () => {
   const practice = structuredClone(custom)
   practice.gameConfig.gameMode = 'PRACTICETOOL'
   assert.equal(teamsFromLobby(practice), null)

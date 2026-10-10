@@ -40,8 +40,9 @@ function teamsFromLobby(lobby) {
       .slice(0, TEAM_SIZE)
       .map(seatOf)
   const teams = { blue: side(config.customTeam100), red: side(config.customTeam200) }
-  const humans = [...teams.blue, ...teams.red].filter((seat) => !seat.bot).length
-  return humans >= 2 ? teams : null
+  // Two places taken, bots included: one player against bots is a fine way to try
+  // the roulette, while someone alone - as in Practice Tool - is not a lobby.
+  return teams.blue.length + teams.red.length >= 2 ? teams : null
 }
 
 /** Same players in the same places. */
