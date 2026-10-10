@@ -1,3 +1,5 @@
+import { DateTime } from 'luxon'
+
 import CustomGame from '#models/custom_game'
 import Group from '#models/group'
 import RiotAccount from '#models/riot_account'
@@ -49,6 +51,19 @@ export class CustomGameReader {
     const game = await CustomGame.query().where('group_id', group.id).where('id', id).first()
     if (!game) return null
     return viewCustomGame(stored(game), await this.#lookups(group))
+  }
+
+  /** Customs that started in `[from, to)`, oldest first. */
+  async between(group: Group, from: DateTime, to: DateTime): Promise<CustomGameView[]> {
+    const games = await CustomGame.query()
+      .where('group_id', group.id)
+      .where('played_at', '>=', from.toUTC().toISO()!)
+      .where('played_at', '<', to.toUTC().toISO()!)
+      .orderBy('played_at', 'asc')
+    if (games.length === 0) return []
+
+    const lookups = await this.#lookups(group)
+    return games.map((game) => viewCustomGame(stored(game), lookups))
   }
 
   async #lookups(group: Group): Promise<ViewLookups> {

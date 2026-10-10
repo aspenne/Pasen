@@ -12,6 +12,7 @@ const AdminController = () => import('#controllers/admin/admin_controller')
 const CustomsController = () => import('#controllers/admin/customs_controller')
 const CaptureDevicesController = () => import('#controllers/admin/capture_devices_controller')
 const CaptureController = () => import('#controllers/capture_controller')
+const FearlessController = () => import('#controllers/fearless_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -41,6 +42,7 @@ router
     router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
     router.get('/groups/:slug/customs/dashboard', [CustomGamesController, 'dashboard'])
     router.get('/groups/:slug/customs/:id', [CustomGamesController, 'show']).where('id', /^\d+$/)
+    router.get('/groups/:slug/fearless', [FearlessController, 'show'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])
