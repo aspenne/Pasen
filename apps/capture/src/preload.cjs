@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('capture', {
   open: (pathname) => ipcRenderer.invoke('open', { pathname }),
   openAtLogin: (enabled) => ipcRenderer.invoke('open-at-login', { enabled }),
   onLive: (listener) => ipcRenderer.on('live', (_event, status) => listener(status)),
+  openUpdate: () => ipcRenderer.invoke('open-update'),
+  onUpdate: (listener) => ipcRenderer.on('update', (_event, update) => listener(update)),
   onFearless: (listener) => ipcRenderer.on('fearless', (_event, summary) => listener(summary)),
   onCaptures: (listener) => ipcRenderer.on('captures', (_event, captures) => listener(captures)),
 })

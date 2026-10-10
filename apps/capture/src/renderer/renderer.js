@@ -35,6 +35,7 @@ function render() {
 
   renderLive(state.live)
   renderFearless(state.fearless)
+  renderUpdate(state.update)
   renderCaptures(state.captures)
 }
 
@@ -51,6 +52,11 @@ function renderLive(live) {
   $('live-detail').textContent = summary.me
     ? `${summary.me.champion} ${summary.me.kills}/${summary.me.deaths}/${summary.me.assists} · ${summary.players} players`
     : `${summary.gameMode} · ${summary.players} players`
+}
+
+function renderUpdate(update) {
+  $('update').hidden = !update
+  if (update) $('update-title').textContent = `Version ${update.version} is available`
 }
 
 function renderFearless(summary) {
@@ -178,6 +184,14 @@ window.capture.onLive((live) => {
   if (!state) return
   state.live = live
   renderLive(live)
+})
+
+$('update-open').addEventListener('click', () => window.capture.openUpdate())
+
+window.capture.onUpdate((update) => {
+  if (!state) return
+  state.update = update
+  renderUpdate(update)
 })
 
 $('fearless-open').addEventListener('click', () => {

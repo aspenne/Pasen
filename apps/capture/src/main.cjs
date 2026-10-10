@@ -16,6 +16,7 @@ const {
 const { Watcher } = require('./watcher.cjs')
 const { Store } = require('./store.cjs')
 const pasen = require('./pasen.cjs')
+const updates = require('./updates.cjs')
 
 /**
  * Pasen Capture: sits in the tray, catches every game the League client
@@ -40,6 +41,8 @@ let quitting = false
 let fearless = null
 let fearlessTimer = null
 const FEARLESS_POLL_MS = 60_000
+let update = null
+const UPDATE_CHECK_MS = 6 * 3_600_000
 
 const asset = (name) => path.join(__dirname, '..', 'assets', name)
 
@@ -122,6 +125,7 @@ function publicState() {
     openAtLogin: config.openAtLogin,
     live,
     fearless,
+    update,
     captures: store.listCaptures().slice(0, 30),
   }
 }
@@ -170,6 +174,14 @@ async function refreshFearless() {
   if (pasen.sameFearless(fearless, next)) return
   fearless = next
   send('fearless', next)
+}
+
+/** A newer version on GitHub, offered rather than installed - see updates.cjs. */
+async function checkForUpdate() {
+  const next = await updates.checkForUpdate(app.getVersion())
+  if (next?.version === update?.version) return
+  update = next
+  send('update', update)
 }
 
 function startFearless() {
@@ -238,6 +250,11 @@ ipcMain.handle('open', (_event, { pathname }) => {
   shell.openExternal(new URL(pathname, store.readConfig().server).toString())
 })
 
+ipcMain.handle('open-update', () => {
+  // Only the release page the check found, and only on this project's releases.
+  if (update?.url?.startsWith(updates.RELEASES)) shell.openExternal(update.url)
+})
+
 ipcMain.handle('open-at-login', (_event, { enabled }) => {
   app.setLoginItemSettings({ openAtLogin: Boolean(enabled), args: ['--hidden'] })
   store.writeConfig({ ...store.readConfig(), openAtLogin: Boolean(enabled) })
@@ -254,6 +271,8 @@ app.whenReady().then(() => {
   createTray()
   startWatching()
   startFearless()
+  checkForUpdate()
+  setInterval(checkForUpdate, UPDATE_CHECK_MS)
 
   // macOS: clicking the dock icon brings the window back.
   app.on('activate', showWindow)

@@ -183,6 +183,14 @@ Tes parties capturées et le code de liaison (chiffré), dans le dossier de l'ap
 Elle n'envoie rien d'autre que les parties sur lesquelles tu cliques
 **Send to Pasen**.
 
+**Comment avoir la dernière version ?**
+L'app ne se met pas à jour toute seule. Quand une nouvelle version sort, un
+encart **Version … is available** apparaît en haut de l'app : clique sur
+**Download**, télécharge le fichier comme la première fois et installe-le
+par-dessus. Ta liaison avec Pasen et tes parties capturées sont gardées.
+(Les versions avant la 0.3.0 n'ont pas cet encart : retélécharge-la à la main
+depuis la [page des téléchargements](https://github.com/aspenne/Pasen/releases/latest).)
+
 **Comment la désinstaller ?**
 - **Windows** : Paramètres → Applications → **Pasen Capture** → Désinstaller.
 - **Mac** : quitte l'app, puis glisse **Pasen Capture** de tes Applications vers

@@ -114,3 +114,5 @@ button.link:hover { color: var(--ink); }
 .fearless { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-left: 2px solid var(--gold); }
 /* A class's display beats the hidden attribute; without this the banner never goes away. */
 .fearless[hidden] { display: none; }
+.update { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-left: 2px solid var(--win); }
+.update[hidden] { display: none; }
