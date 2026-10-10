@@ -574,6 +574,39 @@ export type StaticData = {
 /** Every stats call takes the same scope, so one control drives the whole site. */
 type Scoped = { scope?: QueueScope }
 
+/** Mirrors the API's fearless board: what a night has used up, worked out on every read. */
+export type FearlessPick = {
+  championId: number
+  championName: string
+  playerName: string
+  memberSlug: string | null
+  side: CustomSide
+}
+
+export type FearlessGame = {
+  id: number
+  /** 1, 2, 3… among the games that count; null for an excluded one. */
+  number: number | null
+  label: string | null
+  playedAt: string
+  endedAt: string
+  excluded: boolean
+  picks: FearlessPick[]
+}
+
+export type FearlessBurn = {
+  championId: number
+  source: 'played' | 'manual'
+  by: { playerName: string; memberSlug: string | null; gameNumber: number }[]
+}
+
+export type FearlessBoard = {
+  night: { id: number; label: string | null; startedAt: string; endsAt: string; active: boolean }
+  games: FearlessGame[]
+  burned: FearlessBurn[]
+  freed: number[]
+}
+
 export const api = {
   health: () => apiFetch<HealthResponse>('/health'),
   status: () => apiFetch<SiteStatus>('/api/status'),
@@ -609,6 +642,12 @@ export const api = {
     apiFetch<CustomStandings>(`/api/groups/${slug}/customs/standings`),
   customGame: (slug: string, id: number) =>
     apiFetch<CustomGame>(`/api/groups/${slug}/customs/${id}`),
+  /**
+   * Null when the group never ran a fearless night (the API answers 204). Not
+   * undefined: TanStack Query counts undefined data as a failed query.
+   */
+  fearless: async (slug: string) =>
+    (await apiFetch<FearlessBoard | undefined>(`/api/groups/${slug}/fearless`)) ?? null,
   activity: (slug: string, params: Scoped = {}) =>
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 
@@ -673,6 +712,28 @@ export const api = {
       `/api/admin/customs/${id}`,
       { method: 'PATCH', body: JSON.stringify(patch) }
     ),
+  startFearless: (group: string, label?: string) =>
+    apiFetch<FearlessBoard>(`/api/admin/groups/${group}/fearless`, {
+      method: 'POST',
+      body: JSON.stringify({ label: label || null }),
+    }),
+  updateFearless: (
+    id: number,
+    patch: { label?: string | null; ended?: true; excludedCustomIds?: number[] }
+  ) =>
+    apiFetch<FearlessBoard>(`/api/admin/fearless/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  adjustFearless: (id: number, championId: number, kind: 'burn' | 'free') =>
+    apiFetch<FearlessBoard>(`/api/admin/fearless/${id}/champions/${championId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ kind }),
+    }),
+  unadjustFearless: (id: number, championId: number) =>
+    apiFetch<FearlessBoard>(`/api/admin/fearless/${id}/champions/${championId}`, {
+      method: 'DELETE',
+    }),
 }
 
 function searchOf(params: Record<string, string | number | undefined>): string {

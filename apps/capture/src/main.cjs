@@ -37,6 +37,9 @@ let store = null
 let watcher = null
 let live = { state: 'waiting' }
 let quitting = false
+let fearless = null
+let fearlessTimer = null
+const FEARLESS_POLL_MS = 60_000
 
 const asset = (name) => path.join(__dirname, '..', 'assets', name)
 
@@ -118,6 +121,7 @@ function publicState() {
     server: config.server,
     openAtLogin: config.openAtLogin,
     live,
+    fearless,
     captures: store.listCaptures().slice(0, 30),
   }
 }
@@ -153,6 +157,27 @@ function startWatching() {
   watcher.start()
 }
 
+/**
+ * Keeps the fearless banner current: every minute, and straight after a game
+ * is sent, since that is the moment the list changes.
+ */
+async function refreshFearless() {
+  const config = store.readConfig()
+  const next = config.token
+    ? pasen.fearlessSummary(await pasen.fearless(config.server, config.token), config.pairedAs?.group?.slug)
+    : null
+  // Every push redraws part of the window; nothing changed means nothing to push.
+  if (pasen.sameFearless(fearless, next)) return
+  fearless = next
+  send('fearless', next)
+}
+
+function startFearless() {
+  clearInterval(fearlessTimer)
+  refreshFearless()
+  fearlessTimer = setInterval(refreshFearless, FEARLESS_POLL_MS)
+}
+
 /* ---------- what the page can ask for ---------- */
 
 ipcMain.handle('state', () => publicState())
@@ -172,11 +197,13 @@ ipcMain.handle('pair', async (_event, { code, server }) => {
 
   const config = store.readConfig()
   store.writeConfig({ ...config, server: base, token, pairedAs: answer.body })
+  refreshFearless()
   return { ok: true, state: publicState() }
 })
 
 ipcMain.handle('unpair', () => {
   store.writeConfig({ ...store.readConfig(), token: null, pairedAs: null })
+  fearless = null
   return publicState()
 })
 
@@ -196,6 +223,7 @@ ipcMain.handle('send', async (_event, { fileName, label }) => {
   if (!answer.ok) return answer
 
   store.markSent(fileName, answer.body.url, label)
+  refreshFearless()
   return { ok: true, url: answer.body.url, duplicate: answer.body.duplicate, state: publicState() }
 })
 
@@ -225,6 +253,7 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
   startWatching()
+  startFearless()
 
   // macOS: clicking the dock icon brings the window back.
   app.on('activate', showWindow)
@@ -233,6 +262,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   quitting = true
   watcher?.stop()
+  clearInterval(fearlessTimer)
 })
 
 // The app lives in the tray; closing every window does not end it.

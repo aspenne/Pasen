@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupRouteImport } from './routes/$group'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
+import { Route as GroupFearlessRouteImport } from './routes/$group/fearless'
 import { Route as GroupInsightsRouteImport } from './routes/$group/insights'
 import { Route as GroupCustomsIndexRouteImport } from './routes/$group/customs/index'
 import { Route as GroupCustomsIdRouteImport } from './routes/$group/customs/$id'
@@ -36,6 +37,11 @@ const AdminRoute = AdminRouteImport.update({
 const GroupIndexRoute = GroupIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => GroupRoute,
+} as any)
+const GroupFearlessRoute = GroupFearlessRouteImport.update({
+  id: '/fearless',
+  path: '/fearless',
   getParentRoute: () => GroupRoute,
 } as any)
 const GroupInsightsRoute = GroupInsightsRouteImport.update({
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
   '/admin': typeof AdminRoute
+  '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
   '/admin': typeof AdminRoute
+  '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
@@ -95,6 +104,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$group'
     | '/admin'
+    | '/$group/fearless'
     | '/$group/insights'
     | '/$group/'
     | '/$group/customs/$id'
@@ -104,6 +114,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/$group/fearless'
     | '/$group/insights'
     | '/$group'
     | '/$group/customs/$id'
@@ -114,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$group'
     | '/admin'
+    | '/$group/fearless'
     | '/$group/insights'
     | '/$group/'
     | '/$group/customs/$id'
@@ -157,6 +169,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupIndexRouteImport
       parentRoute: typeof GroupRoute
     }
+    '/$group/fearless': {
+      id: '/$group/fearless'
+      path: '/fearless'
+      fullPath: '/$group/fearless'
+      preLoaderRoute: typeof GroupFearlessRouteImport
+      parentRoute: typeof GroupRoute
+    }
     '/$group/insights': {
       id: '/$group/insights'
       path: '/insights'
@@ -189,6 +208,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface GroupRouteChildren {
+  GroupFearlessRoute: typeof GroupFearlessRoute
   GroupInsightsRoute: typeof GroupInsightsRoute
   GroupIndexRoute: typeof GroupIndexRoute
   GroupCustomsIdRoute: typeof GroupCustomsIdRoute
@@ -197,6 +217,7 @@ interface GroupRouteChildren {
 }
 
 const GroupRouteChildren: GroupRouteChildren = {
+  GroupFearlessRoute: GroupFearlessRoute,
   GroupInsightsRoute: GroupInsightsRoute,
   GroupIndexRoute: GroupIndexRoute,
   GroupCustomsIdRoute: GroupCustomsIdRoute,

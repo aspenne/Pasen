@@ -68,3 +68,43 @@ test('says plainly when the site cannot be reached', async () => {
   assert.equal(answer.ok, false)
   assert.match(answer.message, /Could not reach 127\.0\.0\.1/)
 })
+
+test('reads the fearless night with the pairing code', async () => {
+  const site = await fakeSite(() => [200, { night: { label: 'Vendredi', active: true }, burned: [{}, {}] }])
+  let answer
+  try {
+    answer = await pasen.fearless(site.base, 'pasen_abc')
+  } finally {
+    // Closed even when the call throws, or node --test waits on the open server.
+    site.server.close()
+  }
+
+  assert.equal(answer.ok, true)
+  assert.equal(site.seen[0].url, '/api/capture/fearless')
+  assert.equal(site.seen[0].auth, 'Bearer pasen_abc')
+})
+
+test('sums a running night up for the window', () => {
+  const summary = pasen.fearlessSummary(
+    { ok: true, body: { night: { label: 'Vendredi', active: true }, burned: [{}, {}, {}] } },
+    'arigafion'
+  )
+  assert.deepEqual(summary, { label: 'Vendredi', burned: 3, pathname: '/arigafion/fearless' })
+})
+
+test('shows nothing without a running night or without the site', () => {
+  assert.equal(pasen.fearlessSummary({ ok: true, body: {} }, 'arigafion'), null)
+  assert.equal(
+    pasen.fearlessSummary({ ok: true, body: { night: { active: false }, burned: [] } }, 'arigafion'),
+    null
+  )
+  assert.equal(pasen.fearlessSummary({ ok: false, message: 'offline' }, 'arigafion'), null)
+})
+
+test('tells a changed fearless summary from the same one polled again', () => {
+  const night = { label: 'Vendredi', burned: 3, pathname: '/arigafion/fearless' }
+  assert.equal(pasen.sameFearless(night, { ...night }), true)
+  assert.equal(pasen.sameFearless(null, null), true)
+  assert.equal(pasen.sameFearless(night, { ...night, burned: 4 }), false)
+  assert.equal(pasen.sameFearless(night, null), false)
+})

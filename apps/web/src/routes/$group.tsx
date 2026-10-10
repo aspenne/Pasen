@@ -25,6 +25,7 @@ const NAV = [
   { to: '/$group', label: 'Today', exact: true },
   { to: '/$group/insights', label: 'Insights', exact: false },
   { to: '/$group/customs', label: 'Customs', exact: false },
+  { to: '/$group/fearless', label: 'Fearless', exact: false },
 ] as const
 
 function GroupLayout() {

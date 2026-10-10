@@ -34,6 +34,7 @@ function render() {
   $('open-at-login').checked = state.openAtLogin
 
   renderLive(state.live)
+  renderFearless(state.fearless)
   renderCaptures(state.captures)
 }
 
@@ -50,6 +51,13 @@ function renderLive(live) {
   $('live-detail').textContent = summary.me
     ? `${summary.me.champion} ${summary.me.kills}/${summary.me.deaths}/${summary.me.assists} · ${summary.players} players`
     : `${summary.gameMode} · ${summary.players} players`
+}
+
+function renderFearless(summary) {
+  $('fearless').hidden = !summary
+  if (!summary) return
+  $('fearless-title').textContent = `${summary.label ?? 'Fearless night'} in progress`
+  $('fearless-detail').textContent = `${summary.burned} champion${summary.burned === 1 ? '' : 's'} burned so far`
 }
 
 function renderCaptures(captures) {
@@ -104,6 +112,11 @@ function renderCaptures(captures) {
       const error = el('p', 'error')
       error.setAttribute('role', 'alert')
 
+      // During a fearless night the list only knows a game once it is sent.
+      const reminder = state.fearless
+        ? el('p', 'muted small', 'Send it so the fearless list knows these champions are gone.')
+        : null
+
       sendButton.addEventListener('click', async () => {
         sendButton.disabled = true
         sendButton.textContent = 'Sending…'
@@ -126,7 +139,7 @@ function renderCaptures(captures) {
       })
 
       actions.append(label, sendButton, ignore)
-      item.append(head, meta, actions, error)
+      item.append(head, meta, ...(reminder ? [reminder] : []), actions, error)
       list.append(item)
       continue
     }
@@ -165,6 +178,22 @@ window.capture.onLive((live) => {
   if (!state) return
   state.live = live
   renderLive(live)
+})
+
+$('fearless-open').addEventListener('click', () => {
+  if (state?.fearless) window.capture.open(state.fearless.pathname)
+})
+
+window.capture.onFearless((summary) => {
+  if (!state) return
+  const reminderChanged = Boolean(state.fearless) !== Boolean(summary)
+  state.fearless = summary
+  renderFearless(summary)
+  /*
+   * Redrawing the list wipes a half-typed name and resets a send in flight, so
+   * only when the reminder under each capture appears or goes away.
+   */
+  if (reminderChanged) renderCaptures(state.captures)
 })
 
 window.capture.onCaptures((captures) => {

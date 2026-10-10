@@ -12,6 +12,8 @@ const AdminController = () => import('#controllers/admin/admin_controller')
 const CustomsController = () => import('#controllers/admin/customs_controller')
 const CaptureDevicesController = () => import('#controllers/admin/capture_devices_controller')
 const CaptureController = () => import('#controllers/capture_controller')
+const FearlessController = () => import('#controllers/fearless_controller')
+const AdminFearlessController = () => import('#controllers/admin/fearless_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -32,15 +34,18 @@ router
     router.get('/groups/:slug/matches/:matchId', [GroupsController, 'match'])
     /*
      * The capture app. Not behind the admin session: it carries its own token,
-     * which the controller checks and which can do nothing but send a custom.
+     * which the controller checks and which can do nothing but send a custom
+     * and read the fearless night.
      */
     router.get('/capture/whoami', [CaptureController, 'whoami'])
     router.post('/capture/customs', [CaptureController, 'store'])
+    router.get('/capture/fearless', [CaptureController, 'fearless'])
 
     router.get('/groups/:slug/customs', [CustomGamesController, 'index'])
     router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
     router.get('/groups/:slug/customs/dashboard', [CustomGamesController, 'dashboard'])
     router.get('/groups/:slug/customs/:id', [CustomGamesController, 'show']).where('id', /^\d+$/)
+    router.get('/groups/:slug/fearless', [FearlessController, 'show'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])
@@ -85,6 +90,11 @@ router
         router.get('/admin/groups/:slug/devices', [CaptureDevicesController, 'index'])
         router.post('/admin/groups/:slug/devices', [CaptureDevicesController, 'store'])
         router.delete('/admin/devices/:id', [CaptureDevicesController, 'destroy'])
+
+        router.post('/admin/groups/:slug/fearless', [AdminFearlessController, 'store'])
+        router.patch('/admin/fearless/:id', [AdminFearlessController, 'update'])
+        router.put('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'adjust'])
+        router.delete('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'unadjust'])
       })
       .use(middleware.auth())
   })

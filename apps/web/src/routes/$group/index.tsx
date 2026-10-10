@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react'
 import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { DuoHighlights } from '@/components/home/DuoHighlights'
+import { FearlessBanner } from '@/components/home/FearlessBanner'
 import { LatestCustoms } from '@/components/home/LatestCustoms'
 import { GroupHero } from '@/components/home/GroupHero'
 import { RosterCard } from '@/components/home/RosterCard'
@@ -139,6 +140,12 @@ function Dashboard() {
     queryKey: ['customs', group],
     queryFn: () => api.customGames(group),
   })
+  // Same key as the fearless page; the banner only shows while a night runs.
+  const { data: fearless } = useQuery({
+    queryKey: ['fearless', group],
+    queryFn: () => api.fearless(group),
+    refetchInterval: 60_000,
+  })
 
   const nameOf = (slug: string) =>
     overview?.members.find((member) => member.slug === slug)?.displayName ?? slug
@@ -178,6 +185,8 @@ function Dashboard() {
         backdropChampionId={topChampionId}
         staticData={staticData}
       />
+
+      <FearlessBanner board={fearless} group={group} scope={scope} />
 
       {live && live.games.length > 0 && (
         <section>

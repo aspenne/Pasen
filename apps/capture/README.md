@@ -133,6 +133,15 @@ clic**.
 | Une **ranked** ou une **normale** | **Ignore** (elle est déjà sur Pasen) |
 | Une partie **contre des bots** | Comme tu veux. Elle est marquée **vs bots** et ne compte pas dans les stats |
 
+### Pendant une soirée fearless
+
+Quand la personne qui gère le site lance une soirée fearless, l'app affiche un
+encart **Fearless night in progress** avec le nombre de champions déjà grillés.
+**See the list** ouvre la page du site avec tous les champions encore libres.
+
+La liste ne connaît une game qu'une fois envoyée : clique sur **Send to Pasen**
+dès la fin de chaque partie, avant la draft suivante.
+
 ---
 
 ## 5. Questions fréquentes et soucis
@@ -200,6 +209,11 @@ de son nom. Il ne pourra plus rien envoyer.
 **Corriger une partie** : sur la page de la partie (Customs → la partie), un
 crayon à côté du titre permet de la renommer, et la barre **Who won?** permet de
 choisir l'équipe gagnante.
+
+**Lancer une soirée fearless** : page **Fearless** du site, une fois connecté →
+**Start a fearless night**. Elle se termine sur **End the night**, ou toute seule
+6 h après. Sur la même page : toucher un champion pour le griller ou le libérer
+à la main, et **Leave out** sur une game pour qu'elle ne compte pas.
 
 **Supprimer une partie** : carte **Custom games** de l'admin, corbeille à côté de
 la partie.
