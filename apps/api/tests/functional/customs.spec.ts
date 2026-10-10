@@ -86,6 +86,31 @@ test.group('Custom game uploads', (group) => {
     assert.lengthOf(list.body(), 1)
   })
 
+  test('lists who won each game, so the admin can spot the ones nobody settled', async ({
+    client,
+    assert,
+  }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+    // No GameEnd: the capture was saved when the window closed.
+    const stored = await client
+      .post('/api/admin/groups/arigafion/customs')
+      .json({ capture: capture() })
+      .loginAs(admin)
+
+    const before = await client.get('/api/admin/groups/arigafion/customs').loginAs(admin)
+    assert.isFalse(before.body()[0].resultKnown)
+    assert.isNull(before.body()[0].winner)
+    assert.isFalse(before.body()[0].againstBots)
+
+    await client.patch(`/api/admin/customs/${stored.body().id}`).json({ winner: 'ORDER' }).loginAs(admin)
+
+    const after = await client.get('/api/admin/groups/arigafion/customs').loginAs(admin)
+    assert.isTrue(after.body()[0].resultKnown)
+    assert.equal(after.body()[0].winner, 'ORDER')
+    assert.equal(after.body()[0].resultSource, 'manual')
+  })
+
   test('turns away a file that did not come from the agent', async ({ client, assert }) => {
     await seedGroup()
     const admin = await User.create(CREDENTIALS)

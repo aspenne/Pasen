@@ -90,7 +90,8 @@ export class CustomGameReader {
   }
 }
 
-function stored(game: CustomGame) {
+/** A stored custom in the shape `viewCustomGame` reads. */
+export function stored(game: CustomGame) {
   return {
     id: game.id,
     label: game.label,

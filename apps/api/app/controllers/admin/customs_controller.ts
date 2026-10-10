@@ -5,6 +5,8 @@ import CustomGame from '#models/custom_game'
 import Group from '#models/group'
 import { CustomCaptureService, InvalidCaptureError } from '#customs/custom_capture_service'
 import { CustomMatchMirror } from '#customs/custom_match_mirror'
+import { stored } from '#customs/custom_game_reader'
+import { viewCustomGame } from '#customs/custom_game_view'
 
 /**
  * Uploading and listing captured customs.
@@ -34,16 +36,29 @@ export default class CustomsController {
       .orderBy('played_at', 'desc')
       .limit(100)
 
+    /*
+     * Who won needs no lookups - only the capture's GameEnd and the override -
+     * so the list can flag the games nobody settled without resolving players.
+     */
+    const noLookups = { championIdBySlug: new Map(), spellIdBySlug: new Map(), memberByRiotId: new Map() }
+
     return response.ok(
-      games.map((game) => ({
-        id: game.id,
-        label: game.label,
-        playedAt: game.playedAt.toUTC().toISO(),
-        duration: game.duration,
-        gameMode: game.gameMode,
-        mapName: game.mapName,
-        playerCount: game.playerCount,
-      }))
+      games.map((game) => {
+        const view = viewCustomGame(stored(game), noLookups)
+        return {
+          id: game.id,
+          label: game.label,
+          playedAt: game.playedAt.toUTC().toISO(),
+          duration: game.duration,
+          gameMode: game.gameMode,
+          mapName: game.mapName,
+          playerCount: game.playerCount,
+          resultKnown: view.resultKnown,
+          resultSource: view.resultSource,
+          winner: view.teams.find((team) => team.won)?.side ?? null,
+          againstBots: view.againstBots,
+        }
+      })
     )
   }
 

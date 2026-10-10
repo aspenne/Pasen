@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api, ApiError } from '@/lib/api'
+import { api, ApiError, type CustomSide } from '@/lib/api'
 import { duration as formatDuration } from '@/lib/format'
 
 /**
@@ -59,6 +59,18 @@ export function CustomGames({ group }: { group: string }) {
       toast.error(
         error instanceof ApiError ? error.message : (error as Error).message || 'Upload failed.'
       ),
+  })
+
+  const decide = useMutation({
+    mutationFn: ({ id, winner }: { id: number; winner: CustomSide }) => api.updateCustom(id, { winner }),
+    onSuccess: (_, { id, winner }) => {
+      toast.success(`${winner === 'ORDER' ? 'Blue' : 'Red'} side set as the winner.`)
+      queryClient.invalidateQueries({ queryKey: ['admin-customs', group] })
+      // The same keys the game's own page refreshes: its page, the list, the standings.
+      queryClient.invalidateQueries({ queryKey: ['custom', group, String(id)] })
+      queryClient.invalidateQueries({ queryKey: ['customs', group] })
+    },
+    onError: () => toast.error('Could not save that. Are you still signed in?'),
   })
 
   const remove = useMutation({
@@ -121,8 +133,16 @@ export function CustomGames({ group }: { group: string }) {
             {games.data.map((game) => (
               <li key={game.id} className="flex items-center gap-4 px-3.5 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <div className="display truncate text-[14px] text-ink">
-                    {game.label ?? `${game.gameMode} · ${game.playerCount} players`}
+                  <div className="flex items-center gap-2">
+                    <span className="display truncate text-[14px] text-ink">
+                      {game.label ?? `${game.gameMode} · ${game.playerCount} players`}
+                    </span>
+                    {/* Left out of every win and loss until someone decides. */}
+                    {!game.resultKnown && !game.againstBots && (
+                      <span className="shrink-0 border border-loss px-1.5 text-[10px] uppercase tracking-[0.1em] text-loss">
+                        No result
+                      </span>
+                    )}
                   </div>
                   <div className="tnum text-[11px] text-ink-dim">
                     {new Date(game.playedAt).toLocaleString('en-GB', {
@@ -136,6 +156,30 @@ export function CustomGames({ group }: { group: string }) {
                     {game.mapName ? ` · ${game.mapName}` : ''}
                   </div>
                 </div>
+
+                {!game.againstBots && (
+                  <div className="flex shrink-0 gap-1">
+                    {(['ORDER', 'CHAOS'] as const).map((side) => {
+                      const chosen = game.winner === side
+                      const name = side === 'ORDER' ? 'Blue' : 'Red'
+                      return (
+                        <button
+                          key={side}
+                          type="button"
+                          aria-pressed={chosen}
+                          aria-label={`${name} won: ${game.label ?? game.gameMode}`}
+                          disabled={decide.isPending}
+                          onClick={() => !chosen && decide.mutate({ id: game.id, winner: side })}
+                          className={`tap rounded-[3px] px-2 py-0.5 text-[11px] uppercase tracking-[0.08em] transition-colors disabled:opacity-60 ${
+                            chosen ? 'bg-accent text-on-accent' : 'bg-panel-raised text-ink-muted hover:text-ink'
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
 
                 <Button
                   variant="ghost"

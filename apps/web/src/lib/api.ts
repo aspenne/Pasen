@@ -214,6 +214,11 @@ export type CustomGameSummary = {
   gameMode: string
   mapName: string | null
   playerCount: number
+  /** False when the capture ended before the game did and nobody decided since. */
+  resultKnown: boolean
+  resultSource: 'capture' | 'manual' | null
+  winner: CustomSide | null
+  againstBots: boolean
 }
 
 export type MemberAccount = {
