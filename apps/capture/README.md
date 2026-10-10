@@ -142,6 +142,20 @@ encart **Fearless night in progress** avec le nombre de champions déjà grillé
 La liste ne connaît une game qu'une fois envoyée : clique sur **Send to Pasen**
 dès la fin de chaque partie, avant la draft suivante.
 
+### Pour la roulette des rôles
+
+Quand tu es dans le **salon d'une partie personnalisée** (avant de cliquer sur
+Lancer), l'app dit à Pasen qui est dans quelle équipe. La page **Role
+roulette** du site affiche alors les 10 joueurs et peut tirer les rôles.
+
+Un seul joueur avec l'app ouverte dans le salon suffit. L'app ne lit que la
+composition du salon, uniquement pour une partie personnalisée (jamais une
+ranked ou une normale), et ne touche à rien dans le client.
+
+**Si la roulette ne voit pas le salon** : clic droit sur l'icône de l'app →
+**Save lobby snapshot**. Un fichier `lobby-snapshot.json` s'ouvre dans ton
+dossier : envoie-le à la personne qui gère le site.
+
 ---
 
 ## 5. Questions fréquentes et soucis

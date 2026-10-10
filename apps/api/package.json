@@ -39,7 +39,8 @@
     "#queues/*": "./app/queues/*.js",
     "#notifications/*": "./app/notifications/*.js",
     "#customs/*": "./app/customs/*.js",
-    "#fearless/*": "./app/fearless/*.js"
+    "#fearless/*": "./app/fearless/*.js",
+    "#roulette/*": "./app/roulette/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",

@@ -44,9 +44,19 @@ function CustomsPage() {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className="display text-[30px] font-bold uppercase tracking-[0.03em] text-ink">
-          Customs
-        </h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="display text-[30px] font-bold uppercase tracking-[0.03em] text-ink">
+            Customs
+          </h1>
+          <Link
+            to="/$group/roulette"
+            params={{ group }}
+            search={{ scope }}
+            className="cut-tab tap display inline-flex items-center bg-accent px-4 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-on-accent"
+          >
+            Role roulette
+          </Link>
+        </div>
         <p className="mt-1 max-w-[62ch] text-[13px] text-ink-muted">
           Games Riot keeps no record of. Each one exists only because someone ran the agent beside
           it and uploaded what it caught.

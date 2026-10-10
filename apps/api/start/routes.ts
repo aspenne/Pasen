@@ -14,6 +14,8 @@ const CaptureDevicesController = () => import('#controllers/admin/capture_device
 const CaptureController = () => import('#controllers/capture_controller')
 const FearlessController = () => import('#controllers/fearless_controller')
 const AdminFearlessController = () => import('#controllers/admin/fearless_controller')
+const RouletteController = () => import('#controllers/roulette_controller')
+const AdminRouletteController = () => import('#controllers/admin/roulette_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -41,12 +43,15 @@ router
     router.get('/capture/whoami', [CaptureController, 'whoami'])
     router.post('/capture/customs', [CaptureController, 'store'])
     router.get('/capture/fearless', [CaptureController, 'fearless'])
+    router.post('/capture/lobby', [CaptureController, 'lobby'])
 
     router.get('/groups/:slug/customs', [CustomGamesController, 'index'])
     router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
     router.get('/groups/:slug/customs/dashboard', [CustomGamesController, 'dashboard'])
     router.get('/groups/:slug/customs/:id', [CustomGamesController, 'show']).where('id', /^\d+$/)
     router.get('/groups/:slug/fearless', [FearlessController, 'show'])
+    router.get('/groups/:slug/roulette', [RouletteController, 'show'])
+    router.get('/groups/:slug/roulette/cards', [RouletteController, 'cards'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])
@@ -96,6 +101,9 @@ router
         router.patch('/admin/fearless/:id', [AdminFearlessController, 'update'])
         router.put('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'adjust'])
         router.delete('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'unadjust'])
+
+        router.post('/admin/groups/:slug/roulette/draw', [AdminRouletteController, 'draw'])
+        router.put('/admin/groups/:slug/roulette/lobby', [AdminRouletteController, 'lobby'])
       })
       .use(middleware.auth())
   })

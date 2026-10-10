@@ -108,3 +108,18 @@ test('tells a changed fearless summary from the same one polled again', () => {
   assert.equal(pasen.sameFearless(night, { ...night, burned: 4 }), false)
   assert.equal(pasen.sameFearless(night, null), false)
 })
+
+test('sends the lobby teams with the pairing code', async () => {
+  const site = await fakeSite(() => [201, { changed: true }])
+  const teams = { blue: [{ puuid: 'p1', name: 'Nøah#SHEN', bot: false }], red: [] }
+  let answer
+  try {
+    answer = await pasen.sendLobby(site.base, 'pasen_abc', teams)
+  } finally {
+    site.server.close()
+  }
+  assert.equal(answer.ok, true)
+  assert.equal(site.seen[0].method, 'POST')
+  assert.equal(site.seen[0].url, '/api/capture/lobby')
+  assert.deepEqual(site.seen[0].body, { teams })
+})

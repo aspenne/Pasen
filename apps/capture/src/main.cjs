@@ -17,6 +17,8 @@ const { Watcher } = require('./watcher.cjs')
 const { Store } = require('./store.cjs')
 const pasen = require('./pasen.cjs')
 const updates = require('./updates.cjs')
+const lcu = require('./lcu.cjs')
+const { teamsFromLobby, sameTeams } = require('./lobby.cjs')
 
 /**
  * Pasen Capture: sits in the tray, catches every game the League client
@@ -42,6 +44,12 @@ let fearless = null
 let fearlessTimer = null
 const FEARLESS_POLL_MS = 60_000
 let update = null
+let lobbyTimer = null
+let lastLobby = null
+let lastLobbySentAt = 0
+const LOBBY_POLL_MS = 3000
+// Sent again while unchanged, so the site knows the lobby is still there.
+const LOBBY_HEARTBEAT_MS = 60_000
 const UPDATE_CHECK_MS = 6 * 3_600_000
 
 const asset = (name) => path.join(__dirname, '..', 'assets', name)
@@ -98,6 +106,7 @@ function createTray() {
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: 'Open Pasen Capture', click: showWindow },
+      { label: 'Save lobby snapshot', click: saveLobbySnapshot },
       { type: 'separator' },
       {
         label: 'Quit',
@@ -182,6 +191,48 @@ async function checkForUpdate() {
   if (next?.version === update?.version) return
   update = next
   send('update', update)
+}
+
+/**
+ * Tells the site who is in the custom lobby, for the role roulette. Only a
+ * custom lobby, only when it changes (plus a heartbeat), and never during a
+ * game - the lobby is gone by then, and the poll would only cost the client.
+ */
+let lobbyPolling = false
+
+async function pollLobby() {
+  // One at a time: a slow client or site must not stack a poll every 3 s.
+  if (lobbyPolling) return
+  lobbyPolling = true
+  try {
+    const config = store.readConfig()
+    if (!config.token || live.state === 'playing') return
+    const teams = teamsFromLobby(await lcu.readLobby())
+    if (!teams) return
+    const due = !sameTeams(teams, lastLobby) || Date.now() - lastLobbySentAt > LOBBY_HEARTBEAT_MS
+    if (!due) return
+    const answer = await pasen.sendLobby(config.server, config.token, teams)
+    if (answer.ok) {
+      lastLobby = teams
+      lastLobbySentAt = Date.now()
+    }
+  } catch {
+    // A lobby the app cannot read is skipped; the next tick tries again.
+  } finally {
+    lobbyPolling = false
+  }
+}
+
+/** The raw lobby as the client gives it, for checking what the app reads. */
+async function saveLobbySnapshot() {
+  const lobby = await lcu.readLobby()
+  if (!lobby) {
+    new Notification({ title: 'No lobby found', body: 'Open a lobby in the League client, then try again.', silent: true }).show()
+    return
+  }
+  const file = path.join(app.getPath('userData'), 'lobby-snapshot.json')
+  require('node:fs').writeFileSync(file, JSON.stringify(lobby, null, 2))
+  shell.showItemInFolder(file)
 }
 
 function startFearless() {
@@ -272,6 +323,7 @@ app.whenReady().then(() => {
   startWatching()
   startFearless()
   checkForUpdate()
+  lobbyTimer = setInterval(pollLobby, LOBBY_POLL_MS)
   setInterval(checkForUpdate, UPDATE_CHECK_MS)
 
   // macOS: clicking the dock icon brings the window back.
@@ -282,6 +334,7 @@ app.on('before-quit', () => {
   quitting = true
   watcher?.stop()
   clearInterval(fearlessTimer)
+  clearInterval(lobbyTimer)
 })
 
 // The app lives in the tray; closing every window does not end it.

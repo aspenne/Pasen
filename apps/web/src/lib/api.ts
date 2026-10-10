@@ -612,6 +612,36 @@ export type FearlessBoard = {
   freed: number[]
 }
 
+export type RouletteSide = 'blue' | 'red'
+export type RouletteSeat = { puuid: string | null; name: string; bot: boolean }
+
+/** The role roulette as every page sees it, polled every two seconds. */
+export type RouletteView = {
+  serverTime: string
+  lobby: {
+    id: number
+    source: 'capture' | 'manual'
+    updatedAt: string
+    stale: boolean
+    teams: Record<RouletteSide, RouletteSeat[]>
+  } | null
+  /** Per side, the seat playing each role in Top, Jungle, Mid, Bot, Support order. */
+  draw: { id: number; revealAt: string; roles: Record<RouletteSide, (number | null)[]> } | null
+}
+
+export type RouletteCard = {
+  slug: string
+  displayName: string
+  tag: string | null
+  tier: string | null
+  rank: string | null
+  leaguePoints: number | null
+  winRate: number
+  games: number
+  championId: number | null
+  championName: string | null
+}
+
 /** One group on the front page: who is in it, and what is happening there now. */
 export type GroupCard = {
   slug: string
@@ -667,6 +697,16 @@ export const api = {
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 
   groups: () => apiFetch<{ groups: GroupCard[] }>('/api/groups'),
+  roulette: (slug: string) => apiFetch<RouletteView>(`/api/groups/${slug}/roulette`),
+  rouletteCards: (slug: string) =>
+    apiFetch<{ cards: Record<string, RouletteCard> }>(`/api/groups/${slug}/roulette/cards`),
+  drawRoles: (group: string) =>
+    apiFetch<{ id: number; revealAt: string }>(`/api/admin/groups/${group}/roulette/draw`, { method: 'POST' }),
+  setRouletteTeams: (group: string, teams: Record<RouletteSide, RouletteSeat[]>) =>
+    apiFetch<{ id: number }>(`/api/admin/groups/${group}/roulette/lobby`, {
+      method: 'PUT',
+      body: JSON.stringify({ teams }),
+    }),
 
   session: () => apiFetch<{ authenticated: boolean; email: string | null }>('/api/admin/session'),
   signIn: (email: string, password: string) =>
