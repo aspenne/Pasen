@@ -38,7 +38,8 @@
     "#stats/*": "./app/stats/*.js",
     "#queues/*": "./app/queues/*.js",
     "#notifications/*": "./app/notifications/*.js",
-    "#customs/*": "./app/customs/*.js"
+    "#customs/*": "./app/customs/*.js",
+    "#fearless/*": "./app/fearless/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
