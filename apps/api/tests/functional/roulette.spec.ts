@@ -136,3 +136,21 @@ test.group('Role roulette · corrections', (group) => {
     assert.equal(after.lobby.source, 'capture')
   })
 })
+
+test.group('Role roulette · hand-picked teams', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  test('a member added by Riot ID gets their account, and so their card', async ({ client, assert }) => {
+    await seedGroup()
+    const admin = await User.create(CREDENTIALS)
+
+    await client
+      .put('/api/admin/groups/arigafion/roulette/lobby')
+      .json({ teams: { blue: [{ puuid: null, name: 'patate#ccc', bot: false }], red: [{ puuid: null, name: 'Guest#EUW', bot: false }] } })
+      .loginAs(admin)
+
+    const view = (await client.get('/api/groups/arigafion/roulette')).body()
+    assert.equal(view.lobby.teams.blue[0].puuid, 'puuid-patate')
+    assert.isNull(view.lobby.teams.red[0].puuid)
+  })
+})

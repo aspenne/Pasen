@@ -54,7 +54,8 @@ export class RouletteService {
    */
   async ingest(group: Group, teams: Teams, source: 'capture' | 'manual') {
     if (source === 'manual') {
-      return { lobby: await CustomLobby.create({ groupId: group.id, teams, source }), changed: true }
+      const resolved = await this.#resolveRiotIds(group, teams)
+      return { lobby: await CustomLobby.create({ groupId: group.id, teams: resolved, source }), changed: true }
     }
 
     /*
@@ -81,6 +82,20 @@ export class RouletteService {
     }
 
     return { lobby: await CustomLobby.create({ groupId: group.id, teams, source }), changed: true }
+  }
+
+  /**
+   * The admin's editor names players by Riot ID; a member's account is found
+   * from it, so their seat carries the puuid their card is keyed on.
+   */
+  async #resolveRiotIds(group: Group, teams: Teams): Promise<Teams> {
+    const accounts = await RiotAccount.query().whereHas('member', (member) =>
+      member.whereHas('groups', (groups) => groups.where('groups.id', group.id))
+    )
+    const byRiotId = new Map(accounts.map((a) => [`${a.gameName}#${a.tagLine}`.toLowerCase(), a.puuid]))
+    const resolve = (seat: Teams['blue'][number]) =>
+      seat.puuid || seat.bot ? seat : { ...seat, puuid: byRiotId.get(seat.name.toLowerCase()) ?? null }
+    return { blue: teams.blue.map(resolve), red: teams.red.map(resolve) }
   }
 
   async draw(group: Group): Promise<RoleDraw> {
