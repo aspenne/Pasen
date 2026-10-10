@@ -13,6 +13,7 @@ const CustomsController = () => import('#controllers/admin/customs_controller')
 const CaptureDevicesController = () => import('#controllers/admin/capture_devices_controller')
 const CaptureController = () => import('#controllers/capture_controller')
 const FearlessController = () => import('#controllers/fearless_controller')
+const AdminFearlessController = () => import('#controllers/admin/fearless_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -87,6 +88,11 @@ router
         router.get('/admin/groups/:slug/devices', [CaptureDevicesController, 'index'])
         router.post('/admin/groups/:slug/devices', [CaptureDevicesController, 'store'])
         router.delete('/admin/devices/:id', [CaptureDevicesController, 'destroy'])
+
+        router.post('/admin/groups/:slug/fearless', [AdminFearlessController, 'store'])
+        router.patch('/admin/fearless/:id', [AdminFearlessController, 'update'])
+        router.put('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'adjust'])
+        router.delete('/admin/fearless/:id/champions/:championId', [AdminFearlessController, 'unadjust'])
       })
       .use(middleware.auth())
   })
