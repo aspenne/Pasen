@@ -15,6 +15,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
 import { Route as GroupFearlessRouteImport } from './routes/$group/fearless'
 import { Route as GroupInsightsRouteImport } from './routes/$group/insights'
+import { Route as GroupRouletteRouteImport } from './routes/$group/roulette'
 import { Route as GroupCustomsIndexRouteImport } from './routes/$group/customs/index'
 import { Route as GroupCustomsIdRouteImport } from './routes/$group/customs/$id'
 import { Route as GroupPlayersMemberRouteImport } from './routes/$group/players/$member'
@@ -49,6 +50,11 @@ const GroupInsightsRoute = GroupInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => GroupRoute,
 } as any)
+const GroupRouletteRoute = GroupRouletteRouteImport.update({
+  id: '/roulette',
+  path: '/roulette',
+  getParentRoute: () => GroupRoute,
+} as any)
 const GroupCustomsIndexRoute = GroupCustomsIndexRouteImport.update({
   id: '/customs/',
   path: '/customs/',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
+  '/$group/roulette': typeof GroupRouletteRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
+  '/$group/roulette': typeof GroupRouletteRoute
   '/$group': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
+  '/$group/roulette': typeof GroupRouletteRoute
   '/$group/': typeof GroupIndexRoute
   '/$group/customs/$id': typeof GroupCustomsIdRoute
   '/$group/players/$member': typeof GroupPlayersMemberRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$group/fearless'
     | '/$group/insights'
+    | '/$group/roulette'
     | '/$group/'
     | '/$group/customs/$id'
     | '/$group/players/$member'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$group/fearless'
     | '/$group/insights'
+    | '/$group/roulette'
     | '/$group'
     | '/$group/customs/$id'
     | '/$group/players/$member'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/$group/fearless'
     | '/$group/insights'
+    | '/$group/roulette'
     | '/$group/'
     | '/$group/customs/$id'
     | '/$group/players/$member'
@@ -183,6 +195,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupInsightsRouteImport
       parentRoute: typeof GroupRoute
     }
+    '/$group/roulette': {
+      id: '/$group/roulette'
+      path: '/roulette'
+      fullPath: '/$group/roulette'
+      preLoaderRoute: typeof GroupRouletteRouteImport
+      parentRoute: typeof GroupRoute
+    }
     '/$group/customs/': {
       id: '/$group/customs/'
       path: '/customs'
@@ -210,6 +229,7 @@ declare module '@tanstack/react-router' {
 interface GroupRouteChildren {
   GroupFearlessRoute: typeof GroupFearlessRoute
   GroupInsightsRoute: typeof GroupInsightsRoute
+  GroupRouletteRoute: typeof GroupRouletteRoute
   GroupIndexRoute: typeof GroupIndexRoute
   GroupCustomsIdRoute: typeof GroupCustomsIdRoute
   GroupPlayersMemberRoute: typeof GroupPlayersMemberRoute
@@ -219,6 +239,7 @@ interface GroupRouteChildren {
 const GroupRouteChildren: GroupRouteChildren = {
   GroupFearlessRoute: GroupFearlessRoute,
   GroupInsightsRoute: GroupInsightsRoute,
+  GroupRouletteRoute: GroupRouletteRoute,
   GroupIndexRoute: GroupIndexRoute,
   GroupCustomsIdRoute: GroupCustomsIdRoute,
   GroupPlayersMemberRoute: GroupPlayersMemberRoute,
