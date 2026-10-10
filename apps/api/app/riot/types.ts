@@ -54,7 +54,10 @@ export type LeagueEntryDto = {
 }
 
 export type MatchParticipantDto = {
+  /** "BOT" for every bot in a co-op vs AI game. */
   puuid: string
+  /** 1-10, the seat in the match; the only thing that tells two bots apart. */
+  participantId: number
   riotIdGameName?: string
   riotIdTagline?: string
   teamId: number

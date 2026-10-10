@@ -30,6 +30,34 @@ test.group('MatchIngestService', (group) => {
     assert.isTrue(stored?.statsEligible)
   })
 
+  /*
+   * Co-op vs AI: Riot gives every bot the same puuid, "BOT" - five rows with
+   * one key, which the upsert refused, stopping the whole backfill of anyone
+   * who ever played against bots (EUW1_7892808370 was the real case).
+   */
+  test('stores a game against bots, five bots sharing one puuid', async ({ assert }) => {
+    const match = await fixture('match_ranked_sr')
+    const humans = match.info.participants.slice(0, 5)
+    const bots = match.info.participants.slice(5).map((p) => ({ ...p, puuid: 'BOT' }))
+    const coop = { ...match, info: { ...match.info, queueId: 890, participants: [...humans, ...bots] } }
+
+    const result = await new MatchIngestService().ingest(coop)
+    assert.equal(result.participants, 10)
+
+    const stored = await MatchParticipant.query().where('match_id', match.metadata.matchId)
+    assert.lengthOf(stored, 10)
+    assert.lengthOf(new Set(stored.map((row) => row.puuid)), 10)
+    // The humans keep their real puuid; only the bots are told apart.
+    for (const human of humans) assert.include(stored.map((row) => row.puuid), human.puuid)
+
+    // Fetched again, it lands on the same rows rather than adding five more.
+    await new MatchIngestService().ingest(coop)
+    assert.equal(
+      (await MatchParticipant.query().where('match_id', match.metadata.matchId)).length,
+      10
+    )
+  })
+
   test('stores a match Riot returned with no participants, and keeps the ones it has', async ({
     assert,
   }) => {

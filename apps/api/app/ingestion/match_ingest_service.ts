@@ -138,10 +138,20 @@ function durationSecondsOf(info: MatchDto['info']): number {
     : info.gameDuration
 }
 
+/**
+ * Riot names every bot in a co-op vs AI game with the same puuid, "BOT". A
+ * player's row is keyed on (match, puuid), so each bot gets its own key from
+ * its seat: stable when the match is fetched again, and never a real puuid,
+ * so it can never be mistaken for anyone we track.
+ */
+function puuidOf(p: MatchParticipantDto): string {
+  return p.puuid === 'BOT' ? `bot:${p.teamId}:${p.participantId}` : p.puuid
+}
+
 function participantRow(matchId: string, p: MatchParticipantDto) {
   return {
     match_id: matchId,
-    puuid: p.puuid,
+    puuid: puuidOf(p),
     team_id: p.teamId,
     // Arena only. 0 means "not an Arena match", which is not a subteam.
     subteam_id: p.playerSubteamId || null,
