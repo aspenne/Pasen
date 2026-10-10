@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { PencilIcon, Trash2Icon, UploadIcon } from 'lucide-react'
+import { ExternalLinkIcon, PencilIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -224,6 +224,19 @@ export function CustomGames({ group }: { group: string }) {
                     })}
                   </div>
                 )}
+
+                {/*
+                  The game's own page: both scoreboards, to see who was on which
+                  side, and - signed in as now - its Who won? bar.
+                */}
+                <a
+                  href={`/${group}/customs/${game.id}`}
+                  aria-label={`Open ${game.label ?? game.gameMode}`}
+                  title="Open the game"
+                  className="tap inline-flex shrink-0 items-center text-ink-dim transition-colors hover:text-ink"
+                >
+                  <ExternalLinkIcon className="size-4" />
+                </a>
 
                 <Button
                   variant="ghost"

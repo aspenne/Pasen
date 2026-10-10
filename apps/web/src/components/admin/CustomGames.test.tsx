@@ -80,4 +80,11 @@ describe('CustomGames (admin)', () => {
     expect(screen.queryByRole('textbox', { name: 'New name for Game 4' })).toBeNull()
     expect(update).not.toHaveBeenCalled()
   })
+
+  it('opens the full game, where the scoreboard shows who played what', async () => {
+    vi.spyOn(api, 'customs').mockResolvedValue(games)
+    renderCard()
+    const open = await screen.findByRole('link', { name: 'Open Game 4' })
+    expect(open.getAttribute('href')).toBe('/arigafion/customs/11')
+  })
 })
