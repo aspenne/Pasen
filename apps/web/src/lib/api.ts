@@ -612,6 +612,16 @@ export type FearlessBoard = {
   freed: number[]
 }
 
+/** One group on the front page: who is in it, and what is happening there now. */
+export type GroupCard = {
+  slug: string
+  name: string
+  members: { slug: string; displayName: string; profileIconId: number | null }[]
+  inGame: number
+  gamesToday: number
+  fearless: { label: string | null; burned: number } | null
+}
+
 export const api = {
   health: () => apiFetch<HealthResponse>('/health'),
   status: () => apiFetch<SiteStatus>('/api/status'),
@@ -655,6 +665,8 @@ export const api = {
     (await apiFetch<FearlessBoard | undefined>(`/api/groups/${slug}/fearless`)) ?? null,
   activity: (slug: string, params: Scoped = {}) =>
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
+
+  groups: () => apiFetch<{ groups: GroupCard[] }>('/api/groups'),
 
   session: () => apiFetch<{ authenticated: boolean; email: string | null }>('/api/admin/session'),
   signIn: (email: string, password: string) =>
