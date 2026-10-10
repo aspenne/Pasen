@@ -8,6 +8,8 @@ export type Seat = {
   puuid: string | null
   name: string
   bot: boolean
+  /** A bot's champion, which is all that tells two bots apart. */
+  championId?: number | null
 }
 
 export type Side = 'blue' | 'red'
@@ -31,7 +33,10 @@ export function normaliseTeams(input: unknown): Teams {
       const bot = seat.bot === true
       const name = String(seat.name ?? '').trim().slice(0, NAME_LENGTH)
       const puuid = !bot && typeof seat.puuid === 'string' && seat.puuid ? seat.puuid : null
-      return { puuid, name: name || (bot ? 'Bot' : 'Player'), bot }
+      const champion = Number(seat.championId)
+      return bot
+        ? { puuid, name: name || 'Bot', bot, championId: Number.isInteger(champion) && champion > 0 ? champion : null }
+        : { puuid, name: name || 'Player', bot }
     })
   }
 
@@ -42,7 +47,9 @@ export function normaliseTeams(input: unknown): Teams {
 export function sameTeams(a: Teams, b: Teams): boolean {
   const key = (teams: Teams) =>
     JSON.stringify(
-      (['blue', 'red'] as const).map((side) => teams[side].map((seat) => [seat.puuid, seat.name, seat.bot]))
+      (['blue', 'red'] as const).map((side) =>
+        teams[side].map((seat) => [seat.puuid, seat.name, seat.bot, seat.championId ?? null])
+      )
     )
   return key(a) === key(b)
 }

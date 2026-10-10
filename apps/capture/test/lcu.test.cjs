@@ -89,3 +89,23 @@ test('keeps the credentials it found, and scans for the client process at most o
   now += 60_000
   assert.equal(await source.get(), null)
 })
+
+test("asks the client for a player's Riot ID", async () => {
+  let seen
+  const riotId = await lcu.readRiotId('abc-123', {
+    credentials: async () => ({ port: 54321, password: 'pw', protocol: 'https' }),
+    request: async (url) => {
+      seen = url
+      return { status: 200, body: { gameName: 'Nøah', tagLine: 'SHEN' } }
+    },
+  })
+  assert.equal(riotId, 'Nøah#SHEN')
+  assert.equal(seen, 'https://127.0.0.1:54321/lol-summoner/v2/summoners/puuid/abc-123')
+  assert.equal(
+    await lcu.readRiotId('abc-123', {
+      credentials: async () => ({ port: 1, password: 'x', protocol: 'https' }),
+      request: async () => ({ status: 404, body: null }),
+    }),
+    null
+  )
+})

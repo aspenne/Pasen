@@ -53,9 +53,12 @@ export class RouletteService {
    * roles dealt to other players mean nothing for these.
    */
   async ingest(group: Group, teams: Teams, source: 'capture' | 'manual') {
+    // Both sources name members by Riot ID: the editor has nothing else, and the
+    // client's own puuid is not the one Riot's API gives Pasen.
+    teams = await this.#resolveRiotIds(group, teams)
+
     if (source === 'manual') {
-      const resolved = await this.#resolveRiotIds(group, teams)
-      return { lobby: await CustomLobby.create({ groupId: group.id, teams: resolved, source }), changed: true }
+      return { lobby: await CustomLobby.create({ groupId: group.id, teams, source }), changed: true }
     }
 
     /*
@@ -85,16 +88,20 @@ export class RouletteService {
   }
 
   /**
-   * The admin's editor names players by Riot ID; a member's account is found
-   * from it, so their seat carries the puuid their card is keyed on.
+   * A member's account found from the Riot ID a seat is named by, so the seat
+   * carries the puuid their card is keyed on - whatever puuid it came with,
+   * since the League client's own is encrypted differently from Pasen's.
    */
   async #resolveRiotIds(group: Group, teams: Teams): Promise<Teams> {
     const accounts = await RiotAccount.query().whereHas('member', (member) =>
       member.whereHas('groups', (groups) => groups.where('groups.id', group.id))
     )
     const byRiotId = new Map(accounts.map((a) => [`${a.gameName}#${a.tagLine}`.toLowerCase(), a.puuid]))
-    const resolve = (seat: Teams['blue'][number]) =>
-      seat.puuid || seat.bot ? seat : { ...seat, puuid: byRiotId.get(seat.name.toLowerCase()) ?? null }
+    const resolve = (seat: Teams['blue'][number]) => {
+      if (seat.bot) return seat
+      const known = byRiotId.get(seat.name.toLowerCase())
+      return known ? { ...seat, puuid: known } : seat
+    }
     return { blue: teams.blue.map(resolve), red: teams.red.map(resolve) }
   }
 

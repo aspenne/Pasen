@@ -18,7 +18,7 @@ const { Store } = require('./store.cjs')
 const pasen = require('./pasen.cjs')
 const updates = require('./updates.cjs')
 const lcu = require('./lcu.cjs')
-const { teamsFromLobby, sameTeams } = require('./lobby.cjs')
+const { teamsFromLobby, sameTeams, humansToName } = require('./lobby.cjs')
 
 /**
  * Pasen Capture: sits in the tray, catches every game the League client
@@ -199,6 +199,8 @@ async function checkForUpdate() {
  * game - the lobby is gone by then, and the poll would only cost the client.
  */
 let lobbyPolling = false
+/** Client puuid to "Name#TAG", asked once per player and kept for the session. */
+const riotIds = new Map()
 
 async function pollLobby() {
   // One at a time: a slow client or site must not stack a poll every 3 s.
@@ -207,7 +209,12 @@ async function pollLobby() {
   try {
     const config = store.readConfig()
     if (!config.token || live.state === 'playing') return
-    const teams = teamsFromLobby(await lcu.readLobby())
+    const lobby = await lcu.readLobby()
+    for (const puuid of humansToName(lobby, riotIds)) {
+      const riotId = await lcu.readRiotId(puuid)
+      if (riotId) riotIds.set(puuid, riotId)
+    }
+    const teams = teamsFromLobby(lobby, riotIds)
     if (!teams) return
     const due = !sameTeams(teams, lastLobby) || Date.now() - lastLobbySentAt > LOBBY_HEARTBEAT_MS
     if (!due) return

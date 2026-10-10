@@ -154,3 +154,25 @@ test.group('Role roulette · hand-picked teams', (group) => {
     assert.isNull(view.lobby.teams.red[0].puuid)
   })
 })
+
+test.group('Role roulette · the client puuid', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  /*
+   * The client's puuid is not the one Riot's API gives Pasen (it is encrypted
+   * per application), so a member is recognised from their Riot ID instead.
+   */
+  test('recognises a member from the Riot ID the app sends', async ({ client, assert }) => {
+    const { token } = await paired()
+    await client
+      .post('/api/capture/lobby')
+      .header('authorization', `Bearer ${token}`)
+      .json({ teams: { blue: [{ puuid: 'e53ee48c-7051-5200-ba7f-55dc6100efc3', name: 'Patate#CCC', bot: false }], red: [{ puuid: null, name: 'Bot', bot: true, championId: 103 }] } })
+
+    const view = (await client.get('/api/groups/arigafion/roulette')).body()
+    assert.equal(view.lobby.teams.blue[0].puuid, 'puuid-patate')
+    assert.equal(view.lobby.teams.red[0].championId, 103)
+    const cards = (await client.get('/api/groups/arigafion/roulette/cards')).body().cards
+    assert.property(cards, 'puuid-patate')
+  })
+})

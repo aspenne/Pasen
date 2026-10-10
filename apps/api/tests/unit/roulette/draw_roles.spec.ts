@@ -47,7 +47,7 @@ test.group('normaliseTeams', () => {
       red: [{ puuid: 'x', name: 'Annie Bot', bot: true }],
     })
     assert.lengthOf(teams.blue, 5)
-    assert.deepEqual(teams.red, [{ puuid: null, name: 'Annie Bot', bot: true }])
+    assert.deepEqual(teams.red, [{ puuid: null, name: 'Annie Bot', bot: true, championId: null }])
   })
 
   test('trims names and refuses a side that is not a list', ({ assert }) => {
@@ -55,5 +55,14 @@ test.group('normaliseTeams', () => {
     assert.lengthOf(teams.blue[0].name, 40)
     assert.throws(() => normaliseTeams({ blue: 'nope', red: [] }))
     assert.throws(() => normaliseTeams(null))
+  })
+
+  test("keeps a bot's champion, and only a bot's", ({ assert }) => {
+    const teams = normaliseTeams({
+      blue: [{ puuid: null, name: 'Bot', bot: true, championId: 103 }],
+      red: [{ puuid: 'p', name: 'Nøah#SHEN', bot: false, championId: 98 }],
+    })
+    assert.deepEqual(teams.blue[0], { puuid: null, name: 'Bot', bot: true, championId: 103 })
+    assert.notProperty(teams.red[0], 'championId')
   })
 })

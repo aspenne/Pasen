@@ -7,6 +7,7 @@ import { RoleCard } from '@/components/roulette/RoleCard'
 import { TeamEditor } from '@/components/roulette/TeamEditor'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type RouletteSide, type RouletteView } from '@/lib/api'
+import { useStaticData } from '@/lib/ddragon'
 import { ROLES, discordText, holdReveal, revealOrder, revealedCount } from '@/lib/roulette'
 
 export const Route = createFileRoute('/$group/roulette')({ component: RoulettePage })
@@ -23,6 +24,7 @@ function RoulettePage() {
   const [editing, setEditing] = useState(false)
 
   const { data: session } = useQuery({ queryKey: ['session'], queryFn: api.session })
+  const { data: staticData } = useStaticData()
   const roulette = useQuery({
     queryKey: ['roulette', group],
     queryFn: () => api.roulette(group),
@@ -157,6 +159,7 @@ function RoulettePage() {
                     card={slot.seat?.puuid ? cards?.cards[slot.seat.puuid] : undefined}
                     role={slot.role}
                     revealed={slot.order !== null && slot.order < count}
+                    staticData={staticData}
                   />
                 </li>
               ))}

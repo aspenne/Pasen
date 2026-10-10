@@ -613,7 +613,13 @@ export type FearlessBoard = {
 }
 
 export type RouletteSide = 'blue' | 'red'
-export type RouletteSeat = { puuid: string | null; name: string; bot: boolean }
+export type RouletteSeat = {
+  puuid: string | null
+  name: string
+  bot: boolean
+  /** A bot's champion. */
+  championId?: number | null
+}
 
 /** The role roulette as every page sees it, polled every two seconds. */
 export type RouletteView = {

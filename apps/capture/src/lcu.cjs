@@ -135,13 +135,14 @@ function get(url, auth) {
  * client is closed, there is no lobby, or anything at all goes wrong - the
  * caller just tries again on its next tick.
  */
-async function readLobby({ credentials = () => defaultSource.get(), request = get, forget = () => defaultSource.forget() } = {}) {
+/** One GET on the client's API; the body on a 200, null on anything else. */
+async function lcuGet(path, { credentials = () => defaultSource.get(), request = get, forget = () => defaultSource.forget() } = {}) {
   let found = null
   try {
     found = await credentials()
     if (!found) return null
     const auth = `Basic ${Buffer.from(`riot:${found.password}`).toString('base64')}`
-    const answer = await request(`https://127.0.0.1:${found.port}/lol-lobby/v2/lobby`, auth)
+    const answer = await request(`https://127.0.0.1:${found.port}${path}`, auth)
     return answer.status === 200 ? answer.body : null
   } catch {
     // The client closed or moved to a new port: look for it afresh next time.
@@ -150,4 +151,14 @@ async function readLobby({ credentials = () => defaultSource.get(), request = ge
   }
 }
 
-module.exports = { lockfilePaths, parseLockfile, credentialsFromCommandLine, credentialSource, readLobby }
+function readLobby(options) {
+  return lcuGet('/lol-lobby/v2/lobby', options)
+}
+
+/** "Name#TAG" for a player in the lobby, which the lobby itself no longer says. */
+async function readRiotId(puuid, options) {
+  const summoner = await lcuGet(`/lol-summoner/v2/summoners/puuid/${encodeURIComponent(puuid)}`, options)
+  return summoner?.gameName ? `${summoner.gameName}#${summoner.tagLine ?? ''}` : null
+}
+
+module.exports = { lockfilePaths, parseLockfile, credentialsFromCommandLine, credentialSource, readLobby, readRiotId }

@@ -45,4 +45,13 @@ describe('RoleCard', () => {
     render(<RoleCard side="red" seat={null} role={ROLES[4]} revealed />)
     expect(screen.getByText('No player')).toBeTruthy()
   })
+
+  it("names a bot after its champion, with the champion's art", () => {
+    const staticData = { version: '16.20.1', champions: { '103': { slug: 'Ahri', name: 'Ahri', title: '', tags: [] } } } as never
+    const { container } = render(
+      <RoleCard side="red" seat={{ puuid: null, name: 'Bot', bot: true, championId: 103 }} role={ROLES[2]} revealed staticData={staticData} />
+    )
+    expect(screen.getAllByText('Ahri bot').length).toBeGreaterThan(0)
+    expect(container.querySelector('img[src*="/champion/103/"]')).toBeTruthy()
+  })
 })

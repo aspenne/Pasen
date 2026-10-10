@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 
-import type { RouletteCard, RouletteSeat, RouletteSide } from '@/lib/api'
+import type { RouletteCard, RouletteSeat, RouletteSide, StaticData } from '@/lib/api'
 import { championCentered } from '@/lib/ddragon'
 import { rankLabel, tierColor } from '@/lib/format'
 import { ROLES, roleIcon } from '@/lib/roulette'
@@ -21,6 +21,7 @@ export function RoleCard({
   card,
   role,
   revealed,
+  staticData,
 }: {
   side: RouletteSide
   /** Null when nobody in this team drew the lane. */
@@ -28,10 +29,14 @@ export function RoleCard({
   card?: RouletteCard
   role: Role | null
   revealed: boolean
+  /** For a bot's champion name. */
+  staticData?: StaticData
 }) {
-  const name = card?.displayName ?? seat?.name.split('#')[0] ?? ''
-  const tag = card?.tag ?? seat?.name.split('#')[1] ?? null
-  const art = card?.championId ? championCentered(card.championId) : null
+  const botChampion = seat?.bot && seat.championId ? staticData?.champions[String(seat.championId)]?.name : undefined
+  const name = card?.displayName ?? (botChampion ? `${botChampion} bot` : (seat?.name.split('#')[0] ?? ''))
+  const tag = card?.tag ?? (seat?.bot ? null : (seat?.name.split('#')[1] ?? null))
+  const championId = card?.championId ?? (seat?.bot ? seat.championId : null)
+  const art = championId ? championCentered(championId) : null
   const border = card ? tierColor(card.tier) : 'var(--color-line-strong)'
 
   if (!seat) {
