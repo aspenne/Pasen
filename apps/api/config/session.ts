@@ -13,10 +13,11 @@ const sessionConfig = defineConfig({
   clearWithBrowser: false,
 
   /**
-   * Define how long to keep the session data alive without
-   * any activity.
+   * How long the admin stays signed in without any activity. Every request
+   * pushes it back, so a week is "the next evening, still signed in" - and
+   * Sign out still ends it at once.
    */
-  age: '2h',
+  age: '7d',
 
   /**
    * Configuration for session cookie and the

@@ -6,6 +6,7 @@ import { PlayerSwitcher } from '@/components/nav/PlayerSwitcher'
 import { ScopeSelect } from '@/components/ScopeSelect'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { groupNav } from '@/lib/nav'
 
 /**
  * The scope lives in the URL rather than in component state, so it survives
@@ -21,13 +22,6 @@ export const Route = createFileRoute('/$group')({
   component: GroupLayout,
 })
 
-const NAV = [
-  { to: '/$group', label: 'Today', exact: true },
-  { to: '/$group/insights', label: 'Insights', exact: false },
-  { to: '/$group/customs', label: 'Customs', exact: false },
-  { to: '/$group/fearless', label: 'Fearless', exact: false },
-] as const
-
 function GroupLayout() {
   const { group } = useParams({ from: '/$group' })
   const { scope } = Route.useSearch()
@@ -42,6 +36,9 @@ function GroupLayout() {
     queryKey: ['group', group, scope],
     queryFn: () => api.group(group, { scope }),
   })
+
+  // Shares the admin page's key: signed in there, the menu leads back to it.
+  const { data: session } = useQuery({ queryKey: ['session'], queryFn: api.session })
 
   const { data: status } = useQuery({
     queryKey: ['status'],
@@ -74,20 +71,30 @@ function GroupLayout() {
           */}
           <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
             <nav className="flex gap-4 text-[12px]">
-              {NAV.map((entry) => (
-                <Link
-                  key={entry.label}
-                  to={entry.to}
-                  params={{ group }}
-                  search={{ scope }}
-                  activeOptions={{ exact: entry.exact }}
-                  className="tap inline-flex items-center justify-center"
-                  activeProps={{ className: 'text-ink' }}
-                  inactiveProps={{ className: 'text-ink-muted hover:text-ink' }}
-                >
-                  {entry.label}
-                </Link>
-              ))}
+              {groupNav(Boolean(session?.authenticated)).map((entry) =>
+                entry.to === '/admin' ? (
+                  <Link
+                    key={entry.label}
+                    to="/admin"
+                    className="tap inline-flex items-center justify-center text-accent hover:text-ink"
+                  >
+                    {entry.label}
+                  </Link>
+                ) : (
+                  <Link
+                    key={entry.label}
+                    to={entry.to}
+                    params={{ group }}
+                    search={{ scope }}
+                    activeOptions={{ exact: entry.exact }}
+                    className="tap inline-flex items-center justify-center"
+                    activeProps={{ className: 'text-ink' }}
+                    inactiveProps={{ className: 'text-ink-muted hover:text-ink' }}
+                  >
+                    {entry.label}
+                  </Link>
+                )
+              )}
             </nav>
 
             <ScopeSelect

@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { DEFAULT_SCOPE } from '@pasen/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
@@ -41,7 +42,18 @@ function Admin() {
     <div className="min-h-screen bg-ground text-ink">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-          <span className="text-[13px] tracking-[0.14em] text-accent">PASEN ADMIN</span>
+          <div className="flex items-baseline gap-4">
+            <span className="text-[13px] tracking-[0.14em] text-accent">PASEN ADMIN</span>
+            {/* The session is a cookie: the site reads it too, so going back costs no sign-in. */}
+            <Link
+              to="/$group"
+              params={{ group: DEFAULT_GROUP }}
+              search={{ scope: DEFAULT_SCOPE }}
+              className="tap inline-flex items-center text-[12px] text-ink-dim transition-colors hover:text-ink"
+            >
+              ← Back to the site
+            </Link>
+          </div>
           {session.data?.authenticated && <SignOut email={session.data.email} />}
         </div>
       </header>
