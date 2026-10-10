@@ -26,6 +26,8 @@ type ProfileCardProps = {
   card: ProfileCardStats
   pool?: ChampionPool
   staticData?: StaticData
+  /** The filter the numbers come from ("Summoner's Rift", "Customs"…), named under the win rate. */
+  scopeLabel: string
 }
 
 const MULTIKILL_LABEL = {
@@ -57,6 +59,7 @@ export function ProfileCard({
   card,
   pool,
   staticData,
+  scopeLabel,
 }: ProfileCardProps) {
   const frame = useRef<HTMLElement>(null)
   const art = useRef<HTMLImageElement>(null)
@@ -172,7 +175,7 @@ export function ProfileCard({
           <Cell
             label="Win rate"
             value={`${totals.winRate}%`}
-            note="ranked solo"
+            note={scopeLabel.toLowerCase()}
             tone={totals.winRate >= 50 ? 'win' : 'loss'}
           />
           <Cell

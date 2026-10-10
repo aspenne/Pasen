@@ -8,6 +8,7 @@ import { useSort } from '@/hooks/useSort'
 import type { CustomDashboard as Dashboard, CustomIdentity, StaticData } from '@/lib/api'
 import { duration } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
+import { CUSTOM_SCOPE } from '@/lib/customs'
 
 type Props = {
   data: Dashboard
@@ -39,12 +40,10 @@ function SectionTitle({ children, aside }: { children: ReactNode; aside?: ReactN
 function Who({
   who,
   groupSlug,
-  scope,
   className = '',
 }: {
   who: CustomIdentity
   groupSlug: string
-  scope: QueueScope
   className?: string
 }) {
   if (!who.memberSlug) return <span className={`text-ink-muted ${className}`}>{who.name}</span>
@@ -52,7 +51,8 @@ function Who({
     <Link
       to="/$group/players/$member"
       params={{ group: groupSlug, member: who.memberSlug }}
-      search={{ scope }}
+      // A player opened from the customs opens on their customs.
+      search={{ scope: CUSTOM_SCOPE }}
       className={`text-ink transition-colors hover:text-accent ${className}`}
     >
       {who.name}
@@ -129,7 +129,7 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="text-[11px] text-ink-dim">{RECORD_LABELS[record.kind]}</div>
                   <div className="truncate text-[14px]">
-                    <Who who={record} groupSlug={groupSlug} scope={scope} className="display font-semibold" />
+                    <Who who={record} groupSlug={groupSlug} className="display font-semibold" />
                     <span className="text-ink-dim"> on {record.championName}</span>
                   </div>
                   <Link
@@ -190,7 +190,7 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
               {sorted.map((line) => (
                 <TableRow key={line.key} className="border-line">
                   <TableCell className="max-w-[180px] truncate">
-                    <Who who={line} groupSlug={groupSlug} scope={scope} className="display text-[14px] font-semibold" />
+                    <Who who={line} groupSlug={groupSlug} className="display text-[14px] font-semibold" />
                   </TableCell>
                   <TableCell className="tnum text-right text-ink-muted">{line.games}</TableCell>
                   <TableCell className="tnum text-right font-semibold text-ink">{line.kda}</TableCell>
@@ -264,9 +264,9 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
               {data.duos.map((duo) => (
                 <li key={`${duo.a.key}|${duo.b.key}`} className="flex items-center gap-3 px-4 py-2.5">
                   <div className="min-w-0 flex-1 truncate text-[14px]">
-                    <Who who={duo.a} groupSlug={groupSlug} scope={scope} className="display font-semibold" />
+                    <Who who={duo.a} groupSlug={groupSlug} className="display font-semibold" />
                     <span className="text-ink-dim"> + </span>
-                    <Who who={duo.b} groupSlug={groupSlug} scope={scope} className="display font-semibold" />
+                    <Who who={duo.b} groupSlug={groupSlug} className="display font-semibold" />
                   </div>
                   <div className="tnum shrink-0 text-right">
                     <div className="text-[13px] text-ink">

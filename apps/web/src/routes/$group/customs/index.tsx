@@ -53,7 +53,7 @@ function CustomsPage() {
         </p>
       </header>
 
-      {standings && <CustomLeaderboard data={standings} groupSlug={group} scope={scope} />}
+      {standings && <CustomLeaderboard data={standings} groupSlug={group} />}
 
       {dashboard && (
         <CustomDashboard data={dashboard} staticData={staticData} groupSlug={group} scope={scope} />

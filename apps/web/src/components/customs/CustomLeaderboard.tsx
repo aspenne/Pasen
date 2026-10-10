@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import type { CustomStandings } from '@/lib/api'
-import type { QueueScope } from '@pasen/shared'
+import { CUSTOM_SCOPE, standingPlaces } from '@/lib/customs'
 
 /**
  * Who has won the most customs.
@@ -13,26 +13,13 @@ import type { QueueScope } from '@pasen/shared'
 export function CustomLeaderboard({
   data,
   groupSlug,
-  scope,
 }: {
   data: CustomStandings
   groupSlug: string
-  scope: QueueScope
 }) {
   const { standings, skipped } = data
 
-  /*
-   * Shared places for a real tie. Five players on the same record shown as
-   * 1 to 5 states an order that only the alphabet decided; "1" for all five,
-   * then 6, is what a table of equals actually says.
-   */
-  const place = standings.map((row) => {
-    const first = standings.findIndex(
-      (other) =>
-        other.wins === row.wins && other.winRate === row.winRate && other.games === row.games
-    )
-    return first + 1
-  })
+  const place = standingPlaces(standings)
   const left = [
     skipped.againstBots > 0 &&
       `${skipped.againstBots} game${skipped.againstBots === 1 ? '' : 's'} against bots`,
@@ -71,7 +58,8 @@ export function CustomLeaderboard({
                   <Link
                     to="/$group/players/$member"
                     params={{ group: groupSlug, member: row.memberSlug }}
-                    search={{ scope }}
+                    // A player opened from the customs opens on their customs.
+                    search={{ scope: CUSTOM_SCOPE }}
                     className="display block truncate text-[16px] font-semibold text-ink transition-colors hover:text-accent"
                   >
                     {row.name}

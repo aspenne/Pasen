@@ -5,7 +5,7 @@ import { ItemRow } from '@/components/ItemRow'
 import { RunePair } from '@/components/RunePair'
 import type { CustomTeam, StaticData } from '@/lib/api'
 import { kda, positionLabel } from '@/lib/format'
-import type { QueueScope } from '@pasen/shared'
+import { CUSTOM_SCOPE } from '@/lib/customs'
 
 const SIDE_NAMES = { ORDER: 'Blue side', CHAOS: 'Red side' } as const
 
@@ -33,12 +33,10 @@ export function CustomScoreboard({
   team,
   staticData,
   groupSlug,
-  scope,
 }: {
   team: CustomTeam
   staticData?: StaticData
   groupSlug: string
-  scope: QueueScope
 }) {
   const verdict =
     team.won === null ? null : team.won ? (
@@ -112,7 +110,8 @@ export function CustomScoreboard({
                     <Link
                       to="/$group/players/$member"
                       params={{ group: groupSlug, member: player.memberSlug }}
-                      search={{ scope }}
+                      // A player opened from the customs opens on their customs.
+                      search={{ scope: CUSTOM_SCOPE }}
                       className="display truncate text-[15px] font-semibold text-ink transition-colors hover:text-accent"
                     >
                       {player.displayName ?? player.name}

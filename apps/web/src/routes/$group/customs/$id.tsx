@@ -127,7 +127,6 @@ function CustomGamePage() {
             team={team}
             staticData={staticData}
             groupSlug={group}
-            scope={scope}
           />
         ))}
       </div>

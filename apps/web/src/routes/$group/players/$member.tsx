@@ -21,7 +21,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSort } from '@/hooks/useSort'
+import { InhouseRecord } from '@/components/customs/InhouseRecord'
 import { api, type ChampionPoolEntry } from '@/lib/api'
+import { CUSTOM_SCOPE, inhouseRecordOf } from '@/lib/customs'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor, memberHex, tierColor, timeAgo } from '@/lib/format'
 
@@ -74,6 +76,13 @@ function MemberPage() {
     queryFn: () => api.leaderboards(group, { period: 'all', scope }),
   })
 
+  // Same key as the Customs page, so coming from it costs nothing.
+  const { data: standings } = useQuery({
+    queryKey: ['customs', group, 'standings'],
+    queryFn: () => api.customStandings(group),
+    enabled: scope === CUSTOM_SCOPE,
+  })
+
   const history = useInfiniteQuery({
     queryKey: ['history', memberSlug, scope],
     queryFn: ({ pageParam }) => api.matches(memberSlug, { cursor: pageParam, limit: 20, scope }),
@@ -95,6 +104,55 @@ function MemberPage() {
   const peakLp = (lp?.points ?? []).reduce<number | null>(
     (best, point) => (best === null || point.leaguePoints > best ? point.leaguePoints : best),
     null
+  )
+
+  // Filtered to customs, the page leads with the inhouse record and keeps ranked for later.
+  const customs = scope === CUSTOM_SCOPE
+  const inhouse = standings ? inhouseRecordOf(standings.standings, memberSlug) : null
+
+  const lpCard = (
+    <Card>
+      <CardHeader className="flex-row items-baseline justify-between gap-3 space-y-0">
+        <CardTitle className="text-[13px]">Ranked solo over time</CardTitle>
+        <div className="flex gap-1 text-[11px]">
+          {LP_WINDOWS.map((entry) => (
+            <button
+              key={entry.label}
+              type="button"
+              onClick={() => setLpWindow(entry.days)}
+              aria-pressed={lpWindow === entry.days}
+              className={`rounded-[4px] px-2 py-1 transition-colors ${
+                lpWindow === entry.days
+                  ? 'bg-accent text-on-accent'
+                  : 'text-ink-muted hover:text-ink'
+              }`}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+        {ladder?.position && (
+          <div className="text-right">
+            <div className="display tnum text-[15px] font-semibold text-ink">
+              #{ladder.position.toLocaleString('en-GB')}{' '}
+              <span className="text-[12px] text-ink-muted">
+                {PLATFORM_SHORT[ladder.platform as Platform] ?? ladder.platform}
+              </span>
+            </div>
+            {/*
+              The position is exact and matches Riot's own client. The
+              apex population is not stated: the three leagues come back
+              as 300 + 700 + exactly 10 000, which reads as Riot
+              truncating the Master league rather than as its real size.
+            */}
+            <div className="text-[11px] text-ink-dim">Master+ ladder</div>
+          </div>
+        )}
+      </CardHeader>
+      <CardContent>
+        <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" days={lpWindow} />
+      </CardContent>
+    </Card>
   )
 
   return (
@@ -197,8 +255,10 @@ function MemberPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {rosterEntry && (
-            <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
+          {customs ? (
+            <InhouseRecord record={inhouse} />
+          ) : (
+            rosterEntry && <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
           )}
 
           <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
@@ -214,52 +274,12 @@ function MemberPage() {
                 card={cardStats}
                 pool={pool}
                 staticData={staticData}
+                scopeLabel={SCOPE_LABELS[scope]}
               />
             )}
 
             <div className="grid content-start gap-4">
-            <Card>
-              <CardHeader className="flex-row items-baseline justify-between gap-3 space-y-0">
-                <CardTitle className="text-[13px]">Ranked solo over time</CardTitle>
-                <div className="flex gap-1 text-[11px]">
-                  {LP_WINDOWS.map((entry) => (
-                    <button
-                      key={entry.label}
-                      type="button"
-                      onClick={() => setLpWindow(entry.days)}
-                      aria-pressed={lpWindow === entry.days}
-                      className={`rounded-[4px] px-2 py-1 transition-colors ${
-                        lpWindow === entry.days
-                          ? 'bg-accent text-on-accent'
-                          : 'text-ink-muted hover:text-ink'
-                      }`}
-                    >
-                      {entry.label}
-                    </button>
-                  ))}
-                </div>
-                {ladder?.position && (
-                  <div className="text-right">
-                    <div className="display tnum text-[15px] font-semibold text-ink">
-                      #{ladder.position.toLocaleString('en-GB')}{' '}
-                      <span className="text-[12px] text-ink-muted">
-                        {PLATFORM_SHORT[ladder.platform as Platform] ?? ladder.platform}
-                      </span>
-                    </div>
-                    {/*
-                      The position is exact and matches Riot's own client. The
-                      apex population is not stated: the three leagues come back
-                      as 300 + 700 + exactly 10 000, which reads as Riot
-                      truncating the Master league rather than as its real size.
-                    */}
-                    <div className="text-[11px] text-ink-dim">Master+ ladder</div>
-                  </div>
-                )}
-              </CardHeader>
-              <CardContent>
-                <LpCurve points={lp?.points ?? []} queueLabel="Ranked solo" days={lpWindow} />
-              </CardContent>
-            </Card>
+            {!customs && lpCard}
 
             <Card>
               <CardHeader>
@@ -277,6 +297,12 @@ function MemberPage() {
             </Card>
             </div>
           </div>
+
+          {/* Ranked standing still matters, just not first, when the page is about customs. */}
+          {customs && rosterEntry && (
+            <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
+          )}
+          {customs && lpCard}
         </TabsContent>
 
         <TabsContent value="champions" className="space-y-4">
