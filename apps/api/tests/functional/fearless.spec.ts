@@ -6,6 +6,7 @@ import CustomGame from '#models/custom_game'
 import FearlessNight from '#models/fearless_night'
 import Group from '#models/group'
 import User from '#models/user'
+import { CaptureDeviceService } from '#customs/capture_device_service'
 import { seedChampions, seedGroup } from '#tests/helpers'
 
 const CREDENTIALS = { email: 'admin@pasen.test', password: 'a-long-enough-password' }
@@ -200,5 +201,42 @@ test.group('Fearless nights · admin', (group) => {
       .json({ kind: 'burn' })
       .loginAs(admin)
     response.assertStatus(422)
+  })
+})
+
+test.group('Fearless nights · capture app', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  test('a paired PC reads the night of its own group, and only that', async ({ client, assert }) => {
+    const { group: own } = await seedGroup()
+    const other = await Group.create({ slug: 'others', name: 'Others', timezone: 'Europe/Paris' })
+    await FearlessNight.create({
+      groupId: other.id,
+      label: 'Not yours',
+      startedAt: DateTime.now(),
+      endedAt: null,
+      excludedCustomIds: [],
+    })
+    const { token } = await new CaptureDeviceService().pair(own, 'PC salon')
+
+    const none = await client.get('/api/capture/fearless').header('authorization', `Bearer ${token}`)
+    none.assertStatus(204)
+
+    await FearlessNight.create({
+      groupId: own.id,
+      label: 'Yours',
+      startedAt: DateTime.now(),
+      endedAt: null,
+      excludedCustomIds: [],
+    })
+    const mine = await client.get('/api/capture/fearless').header('authorization', `Bearer ${token}`)
+    mine.assertStatus(200)
+    assert.equal(mine.body().night.label, 'Yours')
+  })
+
+  test('refuses a request without a valid token', async ({ client }) => {
+    await seedGroup()
+    const response = await client.get('/api/capture/fearless').header('authorization', 'Bearer pasen_nope')
+    response.assertStatus(401)
   })
 })

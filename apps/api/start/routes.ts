@@ -34,10 +34,12 @@ router
     router.get('/groups/:slug/matches/:matchId', [GroupsController, 'match'])
     /*
      * The capture app. Not behind the admin session: it carries its own token,
-     * which the controller checks and which can do nothing but send a custom.
+     * which the controller checks and which can do nothing but send a custom
+     * and read the fearless night.
      */
     router.get('/capture/whoami', [CaptureController, 'whoami'])
     router.post('/capture/customs', [CaptureController, 'store'])
+    router.get('/capture/fearless', [CaptureController, 'fearless'])
 
     router.get('/groups/:slug/customs', [CustomGamesController, 'index'])
     router.get('/groups/:slug/customs/standings', [CustomGamesController, 'standings'])
