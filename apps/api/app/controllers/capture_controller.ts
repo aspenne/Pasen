@@ -5,12 +5,14 @@ import { CaptureDeviceService } from '#customs/capture_device_service'
 import { CustomCaptureService, InvalidCaptureError } from '#customs/custom_capture_service'
 import { CustomMatchMirror } from '#customs/custom_match_mirror'
 import { FearlessService } from '#fearless/fearless_service'
+import { InvalidTeamsError, normaliseTeams } from '#roulette/lobby_teams'
+import { RouletteService } from '#roulette/roulette_service'
 
 /**
  * What the desktop capture app talks to, with the token it was paired with.
  *
- * Three routes and no more: one to check the pairing still holds, one to send
- * a game, one to read the fearless night. Everything else on the site stays
+ * Four routes and no more: one to check the pairing still holds, one to send
+ * a game, one to read the fearless night, one to say who is in the lobby. Everything else on the site stays
  * behind the admin session.
  */
 export default class CaptureController {
@@ -65,6 +67,24 @@ export default class CaptureController {
     const night = await service.latest(device.group)
     if (!night) return ctx.response.noContent()
     return ctx.response.ok(await service.board(night))
+  }
+
+  /**
+   * The custom lobby the player is sitting in, read from their League client,
+   * so the role roulette knows who is on which side before the game starts.
+   */
+  async lobby(ctx: HttpContext) {
+    const device = await this.#device(ctx)
+    if (!device) return
+
+    try {
+      const teams = normaliseTeams(ctx.request.input('teams'))
+      const { changed } = await new RouletteService().ingest(device.group, teams, 'capture')
+      return ctx.response.status(changed ? 201 : 200).json({ changed })
+    } catch (error) {
+      if (error instanceof InvalidTeamsError) return ctx.response.unprocessableEntity({ message: error.message })
+      throw error
+    }
   }
 
   /** Answers 401 itself when the token is missing, wrong or revoked. */
