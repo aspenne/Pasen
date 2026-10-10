@@ -36,11 +36,11 @@ Deux tables, dans une migration.
 ```
 fearless_nights        id, group_id → groups, label (nullable, ≤ 80),
                        started_at timestamptz, ended_at timestamptz (nullable),
-                       excluded_custom_ids int[] (défaut '{}'), created_at
+                       excluded_custom_ids jsonb (défaut '[]'), created_at
 
 fearless_adjustments   id, night_id → fearless_nights (cascade),
                        champion_id int, kind 'burn' | 'free',
-                       created_at timestamptz
+                       decided_at timestamptz
                        UNIQUE (night_id, champion_id)
 ```
 
@@ -48,10 +48,12 @@ fearless_adjustments   id, night_id → fearless_nights (cascade),
   en lancer une nouvelle met `ended_at = now()` sur la précédente si elle était
   encore ouverte.
 - `excluded_custom_ids` plutôt qu'une table : quelques entiers par soirée, lus
-  et écrits en bloc. Supprimer une custom du site la fait de toute façon sortir
+  et écrits en bloc. En `jsonb`, comme les autres listes d'entiers du schéma
+  (`match_participants.items`). Supprimer une custom du site la fait de toute façon sortir
   du créneau ; un id orphelin dans la liste est sans effet.
 - **Une seule correction par champion** et par soirée. Changer d'avis remplace
-  la ligne (upsert) ; annuler une correction supprime la ligne.
+  la ligne (upsert) et remet `decided_at` à l'heure du changement ; annuler une
+  correction supprime la ligne.
 
 ### Fin effective
 
@@ -69,13 +71,14 @@ Une fonction pure, `fearlessBoard(night, games, adjustments, now)`, dans
 
 **Entrées**
 - la soirée (début, fin effective, customs exclues) ;
-- les customs du groupe dont `played_at` tombe dans `[started_at, fin)`, déjà
-  passées par `viewCustomGame` (qui reconstruit l'id de chaque champion et le
-  joueur derrière) ;
+- les customs du groupe dont la **fin** (`played_at + duration`) tombe dans
+  `[started_at, fin)`, déjà passées par `viewCustomGame` (qui reconstruit l'id
+  de chaque champion et le joueur derrière) ;
 - les corrections de la soirée.
 
-`played_at` est l'heure de fin de la partie. Une game commencée avant le
-lancement de la soirée et finie après compte donc dans la soirée, ce qui est le
+`played_at` est l'heure de **début** de la partie (l'heure de capture moins le
+chrono du jeu), d'où le calcul de la fin. Une game commencée avant le lancement
+de la soirée et finie après compte donc dans la soirée, ce qui est le
 comportement voulu (on lance la soirée en retard, pas en avance).
 
 **Règle, champion par champion**
@@ -84,8 +87,8 @@ comportement voulu (on lance la soirée en retard, pas en avance).
    Une game contre des bots ne fait pas exception : si c'était de
    l'entraînement, l'admin l'exclut.
 2. Correction `burn` → **grillé**, quels que soient les picks.
-3. Correction `free` → les picks **antérieurs** à la correction ne comptent
-   plus. Un pick dans une game jouée **après** la libération le regrille :
+3. Correction `free` → les picks des games **finies avant** la correction ne
+   comptent plus. Un pick dans une game finie **après** la libération le regrille :
    libérer un champion accorde une exception, pas une immunité pour la soirée.
 4. Sinon, grillé dès qu'il a au moins un pick.
 
@@ -183,7 +186,8 @@ active, et pas du tout une fois terminée.
 Customs. Sur l'accueil, un bandeau « Soirée fearless en cours — 23 grillés »
 vers la page, seulement quand une soirée est active.
 
-Style : direction B, comme le reste du site. Grille dense et tactile (cases
+Textes de l'interface en **anglais**, comme tout le site (les phrases ci-dessus
+sont traduites à l'implémentation). Style : direction B, comme le reste du site. Grille dense et tactile (cases
 d'au moins 44 px sous pointeur grossier), lisible sur téléphone.
 
 ---
