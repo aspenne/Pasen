@@ -46,10 +46,20 @@ export function RoleCard({
   const border = card ? tierColor(card.tier) : 'var(--color-line-strong)'
 
   if (!seat) {
+    // A lane nobody drew turns over like the others, or its place would say which lane is short.
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 rounded-[12px] border border-dashed border-line-strong text-ink-dim">
-        {role && <img src={roleIcon(role.icon)} alt="" width={32} height={32} className="opacity-40" />}
-        <span className="text-[12px]">No player</span>
+      <div
+        className="roulette-slot h-full"
+        data-revealed={revealed}
+        aria-label={revealed && role ? `${role.label}: no player` : 'Hidden card'}
+      >
+        <div className="roulette-card">
+          <CardBack />
+          <div className="roulette-face roulette-front flex flex-col items-center justify-center gap-2 border border-dashed border-line-strong bg-ground text-ink-dim">
+            {role && <img src={roleIcon(role.icon)} alt="" width={32} height={32} className="opacity-40" />}
+            <span className="text-[12px]">No player</span>
+          </div>
+        </div>
       </div>
     )
   }
@@ -64,13 +74,7 @@ export function RoleCard({
       }
     >
       <div className="roulette-card">
-        <div className="roulette-face flex flex-col items-center justify-center gap-2.5 border border-line-strong bg-panel">
-          <span className="display text-[14px] font-bold tracking-[0.3em] text-accent">PASEN</span>
-          <span className="display flex size-12 items-center justify-center rounded-full border border-dashed border-line-strong text-[22px] text-ink-dim">
-            ?
-          </span>
-          {!drawn && <span className="px-2 text-center text-[12px] text-ink-muted">{name}</span>}
-        </div>
+        <CardBack name={drawn ? undefined : name} />
 
         <div className="roulette-face roulette-front border bg-panel" style={{ borderColor: border }}>
           {art && (
@@ -129,6 +133,19 @@ export function RoleCard({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+/** The face-down side: the mark, a question, and - before any draw - who it is. */
+function CardBack({ name }: { name?: string }) {
+  return (
+    <div className="roulette-face flex flex-col items-center justify-center gap-2.5 border border-line-strong bg-panel">
+      <span className="display text-[14px] font-bold tracking-[0.3em] text-accent">PASEN</span>
+      <span className="display flex size-12 items-center justify-center rounded-full border border-dashed border-line-strong text-[22px] text-ink-dim">
+        ?
+      </span>
+      {name && <span className="px-2 text-center text-[12px] text-ink-muted">{name}</span>}
     </div>
   )
 }

@@ -63,4 +63,12 @@ describe('RoleCard', () => {
     expect(back.textContent).not.toContain('Nøah')
     expect(screen.getByLabelText('Hidden card')).toBeTruthy()
   })
+
+  it('keeps an empty lane face down until its turn, so the missing lane is not given away', () => {
+    const { container } = render(<RoleCard side="red" seat={null} role={ROLES[4]} revealed={false} drawn />)
+    const back = container.querySelector('.roulette-face:not(.roulette-front)')!
+    expect(back.textContent).toContain('PASEN')
+    expect(back.querySelector('img')).toBeNull()
+    expect(screen.getByLabelText('Hidden card')).toBeTruthy()
+  })
 })
