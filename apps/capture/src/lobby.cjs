@@ -28,12 +28,20 @@ function botName(member) {
   return champion ? `${champion} bot` : 'Bot'
 }
 
+/** Customs that are not a game between friends: alone in Practice Tool is not a lobby to deal roles in. */
+const NOT_A_MATCH = new Set(['PRACTICETOOL', 'TUTORIAL'])
+
 function teamsFromLobby(lobby) {
   const config = lobby?.gameConfig
-  if (!config?.isCustom) return null
-  const side = (list) => (Array.isArray(list) ? list : []).filter((m) => !m.isSpectator).slice(0, TEAM_SIZE).map(seatOf)
+  if (!config?.isCustom || NOT_A_MATCH.has(config.gameMode)) return null
+  const side = (list) =>
+    (Array.isArray(list) ? list : [])
+      .filter((m) => m && typeof m === 'object' && !m.isSpectator)
+      .slice(0, TEAM_SIZE)
+      .map(seatOf)
   const teams = { blue: side(config.customTeam100), red: side(config.customTeam200) }
-  return teams.blue.length + teams.red.length > 0 ? teams : null
+  const humans = [...teams.blue, ...teams.red].filter((seat) => !seat.bot).length
+  return humans >= 2 ? teams : null
 }
 
 /** Same players in the same places. */

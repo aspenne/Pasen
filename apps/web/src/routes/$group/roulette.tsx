@@ -1,13 +1,13 @@
 import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { RoleCard } from '@/components/roulette/RoleCard'
 import { TeamEditor } from '@/components/roulette/TeamEditor'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type RouletteSide, type RouletteView } from '@/lib/api'
-import { ROLES, discordText, revealOrder, revealedCount } from '@/lib/roulette'
+import { ROLES, discordText, holdReveal, revealOrder, revealedCount } from '@/lib/roulette'
 
 export const Route = createFileRoute('/$group/roulette')({ component: RoulettePage })
 
@@ -124,6 +124,9 @@ function RoulettePage() {
 
       {admin && editing && (
         <TeamEditor
+          // A new lobby while the editor is open starts it afresh, rather than
+          // saving a stale draft over the player who just joined.
+          key={lobby?.id ?? 'none'}
           teams={lobby?.teams ?? { blue: [], red: [] }}
           members={members}
           saving={save.isPending}
@@ -197,7 +200,10 @@ function lobbyLine(view: RouletteView): string {
 function useRevealCount(view: RouletteView | undefined, offset: number): number {
   const revealAt = view?.draw?.revealAt
   const [now, setNow] = useState(() => Date.now())
-  const count = revealAt ? revealedCount(revealAt, offset, now) : 0
+  const held = useRef<{ drawId: number; count: number } | null>(null)
+  const measured = revealAt ? revealedCount(revealAt, offset, now) : 0
+  if (view?.draw) held.current = holdReveal(held.current, view.draw.id, measured)
+  const count = view?.draw ? held.current!.count : 0
 
   useEffect(() => {
     if (!revealAt || count >= revealOrder().length) return

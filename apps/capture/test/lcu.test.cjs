@@ -59,3 +59,33 @@ test('asks for the lobby with the client password', async () => {
   assert.equal(seen.url, 'https://127.0.0.1:54321/lol-lobby/v2/lobby')
   assert.equal(seen.auth, `Basic ${Buffer.from('riot:pw').toString('base64')}`)
 })
+
+test('keeps the credentials it found, and scans for the client process at most once a minute', async () => {
+  let now = 0
+  let scans = 0
+  let lockfile = null
+  const source = lcu.credentialSource({
+    readLockfiles: async () => lockfile,
+    scanProcess: async () => {
+      scans++
+      return null
+    },
+    now: () => now,
+  })
+
+  assert.equal(await source.get(), null)
+  now += 3000
+  assert.equal(await source.get(), null)
+  assert.equal(scans, 1, 'a miss is not rescanned three seconds later')
+  now += 60_000
+  await source.get()
+  assert.equal(scans, 2)
+
+  lockfile = { port: 1, password: 'pw', protocol: 'https' }
+  assert.deepEqual(await source.get(), lockfile)
+  lockfile = null
+  assert.deepEqual(await source.get(), { port: 1, password: 'pw', protocol: 'https' }, 'kept until it stops working')
+  source.forget()
+  now += 60_000
+  assert.equal(await source.get(), null)
+})

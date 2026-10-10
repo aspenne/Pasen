@@ -198,17 +198,28 @@ async function checkForUpdate() {
  * custom lobby, only when it changes (plus a heartbeat), and never during a
  * game - the lobby is gone by then, and the poll would only cost the client.
  */
+let lobbyPolling = false
+
 async function pollLobby() {
-  const config = store.readConfig()
-  if (!config.token || live.state === 'playing') return
-  const teams = teamsFromLobby(await lcu.readLobby())
-  if (!teams) return
-  const due = !sameTeams(teams, lastLobby) || Date.now() - lastLobbySentAt > LOBBY_HEARTBEAT_MS
-  if (!due) return
-  const answer = await pasen.sendLobby(config.server, config.token, teams)
-  if (answer.ok) {
-    lastLobby = teams
-    lastLobbySentAt = Date.now()
+  // One at a time: a slow client or site must not stack a poll every 3 s.
+  if (lobbyPolling) return
+  lobbyPolling = true
+  try {
+    const config = store.readConfig()
+    if (!config.token || live.state === 'playing') return
+    const teams = teamsFromLobby(await lcu.readLobby())
+    if (!teams) return
+    const due = !sameTeams(teams, lastLobby) || Date.now() - lastLobbySentAt > LOBBY_HEARTBEAT_MS
+    if (!due) return
+    const answer = await pasen.sendLobby(config.server, config.token, teams)
+    if (answer.ok) {
+      lastLobby = teams
+      lastLobbySentAt = Date.now()
+    }
+  } catch {
+    // A lobby the app cannot read is skipped; the next tick tries again.
+  } finally {
+    lobbyPolling = false
   }
 }
 

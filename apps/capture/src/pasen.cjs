@@ -8,6 +8,8 @@ async function call(server, token, pathname, init = {}) {
   let response
   try {
     response = await fetch(new URL(pathname, server), {
+      // A site that never answers must not leave a request hanging forever.
+      signal: AbortSignal.timeout(15_000),
       ...init,
       headers: {
         'content-type': 'application/json',

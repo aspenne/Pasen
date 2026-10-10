@@ -58,8 +58,7 @@ function processCommandLine(platform = process.platform) {
   })
 }
 
-/** Where the client listens right now, or null when it is not running. */
-async function findCredentials(platform = process.platform) {
+async function readLockfiles(platform = process.platform) {
   for (const path of lockfilePaths(platform)) {
     try {
       const found = parseLockfile(await fs.readFile(path, 'utf8'))
@@ -68,8 +67,43 @@ async function findCredentials(platform = process.platform) {
       // Not installed there; try the next place.
     }
   }
-  return credentialsFromCommandLine(await processCommandLine(platform))
+  return null
 }
+
+/** A process scan costs a PowerShell start on Windows; a miss waits this long before the next. */
+const SCAN_EVERY_MS = 60_000
+
+/**
+ * Where the client listens, remembered between polls. The lockfiles are
+ * cheap to read every time; scanning the processes is not, so it runs at
+ * most once a minute while the client is closed. What was found is kept
+ * until a request with it fails (`forget`), as when the client restarts on
+ * a new port.
+ */
+function credentialSource({
+  readLockfiles: read = readLockfiles,
+  scanProcess = async () => credentialsFromCommandLine(await processCommandLine()),
+  now = Date.now,
+} = {}) {
+  let known = null
+  let lastScan = -Infinity
+  return {
+    async get() {
+      if (known) return known
+      known = await read()
+      if (!known && now() - lastScan >= SCAN_EVERY_MS) {
+        lastScan = now()
+        known = await scanProcess()
+      }
+      return known
+    },
+    forget() {
+      known = null
+    },
+  }
+}
+
+const defaultSource = credentialSource()
 
 function get(url, auth) {
   return new Promise((resolve, reject) => {
@@ -101,16 +135,19 @@ function get(url, auth) {
  * client is closed, there is no lobby, or anything at all goes wrong - the
  * caller just tries again on its next tick.
  */
-async function readLobby({ credentials = findCredentials, request = get } = {}) {
+async function readLobby({ credentials = () => defaultSource.get(), request = get, forget = () => defaultSource.forget() } = {}) {
+  let found = null
   try {
-    const found = await credentials()
+    found = await credentials()
     if (!found) return null
     const auth = `Basic ${Buffer.from(`riot:${found.password}`).toString('base64')}`
     const answer = await request(`https://127.0.0.1:${found.port}/lol-lobby/v2/lobby`, auth)
     return answer.status === 200 ? answer.body : null
   } catch {
+    // The client closed or moved to a new port: look for it afresh next time.
+    if (found) forget()
     return null
   }
 }
 
-module.exports = { lockfilePaths, parseLockfile, credentialsFromCommandLine, findCredentials, readLobby }
+module.exports = { lockfilePaths, parseLockfile, credentialsFromCommandLine, credentialSource, readLobby }

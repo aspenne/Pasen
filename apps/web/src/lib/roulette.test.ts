@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { RouletteView } from '@/lib/api'
-import { REVEAL_STEP_MS, discordText, revealOrder, revealedCount } from '@/lib/roulette'
+import { REVEAL_STEP_MS, discordText, holdReveal, revealOrder, revealedCount } from '@/lib/roulette'
 
 const seat = (name: string) => ({ puuid: `p-${name}`, name, bot: false })
 
@@ -57,5 +57,17 @@ describe('discordText', () => {
     expect(discordText(view)).toBe(
       ['Blue — Top: E · Jungle: D · Mid: C · Bot: B · Support: A', 'Red — Top: F · Jungle: G · Bot: H · Support: I'].join('\n')
     )
+  })
+})
+
+describe('holdReveal', () => {
+  it('never turns a card back over during a draw, whatever the network jitter', () => {
+    expect(holdReveal({ drawId: 1, count: 4 }, 1, 3)).toEqual({ drawId: 1, count: 4 })
+    expect(holdReveal({ drawId: 1, count: 4 }, 1, 5)).toEqual({ drawId: 1, count: 5 })
+  })
+
+  it('starts again from the new count on a reroll', () => {
+    expect(holdReveal({ drawId: 1, count: 10 }, 2, 0)).toEqual({ drawId: 2, count: 0 })
+    expect(holdReveal(null, 2, 3)).toEqual({ drawId: 2, count: 3 })
   })
 })

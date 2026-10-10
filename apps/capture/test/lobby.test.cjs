@@ -37,3 +37,20 @@ test('tells a changed lobby from the same one polled again', () => {
   assert.equal(sameTeams(a, teamsFromLobby(moved)), false)
   assert.equal(sameTeams(null, a), false)
 })
+
+test('ignores Practice Tool and a custom with fewer than two players', () => {
+  const practice = structuredClone(custom)
+  practice.gameConfig.gameMode = 'PRACTICETOOL'
+  assert.equal(teamsFromLobby(practice), null)
+
+  const alone = structuredClone(custom)
+  alone.gameConfig.customTeam100 = alone.gameConfig.customTeam100.slice(0, 1)
+  alone.gameConfig.customTeam200 = []
+  assert.equal(teamsFromLobby(alone), null)
+})
+
+test('does not trip on a broken member entry', () => {
+  const broken = structuredClone(custom)
+  broken.gameConfig.customTeam100.push(null)
+  assert.equal(teamsFromLobby(broken).blue.length, 5)
+})

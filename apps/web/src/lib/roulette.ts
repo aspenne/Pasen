@@ -51,3 +51,17 @@ export function discordText(view: RouletteView): string {
     })
     .join('\n')
 }
+
+/**
+ * The clock offset is re-measured on every poll, and a slow response shifts it
+ * by a few hundred milliseconds - enough to turn a card back face down for an
+ * instant. Within one draw the count only ever goes up; a reroll starts over.
+ */
+export function holdReveal(
+  previous: { drawId: number; count: number } | null,
+  drawId: number,
+  count: number
+): { drawId: number; count: number } {
+  if (!previous || previous.drawId !== drawId) return { drawId, count }
+  return { drawId, count: Math.max(previous.count, count) }
+}
