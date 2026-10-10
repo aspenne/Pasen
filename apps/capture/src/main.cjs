@@ -166,6 +166,8 @@ async function refreshFearless() {
   const next = config.token
     ? pasen.fearlessSummary(await pasen.fearless(config.server, config.token), config.pairedAs?.group?.slug)
     : null
+  // Every push redraws part of the window; nothing changed means nothing to push.
+  if (pasen.sameFearless(fearless, next)) return
   fearless = next
   send('fearless', next)
 }

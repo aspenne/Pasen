@@ -100,3 +100,11 @@ test('shows nothing without a running night or without the site', () => {
   )
   assert.equal(pasen.fearlessSummary({ ok: false, message: 'offline' }, 'arigafion'), null)
 })
+
+test('tells a changed fearless summary from the same one polled again', () => {
+  const night = { label: 'Vendredi', burned: 3, pathname: '/arigafion/fearless' }
+  assert.equal(pasen.sameFearless(night, { ...night }), true)
+  assert.equal(pasen.sameFearless(null, null), true)
+  assert.equal(pasen.sameFearless(night, { ...night, burned: 4 }), false)
+  assert.equal(pasen.sameFearless(night, null), false)
+})

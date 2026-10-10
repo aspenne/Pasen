@@ -61,4 +61,10 @@ function fearlessSummary(answer, groupSlug) {
   }
 }
 
-module.exports = { whoami, upload, fearless, fearlessSummary }
+/** Whether a poll changed anything the window shows; an unchanged one is not pushed. */
+function sameFearless(a, b) {
+  if (!a || !b) return a === b
+  return a.label === b.label && a.burned === b.burned && a.pathname === b.pathname
+}
+
+module.exports = { whoami, upload, fearless, fearlessSummary, sameFearless }

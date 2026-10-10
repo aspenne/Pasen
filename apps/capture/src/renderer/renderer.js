@@ -186,9 +186,14 @@ $('fearless-open').addEventListener('click', () => {
 
 window.capture.onFearless((summary) => {
   if (!state) return
+  const reminderChanged = Boolean(state.fearless) !== Boolean(summary)
   state.fearless = summary
   renderFearless(summary)
-  renderCaptures(state.captures)
+  /*
+   * Redrawing the list wipes a half-typed name and resets a send in flight, so
+   * only when the reminder under each capture appears or goes away.
+   */
+  if (reminderChanged) renderCaptures(state.captures)
 })
 
 window.capture.onCaptures((captures) => {
