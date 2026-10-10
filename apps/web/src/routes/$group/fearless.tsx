@@ -21,7 +21,7 @@ function FearlessPage() {
   })
   // Shares the admin page's key: signed in there, the controls show up here.
   const { data: session } = useQuery({ queryKey: ['session'], queryFn: api.session })
-  const { data: board, isPending } = useQuery({
+  const { data: board, isPending, isError } = useQuery({
     queryKey: ['fearless', group],
     queryFn: () => api.fearless(group),
     // Someone sends a game mid-draft: the next look at the page should have it.
@@ -37,6 +37,18 @@ function FearlessPage() {
         <Skeleton className="h-[70px]" />
         <Skeleton className="h-[420px]" />
       </div>
+    )
+  }
+
+  if (isError) {
+    /*
+     * Never the empty state: it offers the admin a Start button, and starting
+     * a night ends the one that may well be running behind this error.
+     */
+    return (
+      <p className="border-l-2 border-loss bg-panel px-4 py-3 text-[13px] text-ink-muted">
+        Could not load the fearless night. Reload the page in a moment.
+      </p>
     )
   }
 

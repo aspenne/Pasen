@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { api } from '@/lib/api'
 
 import { availability, foldName, searchChampions, type ChampionEntry } from '@/lib/fearless'
 
@@ -62,5 +64,18 @@ describe('availability', () => {
     expect(availability(ahri, { championId: 103, source: 'manual', by: [] })).toBe(
       'Ahri is burned · burned by hand'
     )
+  })
+})
+
+describe('api.fearless', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  /*
+   * TanStack Query treats undefined data as a failure, which made "this group
+   * never ran a night" look like an outage - and an outage look like no night.
+   */
+  it('answers null, not undefined, when the group never ran a night', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 204 })))
+    await expect(api.fearless('arigafion')).resolves.toBeNull()
   })
 })

@@ -642,8 +642,12 @@ export const api = {
     apiFetch<CustomStandings>(`/api/groups/${slug}/customs/standings`),
   customGame: (slug: string, id: number) =>
     apiFetch<CustomGame>(`/api/groups/${slug}/customs/${id}`),
-  /** Undefined when the group never ran a fearless night (the API answers 204). */
-  fearless: (slug: string) => apiFetch<FearlessBoard | undefined>(`/api/groups/${slug}/fearless`),
+  /**
+   * Null when the group never ran a fearless night (the API answers 204). Not
+   * undefined: TanStack Query counts undefined data as a failed query.
+   */
+  fearless: async (slug: string) =>
+    (await apiFetch<FearlessBoard | undefined>(`/api/groups/${slug}/fearless`)) ?? null,
   activity: (slug: string, params: Scoped = {}) =>
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 

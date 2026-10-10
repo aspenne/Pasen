@@ -14,7 +14,7 @@ export function FearlessHeader({
   admin,
   timezone,
 }: {
-  board: FearlessBoard | undefined
+  board: FearlessBoard | null | undefined
   group: string
   admin: boolean
   timezone: string

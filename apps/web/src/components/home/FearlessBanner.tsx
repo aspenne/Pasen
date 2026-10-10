@@ -9,7 +9,7 @@ export function FearlessBanner({
   group,
   scope,
 }: {
-  board: FearlessBoard | undefined
+  board: FearlessBoard | null | undefined
   group: string
   scope: QueueScope
 }) {
