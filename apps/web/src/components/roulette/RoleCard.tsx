@@ -22,6 +22,7 @@ export function RoleCard({
   role,
   revealed,
   staticData,
+  drawn = false,
 }: {
   side: RouletteSide
   /** Null when nobody in this team drew the lane. */
@@ -31,6 +32,11 @@ export function RoleCard({
   revealed: boolean
   /** For a bot's champion name. */
   staticData?: StaticData
+  /**
+   * Roles are dealt: the cards now sit in lane order, so a name on a card's
+   * back would tell its role before it turns. The back goes blank until then.
+   */
+  drawn?: boolean
 }) {
   const botChampion = seat?.bot && seat.championId ? staticData?.champions[String(seat.championId)]?.name : undefined
   const name = card?.displayName ?? (botChampion ? `${botChampion} bot` : (seat?.name.split('#')[0] ?? ''))
@@ -53,7 +59,9 @@ export function RoleCard({
       className="roulette-slot h-full"
       data-revealed={revealed}
       style={{ '--side': SIDE_COLOR[side] } as CSSProperties}
-      aria-label={revealed && role ? `${name}, ${role.label}` : `${name}, role not revealed yet`}
+      aria-label={
+        revealed && role ? `${name}, ${role.label}` : drawn ? 'Hidden card' : `${name}, role not revealed yet`
+      }
     >
       <div className="roulette-card">
         <div className="roulette-face flex flex-col items-center justify-center gap-2.5 border border-line-strong bg-panel">
@@ -61,7 +69,7 @@ export function RoleCard({
           <span className="display flex size-12 items-center justify-center rounded-full border border-dashed border-line-strong text-[22px] text-ink-dim">
             ?
           </span>
-          <span className="px-2 text-center text-[12px] text-ink-muted">{name}</span>
+          {!drawn && <span className="px-2 text-center text-[12px] text-ink-muted">{name}</span>}
         </div>
 
         <div className="roulette-face roulette-front border bg-panel" style={{ borderColor: border }}>

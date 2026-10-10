@@ -54,4 +54,13 @@ describe('RoleCard', () => {
     expect(screen.getAllByText('Ahri bot').length).toBeGreaterThan(0)
     expect(container.querySelector('img[src*="/champion/103/"]')).toBeTruthy()
   })
+
+  it('hides the name on the back once roles are drawn, so the layout gives nothing away', () => {
+    const { container } = render(
+      <RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={ROLES[1]} revealed={false} drawn />
+    )
+    const back = container.querySelector('.roulette-face:not(.roulette-front)')!
+    expect(back.textContent).not.toContain('Nøah')
+    expect(screen.getByLabelText('Hidden card')).toBeTruthy()
+  })
 })

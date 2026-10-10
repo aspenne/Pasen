@@ -160,6 +160,7 @@ function RoulettePage() {
                     role={slot.role}
                     revealed={slot.order !== null && slot.order < count}
                     staticData={staticData}
+                    drawn={Boolean(view.draw)}
                   />
                 </li>
               ))}
