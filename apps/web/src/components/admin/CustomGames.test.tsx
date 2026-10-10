@@ -55,4 +55,29 @@ describe('CustomGames (admin)', () => {
     const red = await screen.findByRole('button', { name: 'Red won: Game 5' })
     expect(red.getAttribute('aria-pressed')).toBe('true')
   })
+
+  it('renames a game from the list', async () => {
+    vi.spyOn(api, 'customs').mockResolvedValue(games)
+    const update = vi
+      .spyOn(api, 'updateCustom')
+      .mockResolvedValue({ id: 11, label: 'Finale', winnerOverride: null })
+    renderCard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Rename Game 4' }))
+    const input = screen.getByRole('textbox', { name: 'New name for Game 4' })
+    fireEvent.change(input, { target: { value: '  Finale ' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await waitFor(() => expect(update).toHaveBeenCalledWith(11, { label: 'Finale' }))
+  })
+
+  it('leaves the name alone on Escape', async () => {
+    vi.spyOn(api, 'customs').mockResolvedValue(games)
+    const update = vi.spyOn(api, 'updateCustom')
+    renderCard()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Rename Game 4' }))
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'New name for Game 4' }), { key: 'Escape' })
+    expect(screen.queryByRole('textbox', { name: 'New name for Game 4' })).toBeNull()
+    expect(update).not.toHaveBeenCalled()
+  })
 })

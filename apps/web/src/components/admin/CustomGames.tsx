@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Trash2Icon, UploadIcon } from 'lucide-react'
+import { PencilIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +22,7 @@ export function CustomGames({ group }: { group: string }) {
   const queryClient = useQueryClient()
   const fileInput = useRef<HTMLInputElement>(null)
   const [label, setLabel] = useState('')
+  const [renaming, setRenaming] = useState<{ id: number; draft: string } | null>(null)
 
   const games = useQuery({
     queryKey: ['admin-customs', group],
@@ -67,6 +68,19 @@ export function CustomGames({ group }: { group: string }) {
       toast.success(`${winner === 'ORDER' ? 'Blue' : 'Red'} side set as the winner.`)
       queryClient.invalidateQueries({ queryKey: ['admin-customs', group] })
       // The same keys the game's own page refreshes: its page, the list, the standings.
+      queryClient.invalidateQueries({ queryKey: ['custom', group, String(id)] })
+      queryClient.invalidateQueries({ queryKey: ['customs', group] })
+    },
+    onError: () => toast.error('Could not save that. Are you still signed in?'),
+  })
+
+  const rename = useMutation({
+    // Emptied, the game goes back to the name the site gives it.
+    mutationFn: ({ id, label }: { id: number; label: string | null }) => api.updateCustom(id, { label }),
+    onSuccess: (_, { id }) => {
+      toast.success('Renamed.')
+      setRenaming(null)
+      queryClient.invalidateQueries({ queryKey: ['admin-customs', group] })
       queryClient.invalidateQueries({ queryKey: ['custom', group, String(id)] })
       queryClient.invalidateQueries({ queryKey: ['customs', group] })
     },
@@ -134,9 +148,39 @@ export function CustomGames({ group }: { group: string }) {
               <li key={game.id} className="flex items-center gap-4 px-3.5 py-2.5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="display truncate text-[14px] text-ink">
-                      {game.label ?? `${game.gameMode} · ${game.playerCount} players`}
-                    </span>
+                    {renaming?.id === game.id ? (
+                      <Input
+                        autoFocus
+                        value={renaming.draft}
+                        maxLength={80}
+                        disabled={rename.isPending}
+                        aria-label={`New name for ${game.label ?? game.gameMode}`}
+                        placeholder="Enter to save, Esc to cancel"
+                        className="h-7 text-[13px]"
+                        onChange={(event) => setRenaming({ id: game.id, draft: event.target.value })}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            rename.mutate({ id: game.id, label: renaming.draft.trim() || null })
+                          } else if (event.key === 'Escape') {
+                            setRenaming(null)
+                          }
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <span className="display truncate text-[14px] text-ink">
+                          {game.label ?? `${game.gameMode} · ${game.playerCount} players`}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Rename ${game.label ?? game.gameMode}`}
+                          onClick={() => setRenaming({ id: game.id, draft: game.label ?? '' })}
+                          className="tap inline-flex shrink-0 items-center text-ink-dim transition-colors hover:text-ink"
+                        >
+                          <PencilIcon className="size-3.5" />
+                        </button>
+                      </>
+                    )}
                     {/* Left out of every win and loss until someone decides. */}
                     {!game.resultKnown && !game.againstBots && (
                       <span className="shrink-0 border border-loss px-1.5 text-[10px] uppercase tracking-[0.1em] text-loss">
