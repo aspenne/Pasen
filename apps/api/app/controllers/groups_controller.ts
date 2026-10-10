@@ -9,6 +9,7 @@ import { ActivityService } from '#stats/activity_service'
 import { DailyFeedService } from '#stats/daily_feed_service'
 import { DuoStatsService } from '#stats/duo_stats_service'
 import { GroupChampionService } from '#stats/group_champion_service'
+import { GroupDirectoryService } from '#stats/group_directory_service'
 import { GroupService } from '#stats/group_service'
 import { LeaderboardService } from '#stats/leaderboard_service'
 import { MatchDetailService } from '#stats/match_detail_service'
@@ -41,6 +42,18 @@ const feedQuery = vine.compile(
 )
 
 export default class GroupsController {
+  /** Every group, for the front page. */
+  async index() {
+    const live = new LiveGameService(riot(), redis.connection() as unknown as RedisLike)
+    const directory = new GroupDirectoryService(async () => {
+      const games = await live.current()
+      return new Set(
+        games.flatMap((game) => game.participants.map((p) => p.puuid).filter((p): p is string => p !== null))
+      )
+    })
+    return { groups: await directory.cards() }
+  }
+
   async show({ params, request }: HttpContext) {
     const group = await Group.findByOrFail('slug', params.slug)
     const { scope } = await scopeQuery.validate(request.qs())

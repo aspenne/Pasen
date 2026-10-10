@@ -24,6 +24,7 @@ router.get('/health', [HealthController, 'show'])
 
 router
   .group(() => {
+    router.get('/groups', [GroupsController, 'index'])
     router.get('/groups/:slug', [GroupsController, 'show'])
     router.get('/groups/:slug/feed', [GroupsController, 'feed'])
     router.get('/groups/:slug/live', [GroupsController, 'live'])
