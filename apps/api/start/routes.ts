@@ -15,6 +15,7 @@ const CaptureController = () => import('#controllers/capture_controller')
 const FearlessController = () => import('#controllers/fearless_controller')
 const AdminFearlessController = () => import('#controllers/admin/fearless_controller')
 const RouletteController = () => import('#controllers/roulette_controller')
+const LesController = () => import('#controllers/les_controller')
 const AdminRouletteController = () => import('#controllers/admin/roulette_controller')
 
 /*
@@ -52,6 +53,7 @@ router
     router.get('/groups/:slug/fearless', [FearlessController, 'show'])
     router.get('/groups/:slug/roulette', [RouletteController, 'show'])
     router.get('/groups/:slug/roulette/cards', [RouletteController, 'cards'])
+    router.get('/groups/:slug/events/les', [LesController, 'show'])
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])

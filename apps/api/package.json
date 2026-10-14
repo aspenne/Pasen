@@ -40,7 +40,8 @@
     "#notifications/*": "./app/notifications/*.js",
     "#customs/*": "./app/customs/*.js",
     "#fearless/*": "./app/fearless/*.js",
-    "#roulette/*": "./app/roulette/*.js"
+    "#roulette/*": "./app/roulette/*.js",
+    "#les/*": "./app/les/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.8.2",
