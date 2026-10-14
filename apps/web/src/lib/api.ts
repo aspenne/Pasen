@@ -648,6 +648,27 @@ export type RouletteCard = {
   championName: string | null
 }
 
+type LesRank = { tier: string | null; rank: string | null; leaguePoints: number }
+
+/** Road to LES: Solo/Duo LP won per account since the 1st of October. */
+export type LesBoard = {
+  event: { name: string; startsAt: string; endsAt: string; finished: boolean }
+  totals: { lpGained: number; games: number; activeAccounts: number; accounts: number }
+  entries: {
+    memberSlug: string
+    displayName: string
+    riotId: string
+    profileIconId: number | null
+    start: LesRank | null
+    current: LesRank | null
+    lpGained: number
+    games: number
+    wins: number
+    losses: number
+    since: string | null
+  }[]
+}
+
 /** One group on the front page: who is in it, and what is happening there now. */
 export type GroupCard = {
   slug: string
@@ -703,6 +724,7 @@ export const api = {
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 
   groups: () => apiFetch<{ groups: GroupCard[] }>('/api/groups'),
+  les: (slug: string) => apiFetch<LesBoard>(`/api/groups/${slug}/events/les`),
   roulette: (slug: string) => apiFetch<RouletteView>(`/api/groups/${slug}/roulette`),
   rouletteCards: (slug: string) =>
     apiFetch<{ cards: Record<string, RouletteCard> }>(`/api/groups/${slug}/roulette/cards`),

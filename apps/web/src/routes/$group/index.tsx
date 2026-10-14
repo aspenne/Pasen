@@ -6,6 +6,7 @@ import { FeedMatchCard } from '@/components/FeedMatchCard'
 import { LiveGameCard } from '@/components/LiveGameCard'
 import { DuoHighlights } from '@/components/home/DuoHighlights'
 import { FearlessBanner } from '@/components/home/FearlessBanner'
+import { LesBanner } from '@/components/home/LesBanner'
 import { LatestCustoms } from '@/components/home/LatestCustoms'
 import { GroupHero } from '@/components/home/GroupHero'
 import { RosterCard } from '@/components/home/RosterCard'
@@ -146,6 +147,8 @@ function Dashboard() {
     queryFn: () => api.fearless(group),
     refetchInterval: 60_000,
   })
+  // Same key as the LES page.
+  const { data: les } = useQuery({ queryKey: ['les', group], queryFn: () => api.les(group) })
 
   const nameOf = (slug: string) =>
     overview?.members.find((member) => member.slug === slug)?.displayName ?? slug
@@ -187,6 +190,7 @@ function Dashboard() {
       />
 
       <FearlessBanner board={fearless} group={group} scope={scope} />
+      <LesBanner board={les} group={group} scope={scope} />
 
       {live && live.games.length > 0 && (
         <section>

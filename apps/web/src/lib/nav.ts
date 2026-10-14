@@ -1,5 +1,9 @@
 export type NavEntry =
-  | { to: '/$group' | '/$group/insights' | '/$group/customs' | '/$group/fearless'; label: string; exact: boolean }
+  | {
+      to: '/$group' | '/$group/insights' | '/$group/customs' | '/$group/fearless' | '/$group/les'
+      label: string
+      exact: boolean
+    }
   | { to: '/admin'; label: string; exact: boolean }
 
 const PUBLIC: NavEntry[] = [
@@ -7,6 +11,7 @@ const PUBLIC: NavEntry[] = [
   { to: '/$group/insights', label: 'Insights', exact: false },
   { to: '/$group/customs', label: 'Customs', exact: false },
   { to: '/$group/fearless', label: 'Fearless', exact: false },
+  { to: '/$group/les', label: 'LES', exact: false },
 ]
 
 /** The group's menu; signed in, it also leads back to the admin. */
