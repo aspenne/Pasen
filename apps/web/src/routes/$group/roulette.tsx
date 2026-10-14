@@ -1,13 +1,14 @@
 import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { RoleCard } from '@/components/roulette/RoleCard'
 import { TeamEditor } from '@/components/roulette/TeamEditor'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api, type RouletteSide, type RouletteView } from '@/lib/api'
+import { api, type RouletteCard, type RouletteSide, type RouletteView } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
+import { laneGap, pointsLabel, signed, teamAverage } from '@/lib/ladder'
 import { ROLES, discordText, holdReveal, revealOrder, revealedCount } from '@/lib/roulette'
 
 export const Route = createFileRoute('/$group/roulette')({ component: RoulettePage })
@@ -142,31 +143,55 @@ function RoulettePage() {
           ten players show up here before you press Start{admin ? ' - or set the teams by hand.' : '.'}
         </p>
       ) : (
-        SIDES.map(({ side, label, color }) => (
-          <section key={side} className="space-y-2">
-            <h2
-              className="display flex items-center gap-3 text-[13px] font-bold uppercase tracking-[0.16em] after:h-px after:flex-1 after:bg-line"
-              style={{ color }}
-            >
-              {label}
-            </h2>
-            <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              {slotsFor(view, side).map((slot, lane) => (
-                <li key={lane} className="h-[clamp(260px,calc((100vh-330px)/2),440px)]">
-                  <RoleCard
-                    side={side}
-                    seat={slot.seat}
-                    card={slot.seat?.puuid ? cards?.cards[slot.seat.puuid] : undefined}
-                    role={slot.role}
-                    revealed={slot.order !== null && slot.order < count}
-                    staticData={staticData}
-                    drawn={Boolean(view.draw)}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
+        <>
+          {SIDES.map(({ side, label, color }, sideIndex) => {
+            const average = teamAverage(lobby.teams[side], cards?.cards ?? {})
+            const order = revealOrder()
+            return (
+              <Fragment key={side}>
+                {sideIndex === 1 && <TeamGap view={view} cards={cards?.cards ?? {}} />}
+                <section className="space-y-2">
+                  <h2
+                    className="display flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] font-bold uppercase tracking-[0.16em] after:h-px after:flex-1 after:bg-line"
+                    style={{ color }}
+                  >
+                    {label}
+                    {average.points !== null && (
+                      <span className="tnum text-[11px] font-normal normal-case tracking-normal text-ink-dim">
+                        avg {pointsLabel(average.points)}
+                        {average.ranked < average.size && ` · ${average.ranked}/${average.size} ranked`}
+                      </span>
+                    )}
+                  </h2>
+                  <ul className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                    {slotsFor(view, side).map((slot, lane) => {
+                      // Shown once both players of the lane are face up, or it would hint at the second.
+                      const bothUp =
+                        Boolean(view.draw) &&
+                        order.findIndex(([s, l]) => s === 'blue' && l === lane) < count &&
+                        order.findIndex(([s, l]) => s === 'red' && l === lane) < count
+                      const gap = bothUp ? laneGap(view, cards?.cards ?? {}, lane) : null
+                      return (
+                        <li key={lane} className="h-[clamp(260px,calc((100vh-360px)/2),440px)]">
+                          <RoleCard
+                            side={side}
+                            seat={slot.seat}
+                            card={slot.seat?.puuid ? cards?.cards[slot.seat.puuid] : undefined}
+                            role={slot.role}
+                            revealed={slot.order !== null && slot.order < count}
+                            staticData={staticData}
+                            drawn={Boolean(view.draw)}
+                            gap={gap ? gap[side] : null}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              </Fragment>
+            )
+          })}
+        </>
       )}
     </div>
   )
@@ -240,5 +265,29 @@ function ActionButton({
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * The two teams against each other: the gap between their average ranks.
+ * Teams are made in the lobby before any draw, so it shows as soon as the
+ * lobby does.
+ */
+function TeamGap({ view, cards }: { view: RouletteView; cards: Record<string, RouletteCard> }) {
+  if (!view.lobby) return null
+  const blue = teamAverage(view.lobby.teams.blue, cards).points
+  const red = teamAverage(view.lobby.teams.red, cards).points
+  if (blue === null || red === null) return null
+  const gap = blue - red
+  return (
+    <p className="tnum flex flex-wrap items-center justify-center gap-x-4 gap-y-1 bg-panel px-4 py-2 text-[13px]">
+      <span className="text-ink-dim">Average gap</span>
+      <span className="display font-semibold" style={{ color: '#4f8cff' }}>
+        Blue {signed(gap)} LP
+      </span>
+      <span className="display font-semibold" style={{ color: '#ff5a4a' }}>
+        Red {signed(-gap)} LP
+      </span>
+    </p>
   )
 }

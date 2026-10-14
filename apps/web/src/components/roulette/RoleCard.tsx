@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import type { RouletteCard, RouletteSeat, RouletteSide, StaticData } from '@/lib/api'
 import { championCentered } from '@/lib/ddragon'
 import { rankLabel, tierColor } from '@/lib/format'
+import { signed } from '@/lib/ladder'
 import { ROLES, roleIcon } from '@/lib/roulette'
 
 /** The two sides keep League's own colours here, the one place the site uses them. */
@@ -23,6 +24,7 @@ export function RoleCard({
   revealed,
   staticData,
   drawn = false,
+  gap = null,
 }: {
   side: RouletteSide
   /** Null when nobody in this team drew the lane. */
@@ -37,6 +39,8 @@ export function RoleCard({
    * back would tell its role before it turns. The back goes blank until then.
    */
   drawn?: boolean
+  /** LP above (or below) the lane opponent; shown once both are face up. */
+  gap?: number | null
 }) {
   const botChampion = seat?.bot && seat.championId ? staticData?.champions[String(seat.championId)]?.name : undefined
   const name = card?.displayName ?? (botChampion ? `${botChampion} bot` : (seat?.name.split('#')[0] ?? ''))
@@ -74,7 +78,17 @@ export function RoleCard({
       }
     >
       <div className="roulette-card">
-        <CardBack name={drawn ? undefined : name} />
+        <CardBack
+          name={drawn ? undefined : name}
+          rank={
+            !drawn && card
+              ? {
+                  label: rankLabel({ tier: card.tier, rank: card.rank, leaguePoints: card.leaguePoints ?? 0 }),
+                  color: border,
+                }
+              : undefined
+          }
+        />
 
         <div className="roulette-face roulette-front border bg-panel" style={{ borderColor: border }}>
           {art && (
@@ -87,6 +101,17 @@ export function RoleCard({
                 'linear-gradient(180deg, rgb(7 12 23 / 0.15) 0%, rgb(7 12 23 / 0) 35%, rgb(7 12 23 / 0.82) 66%, rgb(7 12 23 / 0.97) 100%)',
             }}
           />
+
+          {gap !== null && (
+            <span
+              aria-label={`${Math.abs(gap)} LP ${gap >= 0 ? 'above' : 'below'} the lane opponent`}
+              className={`display tnum absolute right-2 top-2 z-10 rounded-[4px] bg-ground/85 px-1.5 py-0.5 text-[12px] font-semibold ${
+                gap > 0 ? 'text-win' : gap < 0 ? 'text-loss' : 'text-ink-muted'
+              }`}
+            >
+              {signed(gap)} LP
+            </span>
+          )}
 
           {role && (
             <div className="absolute inset-x-0 top-2.5 flex flex-col items-center">
@@ -137,8 +162,8 @@ export function RoleCard({
   )
 }
 
-/** The face-down side: the mark, a question, and - before any draw - who it is. */
-function CardBack({ name }: { name?: string }) {
+/** The face-down side: the mark, a question, and - before any draw - who it is and their rank. */
+function CardBack({ name, rank }: { name?: string; rank?: { label: string; color: string } }) {
   return (
     <div className="roulette-face flex flex-col items-center justify-center gap-2.5 border border-line-strong bg-panel">
       <span className="display text-[14px] font-bold tracking-[0.3em] text-accent">PASEN</span>
@@ -146,6 +171,11 @@ function CardBack({ name }: { name?: string }) {
         ?
       </span>
       {name && <span className="px-2 text-center text-[12px] text-ink-muted">{name}</span>}
+      {rank && (
+        <span className="px-2 text-center text-[11.5px]" style={{ color: rank.color }}>
+          {rank.label}
+        </span>
+      )}
     </div>
   )
 }

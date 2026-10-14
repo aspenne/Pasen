@@ -21,7 +21,7 @@ const card: RouletteCard = {
 describe('RoleCard', () => {
   it("shows a member's profile and their role once revealed", () => {
     render(
-      <RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={ROLES[1]} revealed />
+      <RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={ROLES[1]} revealed drawn />
     )
     expect(screen.getByText('Jungle')).toBeTruthy()
     expect(screen.getByText('Master · 1646 LP')).toBeTruthy()
@@ -70,5 +70,23 @@ describe('RoleCard', () => {
     expect(back.textContent).toContain('PASEN')
     expect(back.querySelector('img')).toBeNull()
     expect(screen.getByLabelText('Hidden card')).toBeTruthy()
+  })
+
+  it('shows the rank on the back before the draw, and nothing once roles are dealt', () => {
+    const before = render(<RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={null} revealed={false} />)
+    const back = before.container.querySelector('.roulette-face:not(.roulette-front)')!
+    expect(back.textContent).toContain('Master · 1646 LP')
+    before.unmount()
+
+    const after = render(
+      <RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={ROLES[0]} revealed={false} drawn />
+    )
+    expect(after.container.querySelector('.roulette-face:not(.roulette-front)')!.textContent).not.toContain('LP')
+  })
+
+  it('shows the LP gap with the lane opponent once both are face up', () => {
+    render(<RoleCard side="blue" seat={{ puuid: 'p', name: 'Nøah#SHEN', bot: false }} card={card} role={ROLES[0]} revealed drawn gap={635} />)
+    expect(screen.getByText('+635 LP')).toBeTruthy()
+    expect(screen.getByLabelText('635 LP above the lane opponent')).toBeTruthy()
   })
 })
