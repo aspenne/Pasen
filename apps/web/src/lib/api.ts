@@ -666,6 +666,15 @@ export type LesBoard = {
     wins: number
     losses: number
     since: string | null
+    team: 'honest' | 'hungry' | null
+  }[]
+  teams: {
+    key: 'honest' | 'hungry'
+    name: string
+    lpGained: number
+    games: number
+    activeAccounts: number
+    accounts: number
   }[]
 }
 

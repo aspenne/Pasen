@@ -9,7 +9,7 @@ import { api, type LesBoard } from '@/lib/api'
 import { profileIcon, useStaticData } from '@/lib/ddragon'
 import { rankLabel, tierColor } from '@/lib/format'
 import { signed } from '@/lib/ladder'
-import { countdownLabel, sinceLabel } from '@/lib/les'
+import { countdownLabel, entriesFor, sinceLabel, summarise, type LesFilter } from '@/lib/les'
 
 export const Route = createFileRoute('/$group/les')({ component: LesPage })
 
@@ -24,6 +24,8 @@ function LesPage() {
   const { group } = useParams({ from: '/$group/les' })
   const { scope } = useSearch({ from: '/$group' })
   const [sort, setSort] = useState<'lp' | 'games'>('lp')
+  // The LAN's ten players first: the rest of the group is one click away.
+  const [filter, setFilter] = useState<LesFilter>('teams')
   const { data: staticData } = useStaticData()
   const { data: board, isPending, isError } = useQuery({
     queryKey: ['les', group],
@@ -40,8 +42,11 @@ function LesPage() {
     )
   }
 
-  const played = board.entries.filter((entry) => entry.games > 0)
-  const resting = board.entries.filter((entry) => entry.games === 0)
+  const shown = entriesFor(board.entries, filter)
+  const totals = summarise(shown)
+  const played = shown.filter((entry) => entry.games > 0)
+  const resting = shown.filter((entry) => entry.games === 0)
+  const teamName = new Map(board.teams.map((team) => [team.key, team.name]))
   const ordered =
     sort === 'lp'
       ? played
@@ -73,17 +78,43 @@ function LesPage() {
         </div>
       </header>
 
+      <TeamsRecap teams={board.teams} />
+
+      <div role="radiogroup" aria-label="Show" className="flex flex-wrap gap-1.5">
+        {(
+          [
+            ['teams', 'Both teams'],
+            ['honest', teamName.get('honest') ?? 'Team 1'],
+            ['hungry', teamName.get('hungry') ?? 'Team 2'],
+            ['everyone', 'Everyone'],
+          ] as [LesFilter, string][]
+        ).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={filter === value}
+            onClick={() => setFilter(value)}
+            className={`cut-tab tap display px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] transition-colors ${
+              filter === value ? 'bg-accent text-on-accent' : 'bg-panel-raised text-ink-muted hover:text-ink'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile
-          label="LP won by the group"
-          value={signed(board.totals.lpGained)}
-          tone={board.totals.lpGained >= 0 ? 'win' : 'loss'}
+          label="LP won"
+          value={signed(totals.lpGained)}
+          tone={totals.lpGained >= 0 ? 'win' : 'loss'}
         />
-        <StatTile label="Games played" value={board.totals.games} />
+        <StatTile label="Games played" value={totals.games} />
         <StatTile
           label="Accounts playing"
-          value={board.totals.activeAccounts}
-          detail={`of ${board.totals.accounts}`}
+          value={totals.activeAccounts}
+          detail={`of ${totals.accounts}`}
           tone="accent"
         />
         <StatTile
@@ -136,6 +167,7 @@ function LesPage() {
               scope={scope}
               version={staticData?.version ?? null}
               showRiotId={(accountsPerMember.get(entry.memberSlug) ?? 0) > 1}
+              team={filter === 'teams' || filter === 'everyone' ? (entry.team && teamName.get(entry.team)) || null : null}
             />
           ))}
           {resting.map((entry) => (
@@ -147,6 +179,7 @@ function LesPage() {
               scope={scope}
               version={staticData?.version ?? null}
               showRiotId={(accountsPerMember.get(entry.memberSlug) ?? 0) > 1}
+              team={filter === 'teams' || filter === 'everyone' ? (entry.team && teamName.get(entry.team)) || null : null}
             />
           ))}
         </ol>
@@ -162,6 +195,7 @@ function Row({
   scope,
   version,
   showRiotId,
+  team,
 }: {
   entry: Entry
   place: number | null
@@ -169,6 +203,8 @@ function Row({
   scope: QueueScope
   version: string | null
   showRiotId: boolean
+  /** The LAN team, when the list mixes both. */
+  team: string | null
 }) {
   const icon = profileIcon(version, entry.profileIconId)
   const rank = (r: Entry['current']) => (r ? rankLabel(r) : 'Unranked')
@@ -193,6 +229,7 @@ function Row({
           {entry.displayName}
         </Link>
         <div className="truncate text-[11.5px] text-ink-dim">
+          {team && <span className="text-ink-muted">{team} · </span>}
           {showRiotId && <span>{entry.riotId} · </span>}
           {entry.start ? (
             <>
@@ -226,5 +263,38 @@ function Row({
         )}
       </div>
     </li>
+  )
+}
+
+/** The two LAN teams' scores side by side, the leader marked. */
+function TeamsRecap({ teams }: { teams: LesBoard['teams'] }) {
+  if (teams.length !== 2) return null
+  const lead = teams[0].lpGained === teams[1].lpGained ? null : teams[0].lpGained > teams[1].lpGained ? teams[0].key : teams[1].key
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {teams.map((team) => (
+        <section
+          key={team.key}
+          className={`space-y-2 border bg-panel px-5 py-4 ${team.key === lead ? 'border-accent' : 'border-line'}`}
+        >
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="display text-[18px] font-bold uppercase leading-tight tracking-[0.04em] text-ink">{team.name}</h2>
+            {team.key === lead && (
+              <span className="display shrink-0 bg-accent px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-on-accent">
+                Leading
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+            <span className={`display tnum text-[28px] font-semibold leading-none ${team.lpGained >= 0 ? 'text-win' : 'text-loss'}`}>
+              {signed(team.lpGained)} LP
+            </span>
+            <span className="tnum text-[13px] text-ink-muted">
+              {team.games} games · {team.activeAccounts}/{team.accounts} accounts playing
+            </span>
+          </div>
+        </section>
+      ))}
+    </div>
   )
 }

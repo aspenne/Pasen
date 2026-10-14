@@ -15,6 +15,22 @@ export const LES_EVENT = {
   endsAt: DateTime.fromObject({ year: 2026, month: 11, day: 13 }, { zone: 'Europe/Paris' }).toJSDate(),
 } as const
 
+/** The two sides ARIGAFION splits into at the LAN, by member. */
+export const LES_TEAMS = [
+  {
+    key: 'honest',
+    name: 'Honnêtes & Gourmets',
+    members: ['noah', 'homme-vide', 'matiou-goat', 'froslass', 'xm1014-camembert'],
+  },
+  {
+    key: 'hungry',
+    name: 'Malhonnêtes & Affamés',
+    members: ['3c-patate-chaude', 'adam-le-gourmand', 'azizes', 'loris-la-malice', 'koko'],
+  },
+] as const
+
+export type LesTeamKey = (typeof LES_TEAMS)[number]['key']
+
 export type LesAccount = {
   id: number
   memberSlug: string
@@ -49,12 +65,37 @@ export type LesEntry = {
   losses: number
   /** Set when the account has no reading before the event: where its count starts. */
   since: string | null
+  /** The member's LAN team; null for someone not going. */
+  team: LesTeamKey | null
+}
+
+export type LesTeamTotals = {
+  key: LesTeamKey
+  name: string
+  lpGained: number
+  games: number
+  activeAccounts: number
+  accounts: number
 }
 
 export type LesBoard = {
   event: { name: string; startsAt: string; endsAt: string; finished: boolean }
   totals: { lpGained: number; games: number; activeAccounts: number; accounts: number }
+  /** Each LAN team's score: its accounts' LP won, losses included. */
+  teams: LesTeamTotals[]
   entries: LesEntry[]
+}
+
+const teamOf = (memberSlug: string): LesTeamKey | null =>
+  LES_TEAMS.find((team) => (team.members as readonly string[]).includes(memberSlug))?.key ?? null
+
+function sum(entries: LesEntry[]) {
+  return {
+    lpGained: entries.reduce((total, e) => total + e.lpGained, 0),
+    games: entries.reduce((total, e) => total + e.games, 0),
+    activeAccounts: entries.filter((e) => e.games > 0).length,
+    accounts: entries.length,
+  }
 }
 
 const rankOf = (r: LesReading): Rank => ({ tier: r.tier, rank: r.rank, leaguePoints: r.leaguePoints })
@@ -87,6 +128,7 @@ export function lesBoard(accounts: LesAccount[], readings: LesReading[], now: Da
       displayName: account.displayName,
       riotId: account.riotId,
       profileIconId: account.profileIconId,
+      team: teamOf(account.memberSlug),
     }
     if (!first || !last) {
       return { ...base, start: null, current: null, lpGained: 0, games: 0, wins: 0, losses: 0, since: null }
@@ -123,12 +165,12 @@ export function lesBoard(accounts: LesAccount[], readings: LesReading[], now: Da
       endsAt: LES_EVENT.endsAt.toISOString(),
       finished: now.getTime() >= end,
     },
-    totals: {
-      lpGained: entries.reduce((sum, e) => sum + e.lpGained, 0),
-      games: entries.reduce((sum, e) => sum + e.games, 0),
-      activeAccounts: entries.filter((e) => e.games > 0).length,
-      accounts: entries.length,
-    },
+    totals: sum(entries),
+    teams: LES_TEAMS.map((team) => ({
+      key: team.key,
+      name: team.name,
+      ...sum(entries.filter((e) => e.team === team.key)),
+    })),
     entries,
   }
 }
