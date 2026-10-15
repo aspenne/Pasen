@@ -89,6 +89,9 @@ services:
       - '443:443'
     environment:
       PUBLIC_DOMAIN: ${PUBLIC_DOMAIN:?}
+      # Every domain the site answers on, and their www forms; one domain unless set.
+      SITE_HOSTS: ${SITE_HOSTS:-${PUBLIC_DOMAIN}}
+      WWW_HOSTS: ${WWW_HOSTS:-www.${PUBLIC_DOMAIN}}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data
