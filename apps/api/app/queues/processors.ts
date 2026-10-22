@@ -9,11 +9,13 @@ import { LiveGameService } from '#ingestion/live_game_service'
 import { MatchSyncService } from '#ingestion/match_sync_service'
 import { HOT_WINDOW_HOURS, selectLivePollTargets } from '#ingestion/live_poll_selection'
 import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
+import { RiotIdRefreshService } from '#ingestion/riot_id_refresh_service'
 import { RankService } from '#ingestion/rank_service'
 import {
   decayAnnouncement,
   pentakillAnnouncement,
   rankAnnouncement,
+  renameAnnouncement,
   streakAnnouncement,
 } from '#notifications/announcements'
 import { DiscordService } from '#notifications/discord_service'
@@ -298,4 +300,23 @@ export async function processPuuidRekey(): Promise<void> {
     },
     'puuids re-keyed after an API key change'
   )
+}
+
+/**
+ * Follows Riot ID changes. Daily: a rename is rare, and catching it within a
+ * day is enough for the one thing that cannot wait - the next API key change,
+ * which finds every account again by its Riot ID.
+ */
+export async function processRiotIdRefresh(): Promise<void> {
+  const report = await new RiotIdRefreshService(riot(), logger).refresh()
+  if (report.renamed.length > 0 || report.failed.length > 0) {
+    logger.info(report, 'riot ids refreshed')
+  }
+
+  const discord = new DiscordService()
+  for (const rename of report.renamed) {
+    const account = await RiotAccount.query().where('id', rename.accountId).preload('member').first()
+    if (!account) continue
+    await discord.announce(renameAnnouncement(account.member.displayName, account.id, rename.from, rename.to))
+  }
 }

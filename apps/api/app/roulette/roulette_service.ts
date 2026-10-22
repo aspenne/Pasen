@@ -4,6 +4,7 @@ import CustomLobby from '#models/custom_lobby'
 import Group from '#models/group'
 import RiotAccount from '#models/riot_account'
 import RoleDraw from '#models/role_draw'
+import { knownRiotIds } from '#ingestion/known_riot_ids'
 import { drawRoles, type RoleDraw as Roles } from '#roulette/draw_roles'
 import { sameTeams, type Teams } from '#roulette/lobby_teams'
 import { GroupService } from '#stats/group_service'
@@ -93,14 +94,12 @@ export class RouletteService {
    * since the League client's own is encrypted differently from Pasen's.
    */
   async #resolveRiotIds(group: Group, teams: Teams): Promise<Teams> {
-    const accounts = await RiotAccount.query().whereHas('member', (member) =>
-      member.whereHas('groups', (groups) => groups.where('groups.id', group.id))
-    )
-    const byRiotId = new Map(accounts.map((a) => [`${a.gameName}#${a.tagLine}`.toLowerCase(), a.puuid]))
+    // Old Riot IDs included: someone typed in under the name everyone still calls them.
+    const known = await knownRiotIds(group.id)
     const resolve = (seat: Teams['blue'][number]) => {
       if (seat.bot) return seat
-      const known = byRiotId.get(seat.name.toLowerCase())
-      return known ? { ...seat, puuid: known } : seat
+      const account = known.get(seat.name.toLowerCase())
+      return account ? { ...seat, puuid: account.puuid } : seat
     }
     return { blue: teams.blue.map(resolve), red: teams.red.map(resolve) }
   }

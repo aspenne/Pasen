@@ -7,6 +7,7 @@ import { KeyRoundIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 
 import { CaptureDevices } from '@/components/admin/CaptureDevices'
 import { CustomGames } from '@/components/admin/CustomGames'
+import { PreviousNames } from '@/components/admin/PreviousNames'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -391,6 +392,7 @@ function AccountsCard({ accounts }: { accounts: AdminAccount[] }) {
                     {account.platform}
                     {account.summonerLevel ? ` · level ${account.summonerLevel}` : ''}
                   </span>
+                  <PreviousNames accountId={account.id} riotId={account.riotId} aliases={account.aliases} />
                 </TableCell>
 
                 <TableCell className="text-ink-muted">{account.displayName}</TableCell>

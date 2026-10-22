@@ -554,6 +554,8 @@ export type AdminAccount = {
   syncedFrom: string | null
   syncedTo: string | null
   lastSyncedAt: string | null
+  /** Riot IDs the account used to go by: found by the daily check, or added by hand. */
+  aliases: { id: number; riotId: string; source: 'riot' | 'manual' }[]
 }
 
 export type AdminStatus = {
@@ -767,6 +769,12 @@ export const api = {
       `/api/admin/groups/${group}/accounts`,
       { method: 'POST', body: JSON.stringify(payload) }
     ),
+  addAlias: (accountId: number, riotId: string) =>
+    apiFetch<{ id: number; riotId: string; source: 'riot' | 'manual' }>(`/api/admin/accounts/${accountId}/aliases`, {
+      method: 'POST',
+      body: JSON.stringify({ riotId }),
+    }),
+  removeAlias: (id: number) => apiFetch<void>(`/api/admin/aliases/${id}`, { method: 'DELETE' }),
   removeAccount: (id: number) =>
     apiFetch<void>(`/api/admin/accounts/${id}`, { method: 'DELETE' }),
   resyncAccount: (id: number) =>

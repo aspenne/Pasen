@@ -103,3 +103,15 @@ export function decayAnnouncement(
     text: `**${displayName}** starts decaying ${when} in ${queue} — that is ${decay.lpPerDay} LP a day until they play one.`,
   }
 }
+
+/**
+ * A member changed their Riot ID. Said once per rename: keyed by the account
+ * and both names, so going back to an old name later is news again.
+ */
+export function renameAnnouncement(displayName: string, accountId: number, from: string, to: string): Announcement {
+  return {
+    key: `rename:${accountId}:${from.toLowerCase()}>${to.toLowerCase()}`,
+    kind: 'rename',
+    text: `**${displayName}** is now **${to}** (was ${from}).`,
+  }
+}

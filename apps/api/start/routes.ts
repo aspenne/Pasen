@@ -17,6 +17,7 @@ const AdminFearlessController = () => import('#controllers/admin/fearless_contro
 const RouletteController = () => import('#controllers/roulette_controller')
 const LesController = () => import('#controllers/les_controller')
 const AdminRouletteController = () => import('#controllers/admin/roulette_controller')
+const RiotIdAliasesController = () => import('#controllers/admin/riot_id_aliases_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -84,6 +85,8 @@ router
         router.delete('/admin/accounts/:id', [AdminController, 'removeAccount'])
         router.post('/admin/accounts/:id/resync', [AdminController, 'resync'])
         router.patch('/admin/members/:slug', [AdminController, 'updateMember'])
+        router.post('/admin/accounts/:id/aliases', [RiotIdAliasesController, 'store'])
+        router.delete('/admin/aliases/:id', [RiotIdAliasesController, 'destroy'])
 
         /*
          * Customs come in by hand. They exist nowhere but the capture, so the

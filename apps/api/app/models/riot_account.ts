@@ -5,6 +5,7 @@ import { DateTime } from 'luxon'
 
 import LeagueEntry from '#models/league_entry'
 import Member from '#models/member'
+import RiotAccountAlias from '#models/riot_account_alias'
 
 export const BACKFILL_STATES = ['pending', 'running', 'done', 'failed'] as const
 export type BackfillState = (typeof BACKFILL_STATES)[number]
@@ -70,6 +71,10 @@ export default class RiotAccount extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  /** Riot IDs this account used to go by. */
+  @hasMany(() => RiotAccountAlias)
+  declare aliases: HasMany<typeof RiotAccountAlias>
 
   get riotId() {
     return `${this.gameName}#${this.tagLine}`

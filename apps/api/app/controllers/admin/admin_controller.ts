@@ -40,7 +40,10 @@ const apiKey = vine.compile(vine.object({ key: vine.string().trim().minLength(10
 export default class AdminController {
   /** Everything the admin screen needs in one call. */
   async status() {
-    const accounts = await RiotAccount.query().preload('member').orderBy('id')
+    const accounts = await RiotAccount.query()
+      .preload('member')
+      .preload('aliases', (aliases) => aliases.orderBy('id'))
+      .orderBy('id')
     const keyStatus = await riotKeyProvider().status()
     const limiter = await riotGateway().limiter()
 
@@ -64,6 +67,7 @@ export default class AdminController {
         syncedFrom: account.syncedFrom?.toUTC().toISO() ?? null,
         syncedTo: account.syncedTo?.toUTC().toISO() ?? null,
         lastSyncedAt: account.lastSyncedAt?.toUTC().toISO() ?? null,
+        aliases: account.aliases.map((alias) => ({ id: alias.id, riotId: alias.riotId, source: alias.source })),
       })),
     }
   }

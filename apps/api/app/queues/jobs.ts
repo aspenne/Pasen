@@ -21,6 +21,8 @@ export const JOBS = {
    * taking a puuid fails and a member's history is detached from them.
    */
   puuidRekey: 'recent:puuid-rekey',
+  /** Re-read every account's Riot ID, following renames. */
+  riotIdRefresh: 'backfill:riot-id-refresh',
 } as const
 
 export type RecentSyncAccountPayload = { riotAccountId: number }

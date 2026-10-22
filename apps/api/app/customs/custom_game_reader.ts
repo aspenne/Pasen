@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 
 import CustomGame from '#models/custom_game'
 import Group from '#models/group'
-import RiotAccount from '#models/riot_account'
+import { knownRiotIds } from '#ingestion/known_riot_ids'
 import StaticChampion from '#models/static_champion'
 import StaticSummonerSpell from '#models/static_summoner_spell'
 import { viewCustomGame, type CustomGameView, type ViewLookups } from '#customs/custom_game_view'
@@ -67,22 +67,19 @@ export class CustomGameReader {
   }
 
   async #lookups(group: Group): Promise<ViewLookups> {
-    const [champions, spells, accounts] = await Promise.all([
+    const [champions, spells, riotIds] = await Promise.all([
       StaticChampion.query().select('id', 'slug'),
       StaticSummonerSpell.query().select('id', 'slug'),
-      RiotAccount.query()
-        .preload('member')
-        .whereHas('member', (member) =>
-          member.whereHas('groups', (groups) => groups.where('groups.id', group.id))
-        ),
+      // Old Riot IDs included: a custom played before a rename still belongs to the player.
+      knownRiotIds(group.id),
     ])
 
     return {
       championIdBySlug: new Map(champions.map((champion) => [champion.slug, champion.id])),
       spellIdBySlug: new Map(spells.map((spell) => [spell.slug, spell.id])),
       memberByRiotId: new Map(
-        accounts.map((account) => [
-          `${account.gameName}#${account.tagLine}`.toLowerCase(),
+        [...riotIds].map(([riotId, account]) => [
+          riotId,
           { slug: account.member.slug, displayName: account.member.displayName },
         ])
       ),

@@ -12,7 +12,7 @@ export type Announcement = {
    * five members' syncs must produce one key, not five.
    */
   key: string
-  kind: 'promotion' | 'demotion' | 'pentakill' | 'streak' | 'decay'
+  kind: 'promotion' | 'demotion' | 'pentakill' | 'streak' | 'decay' | 'rename'
   text: string
 }
 

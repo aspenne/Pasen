@@ -1,6 +1,7 @@
 import { test } from '@japa/runner'
 
 import {
+  renameAnnouncement,
   decayAnnouncement,
   pentakillAnnouncement,
   rankAnnouncement,
@@ -158,5 +159,14 @@ test.group('decayAnnouncement', () => {
     )
 
     assert.equal(twoDays?.key, oneDay?.key)
+  })
+})
+
+test.group('renameAnnouncement', () => {
+  test('names the member, the old and the new Riot ID, once per rename', ({ assert }) => {
+    const announcement = renameAnnouncement('Patate', 12, 'Patate#CCC', 'Patate Chaude#FR1')
+    assert.equal(announcement.kind, 'rename')
+    assert.equal(announcement.key, 'rename:12:patate#ccc>patate chaude#fr1')
+    assert.equal(announcement.text, '**Patate** is now **Patate Chaude#FR1** (was Patate#CCC).')
   })
 })

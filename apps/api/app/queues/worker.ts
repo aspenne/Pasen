@@ -11,6 +11,7 @@ import {
   processRecentSyncAccount,
   processStaticSync,
   processPuuidRekey,
+  processRiotIdRefresh,
 } from '#queues/processors'
 
 /**
@@ -25,6 +26,7 @@ const SCHEDULE = [
   { queue: 'recent', name: JOBS.rankSnapshot, every: 3_600_000 },
   { queue: 'backfill', name: JOBS.backfillStep, every: 60_000 },
   { queue: 'backfill', name: JOBS.staticSync, every: 86_400_000 },
+  { queue: 'backfill', name: JOBS.riotIdRefresh, every: 86_400_000 },
 ] as const
 
 const HANDLERS: Record<string, (job: any) => Promise<void>> = {
@@ -35,6 +37,7 @@ const HANDLERS: Record<string, (job: any) => Promise<void>> = {
   [JOBS.backfillStep]: processBackfillStep,
   [JOBS.staticSync]: processStaticSync,
   [JOBS.puuidRekey]: processPuuidRekey,
+  [JOBS.riotIdRefresh]: processRiotIdRefresh,
 }
 
 export async function startWorkers(): Promise<Worker[]> {
