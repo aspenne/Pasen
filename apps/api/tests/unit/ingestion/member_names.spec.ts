@@ -39,4 +39,15 @@ test.group('syncMemberNames', (group) => {
     assert.equal(a.displayName, 'New A')
     assert.equal(b.displayName, 'Old B')
   })
+
+  test('follows the main account when one is chosen', async ({ assert }) => {
+    const patate = await member('patate', 'Whatever', [['Aspenne', 'EUW'], ['3C Patate Chaude', 'CCC']])
+    const main = await RiotAccount.findByOrFail('game_name', '3C Patate Chaude')
+    patate.mainAccountId = main.id
+    await patate.save()
+
+    await syncMemberNames([patate.id])
+    await patate.refresh()
+    assert.equal(patate.displayName, '3C Patate Chaude')
+  })
 })

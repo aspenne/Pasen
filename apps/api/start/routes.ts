@@ -86,6 +86,7 @@ router
         router.post('/admin/accounts/:id/resync', [AdminController, 'resync'])
         router.patch('/admin/members/:slug', [AdminController, 'updateMember'])
         router.post('/admin/accounts/:id/aliases', [RiotIdAliasesController, 'store'])
+        router.post('/admin/accounts/:id/main', [AdminController, 'setMain'])
         router.delete('/admin/aliases/:id', [RiotIdAliasesController, 'destroy'])
 
         /*

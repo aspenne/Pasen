@@ -556,6 +556,8 @@ export type AdminAccount = {
   lastSyncedAt: string | null
   /** Riot IDs the account used to go by: found by the daily check, or added by hand. */
   aliases: { id: number; riotId: string; source: 'riot' | 'manual' }[]
+  /** The account the member is named after across the site. */
+  isMain: boolean
 }
 
 export type AdminStatus = {
@@ -774,6 +776,8 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ riotId }),
     }),
+  setMainAccount: (accountId: number) =>
+    apiFetch<{ slug: string; displayName: string }>(`/api/admin/accounts/${accountId}/main`, { method: 'POST' }),
   removeAlias: (id: number) => apiFetch<void>(`/api/admin/aliases/${id}`, { method: 'DELETE' }),
   removeAccount: (id: number) =>
     apiFetch<void>(`/api/admin/accounts/${id}`, { method: 'DELETE' }),

@@ -14,6 +14,10 @@ export default class Member extends BaseModel {
   @column()
   declare slug: string
 
+  /** The account the member is named after; null means their first account. */
+  @column()
+  declare mainAccountId: number | null
+
   @column()
   declare displayName: string
 

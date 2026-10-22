@@ -135,6 +135,28 @@ test.group('Admin API', (group) => {
     assert.equal(member.accentColor, '#d4af5a')
   })
 
+  test('makes an account the main one, naming the member after it', async ({ client, assert }) => {
+    const admin = await seedAdmin()
+    const { member } = await seedGroup()
+    const smurf = await RiotAccount.create({ memberId: member.id, puuid: 'puuid-smurf', gameName: 'Little Potato', tagLine: 'EUW', platform: 'euw1', backfillState: 'done' })
+
+    const anonymous = await client.post(`/api/admin/accounts/${smurf.id}/main`)
+    anonymous.assertStatus(401)
+
+    const response = await client.post(`/api/admin/accounts/${smurf.id}/main`).loginAs(admin)
+    response.assertStatus(200)
+    await member.refresh()
+    assert.equal(member.mainAccountId, smurf.id)
+    assert.equal(member.displayName, 'Little Potato')
+
+    await client.post('/api/admin/riot-key').json({ key: 'RGAPI-test' }).loginAs(admin)
+    const status = (await client.get('/api/admin/status').loginAs(admin)).body()
+    assert.deepEqual(
+      status.accounts.map((a: { riotId: string; isMain: boolean }) => [a.riotId, a.isMain]),
+      [['Patate#CCC', false], ['Little Potato#EUW', true]]
+    )
+  })
+
   test('removing an account takes the member with it only if it was their last', async ({
     client,
     assert,

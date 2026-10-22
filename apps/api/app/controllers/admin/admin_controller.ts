@@ -11,6 +11,7 @@ import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
 import { AccountLinker } from '#ingestion/account_linker'
 import { riot, riotGateway, riotKeyProvider } from '#riot/service'
+import { syncMemberNames } from '#ingestion/member_names'
 
 const newGroup = vine.compile(
   vine.object({ name: vine.string().trim().minLength(2).maxLength(60) })
@@ -43,6 +44,8 @@ export default class AdminController {
       .preload('member')
       .preload('aliases', (aliases) => aliases.orderBy('id'))
       .orderBy('id')
+    const firstOf = new Map<number, number>()
+    for (const account of accounts) if (!firstOf.has(account.memberId)) firstOf.set(account.memberId, account.id)
     const keyStatus = await riotKeyProvider().status()
     const limiter = await riotGateway().limiter()
 
@@ -67,6 +70,10 @@ export default class AdminController {
         syncedTo: account.syncedTo?.toUTC().toISO() ?? null,
         lastSyncedAt: account.lastSyncedAt?.toUTC().toISO() ?? null,
         aliases: account.aliases.map((alias) => ({ id: alias.id, riotId: alias.riotId, source: alias.source })),
+        // The account the member is named after: the chosen one, else their first.
+        isMain:
+          account.member.mainAccountId === account.id ||
+          (account.member.mainAccountId === null && firstOf.get(account.memberId) === account.id),
       })),
     }
   }
@@ -165,6 +172,17 @@ export default class AdminController {
       displayName: member.displayName,
       accentColor: member.accentColor,
     })
+  }
+
+  /** Names the member after this account from now on. */
+  async setMain({ params, response }: HttpContext) {
+    const account = await RiotAccount.findOrFail(params.id)
+    const member = await Member.findOrFail(account.memberId)
+    member.mainAccountId = account.id
+    await member.save()
+    await syncMemberNames([member.id])
+    await member.refresh()
+    return response.ok({ slug: member.slug, displayName: member.displayName })
   }
 
   /** Puts an account back at the front of the backfill queue. */
