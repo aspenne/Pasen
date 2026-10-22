@@ -166,7 +166,8 @@ export class RouletteService {
         const top = (await stats.championPool(account.member, { scope: 'rift' })).entries[0]
         const card: RouletteCard = {
           slug: account.member.slug,
-          displayName: account.member.displayName,
+          // The account actually in the lobby, smurf or not.
+          displayName: account.gameName,
           tag: account.tagLine,
           tier: solo?.tier ?? null,
           rank: solo?.rank ?? null,

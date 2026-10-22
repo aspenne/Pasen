@@ -2,6 +2,8 @@ import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { DateTime } from 'luxon'
 
+import Member from '#models/member'
+import RiotAccount from '#models/riot_account'
 import User from '#models/user'
 import { CaptureDeviceService } from '#customs/capture_device_service'
 import { seedGroup, seedMatch } from '#tests/helpers'
@@ -174,5 +176,24 @@ test.group('Role roulette · the client puuid', (group) => {
     assert.equal(view.lobby.teams.red[0].championId, 103)
     const cards = (await client.get('/api/groups/arigafion/roulette/cards')).body().cards
     assert.property(cards, 'puuid-patate')
+  })
+})
+
+test.group('Role roulette · names', (group) => {
+  group.each.setup(() => testUtils.db().withGlobalTransaction())
+
+  test("a card carries the in-game name of the account in the lobby", async ({ client, assert }) => {
+    const { token } = await paired()
+    const member = await Member.findByOrFail('slug', 'patate')
+    await RiotAccount.create({ memberId: member.id, puuid: 'puuid-smurf', gameName: 'Little Potato', tagLine: 'EUW', platform: 'euw1', backfillState: 'done' })
+
+    await client
+      .post('/api/capture/lobby')
+      .header('authorization', `Bearer ${token}`)
+      .json({ teams: { blue: [{ puuid: null, name: 'Little Potato#EUW', bot: false }], red: [{ puuid: null, name: 'Patate#CCC', bot: false }] } })
+
+    const cards = (await client.get('/api/groups/arigafion/roulette/cards')).body().cards
+    assert.equal(cards['puuid-smurf'].displayName, 'Little Potato')
+    assert.equal(cards['puuid-patate'].displayName, 'Patate')
   })
 })

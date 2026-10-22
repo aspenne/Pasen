@@ -7,6 +7,7 @@ import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
 import { RankService } from '#ingestion/rank_service'
 import type { RiotClient } from '#riot/client'
+import { syncMemberNames } from '#ingestion/member_names'
 
 export type LinkRequest = {
   gameName: string
@@ -84,6 +85,8 @@ export class AccountLinker {
       )
     }
 
+    // A member is called what their first account is called in game.
+    await syncMemberNames([account.memberId])
     return account
   }
 

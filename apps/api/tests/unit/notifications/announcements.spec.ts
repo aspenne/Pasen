@@ -163,10 +163,10 @@ test.group('decayAnnouncement', () => {
 })
 
 test.group('renameAnnouncement', () => {
-  test('names the member, the old and the new Riot ID, once per rename', ({ assert }) => {
-    const announcement = renameAnnouncement('Patate', 12, 'Patate#CCC', 'Patate Chaude#FR1')
+  test('names the old and the new Riot ID, once per rename', ({ assert }) => {
+    const announcement = renameAnnouncement(12, 'Patate#CCC', 'Patate Chaude#FR1')
     assert.equal(announcement.kind, 'rename')
     assert.equal(announcement.key, 'rename:12:patate#ccc>patate chaude#fr1')
-    assert.equal(announcement.text, '**Patate** is now **Patate Chaude#FR1** (was Patate#CCC).')
+    assert.equal(announcement.text, '**Patate#CCC** is now **Patate Chaude#FR1**.')
   })
 })

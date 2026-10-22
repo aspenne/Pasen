@@ -30,7 +30,6 @@ const newAccount = vine.compile(
 
 const memberPatch = vine.compile(
   vine.object({
-    displayName: vine.string().trim().minLength(1).maxLength(40).optional(),
     accentColor: vine.string().trim().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
   })
 )
@@ -157,7 +156,6 @@ export default class AdminController {
     const payload = await memberPatch.validate(request.all())
 
     member.merge({
-      displayName: payload.displayName ?? member.displayName,
       accentColor: payload.accentColor === undefined ? member.accentColor : payload.accentColor,
     })
     await member.save()

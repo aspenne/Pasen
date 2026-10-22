@@ -37,7 +37,8 @@ export class LesService {
       accounts.map((account) => ({
         id: account.id,
         memberSlug: account.member.slug,
-        displayName: account.member.displayName,
+        // One line per account, so each under its own in-game name.
+        displayName: account.gameName,
         riotId: `${account.gameName}#${account.tagLine}`,
         profileIconId: account.profileIconId,
       })),

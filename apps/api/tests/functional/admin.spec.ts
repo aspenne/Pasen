@@ -120,7 +120,7 @@ test.group('Admin API', (group) => {
     response.assertStatus(422)
   })
 
-  test('renames a member and sets their colour', async ({ client, assert }) => {
+  test("sets a member's colour, but not their name, which follows their Riot ID", async ({ client, assert }) => {
     const admin = await seedAdmin()
     await seedGroup()
 
@@ -131,7 +131,7 @@ test.group('Admin API', (group) => {
 
     response.assertStatus(200)
     const member = await Member.findByOrFail('slug', 'patate')
-    assert.equal(member.displayName, 'La Patate')
+    assert.equal(member.displayName, 'Patate')
     assert.equal(member.accentColor, '#d4af5a')
   })
 

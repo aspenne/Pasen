@@ -315,8 +315,6 @@ export async function processRiotIdRefresh(): Promise<void> {
 
   const discord = new DiscordService()
   for (const rename of report.renamed) {
-    const account = await RiotAccount.query().where('id', rename.accountId).preload('member').first()
-    if (!account) continue
-    await discord.announce(renameAnnouncement(account.member.displayName, account.id, rename.from, rename.to))
+    await discord.announce(renameAnnouncement(rename.accountId, rename.from, rename.to))
   }
 }

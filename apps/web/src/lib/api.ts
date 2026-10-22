@@ -779,7 +779,8 @@ export const api = {
     apiFetch<void>(`/api/admin/accounts/${id}`, { method: 'DELETE' }),
   resyncAccount: (id: number) =>
     apiFetch<{ id: number }>(`/api/admin/accounts/${id}/resync`, { method: 'POST' }),
-  updateMember: (slug: string, payload: { displayName?: string; accentColor?: string | null }) =>
+  /** A member's colour. Their name is not set here: it follows their first account's Riot ID. */
+  updateMember: (slug: string, payload: { accentColor?: string | null }) =>
     apiFetch<{ slug: string }>(`/api/admin/members/${slug}`, {
       method: 'PATCH',
       body: JSON.stringify(payload),

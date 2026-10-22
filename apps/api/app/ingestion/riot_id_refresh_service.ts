@@ -3,6 +3,7 @@ import type { Logger } from '@adonisjs/core/logger'
 
 import RiotAccount from '#models/riot_account'
 import RiotAccountAlias from '#models/riot_account_alias'
+import { syncMemberNames } from '#ingestion/member_names'
 import type { RiotClient } from '#riot/client'
 
 export type RiotIdRefreshReport = {
@@ -70,6 +71,8 @@ export class RiotIdRefreshService {
       report.renamed.push({ accountId: account.id, from: before, to: after })
     }
 
+    // Members are shown by their first account's in-game name: follow the renames.
+    await syncMemberNames()
     return report
   }
 }
