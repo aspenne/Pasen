@@ -165,7 +165,7 @@ export function FeedMatchCard({
             <div className="flex w-full items-center justify-between gap-3.5 sm:w-auto sm:justify-end">
               <RunePair perks={member.perks} staticData={staticData} size={24} />
 
-              <div className="hidden xl:block">
+              <div className="hidden @4xl:block">
                 <ItemRow items={member.items} staticData={staticData} />
               </div>
 

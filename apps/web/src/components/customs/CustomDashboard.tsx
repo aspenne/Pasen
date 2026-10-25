@@ -210,7 +210,7 @@ export function CustomDashboard({ data, staticData, groupSlug, scope }: Props) {
         </div>
       </section>
 
-      <div className="grid gap-7 lg:grid-cols-2">
+      <div className="grid gap-7 @3xl:grid-cols-2">
         {/* ---- champions ---- */}
         <section className="min-w-0">
           <SectionTitle aside="Picked twice at least">Most picked</SectionTitle>

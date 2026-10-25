@@ -25,6 +25,7 @@ type GroupHeroProps = {
   /** Champion behind the art: the standout's, or the roster's most played. */
   backdropChampionId?: number
   staticData?: StaticData
+  className?: string
 }
 
 /**
@@ -43,6 +44,7 @@ export function GroupHero({
   standout,
   backdropChampionId,
   staticData,
+  className = '',
 }: GroupHeroProps) {
   const championId = standout?.championId ?? backdropChampionId
   const art =
@@ -53,7 +55,7 @@ export function GroupHero({
   const played = totals?.games ?? 0
 
   return (
-    <section className="relative flex min-h-[236px] flex-col justify-end overflow-hidden rounded-[10px] border border-line bg-panel px-6 py-5">
+    <section className={`relative flex min-h-[236px] ${className} flex-col justify-end overflow-hidden rounded-[10px] border border-line bg-panel px-6 py-5`}>
       {art && (
         <img
           src={art}

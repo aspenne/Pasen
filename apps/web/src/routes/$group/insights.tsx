@@ -79,7 +79,7 @@ function Insights() {
       <section>
         <h2 className="mb-2 text-[13px] text-ink">Titles</h2>
         {!boards ? (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-2 @3xl:grid-cols-4">
             {Array.from({ length: 4 }, (_, i) => (
               <Skeleton key={i} className="h-[88px]" />
             ))}
@@ -89,7 +89,7 @@ function Insights() {
             Nobody has played {boards.minimumGames} games in this window yet.
           </p>
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-2 @3xl:grid-cols-4">
             {boards?.titles.map((title) => (
               <div
                 key={title.key}
@@ -115,7 +115,7 @@ function Insights() {
 
       <section>
         <h2 className="mb-2 text-[13px] text-ink">Leaderboards</h2>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 @3xl:grid-cols-3">
           {boards?.boards.map((board) => (
             <div key={board.key} className="bg-panel px-3 py-2.5">
               <div className="mb-1.5 text-[10px] uppercase tracking-[0.08em] text-ink-dim">
@@ -247,7 +247,7 @@ function Insights() {
             played between us · {pool.untouched.length} never picked
           </p>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 @3xl:grid-cols-2">
             {/*
               `min-w-0`, because a grid track is `min-width: auto` by default:
               without it the column grows to its widest row and the truncation

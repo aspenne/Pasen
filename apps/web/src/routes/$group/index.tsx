@@ -3,21 +3,21 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { FeedMatchCard } from '@/components/FeedMatchCard'
-import { LiveGameCard } from '@/components/LiveGameCard'
-import { DuoHighlights } from '@/components/home/DuoHighlights'
-import { FearlessBanner } from '@/components/home/FearlessBanner'
-import { LesBanner } from '@/components/home/LesBanner'
-import { LatestCustoms } from '@/components/home/LatestCustoms'
+import {
+  DuoTile,
+  FearlessTile,
+  KpiTile,
+  LesTile,
+  SignatureTile,
+  WeekRhythmTile,
+} from '@/components/home/BentoTiles'
 import { GroupHero } from '@/components/home/GroupHero'
-import { RosterCard } from '@/components/home/RosterCard'
-import { GroupRhythm } from '@/components/home/GroupRhythm'
-import { SignatureChampions } from '@/components/home/SignatureChampions'
 import { Reveal } from '@/components/Reveal'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { memberColor, rankedQueueFor, rankScore } from '@/lib/format'
+import { memberColor } from '@/lib/format'
 
 /** Enough to show what kind of day it was without scrolling past it. */
 const FEED_PREVIEW = 6
@@ -56,50 +56,6 @@ function Dashboard() {
     // Matches land within a minute of a game ending, so refresh at that pace.
     refetchInterval: selected === today ? 60_000 : false,
   })
-
-  const { data: live } = useQuery({
-    queryKey: ['live', group],
-    queryFn: () => api.live(group),
-    // The worker polls Riot once a minute; asking more often than this would
-    // only re-read the same cache entry.
-    refetchInterval: 20_000,
-  })
-
-  /*
-   * Best standing first, in whichever ladder the scope is about - so switching
-   * to flex reorders the roster by flex.
-   *
-   * The original position travels with each member: their colour is assigned
-   * from it, and the rule is that a colour follows the person rather than their
-   * place in a list. Reordering the roster must not repaint the group.
-   */
-  const rosterByRank = useMemo(() => {
-    const queueType = rankedQueueFor(scope)
-    const entries = (overview?.members ?? []).map((member, index) => ({ member, index }))
-
-    /*
-     * Arena has no ladder, but it does have a standing: Riot counts any podium
-     * as a win there, so the win rate says little and the games actually taken
-     * say everything.
-     */
-    const standing = (entry: (typeof entries)[number]) =>
-      scope === 'arena'
-        ? entry.member.totals.firstPlaces
-        : scope === 'custom'
-          ? /*
-             * Inhouses have no ladder either. Most wins leads, as on the
-             * customs leaderboard; the rate breaks a tie, and the fraction
-             * keeps it from ever outweighing a whole win.
-             */
-            entry.member.totals.wins + entry.member.totals.winRate / 1000
-          : rankScore(entry.member.ranks.find((rank) => rank.queueType === queueType))
-
-    return entries.sort((a, b) => {
-      const difference = standing(b) - standing(a)
-      // Ties keep a stable order instead of shuffling on each load.
-      return difference !== 0 ? difference : a.index - b.index
-    })
-  }, [overview, scope])
 
   const colorFor = useMemo(() => {
     const colors = new Map(
@@ -165,53 +121,64 @@ function Dashboard() {
     })
   }, [feed])
 
+  const lastCustom = customs?.games[0]
+
   return (
     <div className="space-y-6">
-      <GroupHero
-        name={overview?.name ?? group}
-        dateLabel={selected === today ? 'today' : selected}
-        totals={totals}
-        groupGames={totalGames}
-        members={overview?.members.length ?? 0}
-        standout={
-          standout
-            ? {
-                displayName: standout.displayName,
-                championId: standout.championId,
-                championName: standout.championName,
-                kills: standout.kills,
-                deaths: standout.deaths,
-                assists: standout.assists,
-              }
-            : null
-        }
-        backdropChampionId={topChampionId}
-        staticData={staticData}
-      />
+      {/* The day at a glance, a tile each; the games themselves run full width below. */}
+      <div className="@container">
+        <div className="grid grid-cols-2 gap-3 @[640px]:grid-cols-4">
+          <GroupHero
+            className="col-span-full @[640px]:col-span-2 @[640px]:row-span-2"
+            name={overview?.name ?? group}
+            dateLabel={selected === today ? 'today' : selected}
+            totals={totals}
+            groupGames={totalGames}
+            members={overview?.members.length ?? 0}
+            standout={
+              standout
+                ? {
+                    displayName: standout.displayName,
+                    championId: standout.championId,
+                    championName: standout.championName,
+                    kills: standout.kills,
+                    deaths: standout.deaths,
+                    assists: standout.assists,
+                  }
+                : null
+            }
+            backdropChampionId={topChampionId}
+            staticData={staticData}
+          />
 
-      <FearlessBanner board={fearless} group={group} scope={scope} />
-      <LesBanner board={les} group={group} scope={scope} />
+          {les && !les.event.finished && <LesTile board={les} group={group} scope={scope} />}
+          <FearlessTile board={fearless} lastCustom={lastCustom} group={group} scope={scope} />
 
-      {live && live.games.length > 0 && (
-        <section>
-          <h2 className="mb-2.5 flex items-center gap-2 text-[13px] tracking-[0.04em] text-loss">
-            <span aria-hidden className="live-dot inline-block size-[7px] rounded-full bg-loss" />
-            IN GAME NOW · {live.games.length}
-          </h2>
-          <div className="space-y-2.5">
-            {live.games.map((game) => (
-              <LiveGameCard
-                key={game.gameId}
-                game={game}
-                staticData={staticData}
-                queueLabel={
-                  staticData?.queues?.[String(game.queueId)]?.description ?? game.gameMode
-                }
-              />
-            ))}
-          </div>
-        </section>
-      )}
+          <KpiTile
+            title="Win rate"
+            value={`${totals?.winRate ?? 0}%`}
+            detail={`${totals?.wins ?? 0}W ${totals?.losses ?? 0}L ${selected === today ? 'today' : 'that day'}`}
+            tone={(totals?.games ?? 0) === 0 ? 'text-ink' : (totals?.winRate ?? 0) >= 50 ? 'text-win' : 'text-loss'}
+          />
+          <KpiTile
+            title="Champions"
+            value={totals?.championsPlayed ?? 0}
+            detail={`played ${selected === today ? 'today' : 'that day'}`}
+          />
+
+          {activity && <WeekRhythmTile days={activity.days} />}
+          {duos?.pairs[0] && <DuoTile pair={duos.pairs[0]} nameOf={nameOf} group={group} scope={scope} />}
+          {groupChampions && groupChampions.champions.length > 0 && (
+            <SignatureTile
+              champions={groupChampions.champions}
+              group={group}
+              scope={scope}
+              staticData={staticData}
+              span={duos?.pairs[0] ? 2 : 4}
+            />
+          )}
+        </div>
+      </div>
 
       <section>
         <div className="mb-2 flex items-center justify-between">
@@ -287,64 +254,9 @@ function Dashboard() {
         )}
       </section>
 
-      {overview && overview.members.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-[13px] text-ink">Roster</h2>
-          <Reveal token={scope} className="grid gap-2 sm:grid-cols-2">
-            {rosterByRank.map(({ member, index }) => (
-              <RosterCard
-                key={member.slug}
-                member={member}
-                index={index}
-                groupSlug={group}
-                scope={scope}
-              />
-            ))}
-          </Reveal>
-        </section>
-      )}
-
-      {/*
-        Three things only this site can say, because they are about the group
-        rather than any one player. Short forms here; Insights carries the full
-        lists behind each link.
-      */}
-      {groupChampions && groupChampions.champions.length > 0 && (
-        <SignatureChampions
-          champions={groupChampions.champions}
-          groupSlug={group}
-          scope={scope}
-          staticData={staticData}
-        />
-      )}
-
-      {duos && duos.pairs.length > 0 && (
-        <DuoHighlights
-          pairs={duos.pairs}
-          nameOf={nameOf}
-          colorFor={colorFor}
-          groupSlug={group}
-          scope={scope}
-        />
-      )}
-
-      {customs && (
-        <LatestCustoms
-          games={customs.games}
-          groupSlug={group}
-          scope={scope}
-          timezone={timezone}
-        />
-      )}
-
-      {activity && <GroupRhythm days={activity.days} />}
-
       {feed && feed.matches.length > 0 && (
-        <p className="text-[11px] text-ink-dim">
-          All queues · times in {timezone}
-        </p>
+        <p className="text-[11px] text-ink-dim">All queues · times in {timezone}</p>
       )}
-
     </div>
   )
 }

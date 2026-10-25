@@ -45,7 +45,7 @@ function CustomGamePage() {
       <div className="space-y-4">
         {back}
         <Skeleton className="h-[90px]" />
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid gap-3 @3xl:grid-cols-2">
           <Skeleton className="h-[380px]" />
           <Skeleton className="h-[380px]" />
         </div>
@@ -120,7 +120,7 @@ function CustomGamePage() {
 
       {session?.authenticated && <WinnerControl game={game} group={group} />}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 @3xl:grid-cols-2">
         {game.teams.map((team) => (
           <CustomScoreboard
             key={team.side}

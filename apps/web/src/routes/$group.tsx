@@ -2,10 +2,14 @@ import { Link, Outlet, createFileRoute, useNavigate, useParams, useRouterState }
 import { useQuery } from '@tanstack/react-query'
 import { DEFAULT_SCOPE, QUEUE_SCOPES, type QueueScope } from '@pasen/shared'
 
+import { LiveRail } from '@/components/layout/LiveRail'
+import { RosterRail } from '@/components/layout/RosterRail'
+import { WeekBoards } from '@/components/layout/WeekBoards'
 import { PlayerSwitcher } from '@/components/nav/PlayerSwitcher'
 import { ScopeSelect } from '@/components/ScopeSelect'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { useStaticData } from '@/lib/ddragon'
 import { groupNav } from '@/lib/nav'
 
 /**
@@ -21,6 +25,18 @@ export const Route = createFileRoute('/$group')({
   }),
   component: GroupLayout,
 })
+
+const RAIL =
+  'flex min-w-0 flex-col gap-4 self-start min-[1280px]:sticky min-[1280px]:top-[68px] min-[1280px]:max-h-[calc(100vh-84px)] min-[1280px]:overflow-y-auto'
+
+/** The members in a game right now. */
+function playing(games: { participants: { memberSlug: string | null }[] }[]): Set<string> {
+  return new Set(
+    games.flatMap((game) => game.participants.map((participant) => participant.memberSlug)).filter(
+      (slug): slug is string => slug !== null
+    )
+  )
+}
 
 function GroupLayout() {
   const { group } = useParams({ from: '/$group' })
@@ -47,6 +63,20 @@ function GroupLayout() {
   })
 
   // The drafter is a full-screen board, like a champion select: no menu, no column.
+  const { data: live } = useQuery({
+    queryKey: ['live', group],
+    queryFn: () => api.live(group),
+    refetchInterval: 20_000,
+  })
+
+  const { data: week } = useQuery({
+    queryKey: ['leaderboards', group, 'week', scope],
+    queryFn: () => api.leaderboards(group, { period: 'week', scope }),
+    refetchInterval: 5 * 60_000,
+  })
+
+  const { data: staticData } = useStaticData()
+
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   if (pathname.endsWith('/draft')) {
     return (
@@ -59,7 +89,7 @@ function GroupLayout() {
   return (
     <div className="min-h-screen bg-ground text-ink">
       <header className="sticky top-0 z-30 border-b border-line bg-ground/95 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+        <div className="mx-auto flex max-w-[1640px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <div className="flex items-baseline gap-3">
             <Link
               to="/"
@@ -131,7 +161,7 @@ function GroupLayout() {
          * nothing new arrives, and nobody can tell "nobody played" from "we
          * stopped being able to look".
          */
-        <p className="mx-auto flex max-w-5xl flex-wrap items-baseline gap-x-2 border-l-2 border-accent bg-accent-soft/40 px-4 py-2.5 text-[13px] text-ink">
+        <p className="mx-auto flex max-w-[1640px] flex-wrap items-baseline gap-x-2 border-l-2 border-accent bg-accent-soft/40 px-4 py-2.5 text-[13px] text-ink">
           <span>Riot stopped accepting our key</span>
           {status.ingestion.since && (
             <span className="text-ink-muted">
@@ -150,15 +180,42 @@ function GroupLayout() {
         </p>
       )}
 
-      <main className="mx-auto max-w-5xl px-4 py-5">
-        {error ? (
-          <p className="border-l-2 border-loss bg-panel px-4 py-3 text-[13px] text-ink-muted">
-            No group called “{group}”.
-          </p>
-        ) : (
-          <Outlet />
+      {/*
+        Three columns on a wide screen: the roster on the left, what is
+        happening on the right, the page in between. Narrower, the roster drops
+        under the page; on a phone both rails follow the page, live games first.
+      */}
+      <div className="mx-auto grid max-w-[1640px] grid-cols-[minmax(0,1fr)] gap-4 px-4 py-5 min-[900px]:grid-cols-[minmax(0,1fr)_300px] min-[1280px]:grid-cols-[270px_minmax(0,1fr)_310px]">
+        <main className="@container min-w-0 min-[1280px]:order-2">
+          {error ? (
+            <p className="border-l-2 border-loss bg-panel px-4 py-3 text-[13px] text-ink-muted">
+              No group called “{group}”.
+            </p>
+          ) : (
+            <Outlet />
+          )}
+        </main>
+
+        {!error && (
+          <>
+            <aside className={`${RAIL} order-3 min-[900px]:col-span-full min-[1280px]:order-1 min-[1280px]:col-span-1`}>
+              {data && (
+                <RosterRail
+                  members={data.members}
+                  group={group}
+                  scope={scope}
+                  playing={playing(live?.games ?? [])}
+                />
+              )}
+            </aside>
+
+            <aside className={`${RAIL} order-2 min-[1280px]:order-3`}>
+              <LiveRail games={live?.games ?? []} staticData={staticData} />
+              {week && <WeekBoards boards={week} group={group} scope={scope} />}
+            </aside>
+          </>
         )}
-      </main>
+      </div>
     </div>
   )
 }

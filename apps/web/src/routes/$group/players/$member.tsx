@@ -261,10 +261,12 @@ function MemberPage() {
             rosterEntry && <RankPanel ranks={rosterEntry.ranks} points={lp?.points ?? []} />
           )}
 
-          <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+          {/* Sized on the column it sits in, not the window: beside two rails, a wide screen is a narrow page. */}
+          <div className="@container">
+          <div className="grid gap-4 @[600px]:grid-cols-[300px_minmax(0,1fr)]">
             {totals && cardStats && (
               <ProfileCard
-                className="aspect-[5/7] lg:aspect-auto lg:h-full lg:min-h-[460px]"
+                className="mx-auto aspect-[5/7] w-full max-w-[380px] @[600px]:max-w-none @[600px]:aspect-auto @[600px]:h-full @[600px]:min-h-[460px]"
                 name={profile?.displayName ?? memberSlug}
                 tagLine={account?.riotId.split('#')[1] ?? null}
                 rank={solo ?? null}
@@ -296,6 +298,7 @@ function MemberPage() {
               </CardContent>
             </Card>
             </div>
+          </div>
           </div>
 
           {/* Ranked standing still matters, just not first, when the page is about customs. */}

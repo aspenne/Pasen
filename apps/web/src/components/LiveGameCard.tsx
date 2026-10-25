@@ -103,10 +103,13 @@ export function LiveGameCard({
   game,
   staticData,
   queueLabel,
+  compact = false,
 }: {
   game: LiveGame
   staticData?: StaticData
   queueLabel: string
+  /** In a side column: the two sides stack instead of sitting side by side. */
+  compact?: boolean
 }) {
   const elapsed = useElapsed(game.startedAt, game.lengthSeconds)
   const [open, setOpen] = useState(false)
@@ -172,7 +175,7 @@ export function LiveGameCard({
           </span>
         </AccordionTrigger>
 
-        <AccordionContent className="grid gap-x-4 gap-y-3 p-3 pb-3 sm:grid-cols-2">
+        <AccordionContent className={`grid gap-x-4 gap-y-3 p-3 pb-3 ${compact ? '' : 'sm:grid-cols-2'}`}>
           {teams.map((team, index) => (
             <div key={index}>
               <div className="mb-1.5 px-1.5 text-[10px] uppercase tracking-[0.13em] text-ink-dim">

@@ -32,7 +32,7 @@ export function MatchScoreboard({
   return (
     <Reveal
       token={detail.matchId}
-      className={arena ? 'grid gap-2 sm:grid-cols-2' : 'grid gap-2 lg:grid-cols-2'}
+      className={arena ? 'grid gap-2 sm:grid-cols-2' : 'grid gap-2 @3xl:grid-cols-2'}
     >
       {detail.sides.map((side) => (
         <div key={side.id} className="min-w-0 rounded-[6px] border border-line bg-ground/50 p-3">
@@ -79,7 +79,7 @@ export function MatchScoreboard({
 
                   <RunePair perks={player.perks} staticData={staticData} size={20} />
 
-                  <div className="hidden shrink-0 xl:block">
+                  <div className="hidden shrink-0 @4xl:block">
                     <ItemRow items={player.items} staticData={staticData} />
                   </div>
 
