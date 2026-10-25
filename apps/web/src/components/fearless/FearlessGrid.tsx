@@ -5,6 +5,8 @@ import { toast } from 'sonner'
 import { api, type FearlessBoard, type StaticData } from '@/lib/api'
 import { championIcon } from '@/lib/ddragon'
 import { availability, searchChampions, type ChampionEntry } from '@/lib/fearless'
+import { matchesRole, type RoleFilter } from '@/lib/roles'
+import { RoleFilterBar } from '@/components/RoleFilterBar'
 
 /**
  * Every champion, the used-up ones struck through, answering the one question
@@ -28,6 +30,7 @@ export function FearlessGrid({
 }) {
   const [query, setQuery] = useState('')
   const [hideBurned, setHideBurned] = useState(false)
+  const [role, setRole] = useState<RoleFilter>('ALL')
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const champions: ChampionEntry[] = useMemo(
@@ -36,13 +39,14 @@ export function FearlessGrid({
         id: Number(id),
         name: champion.name,
         slug: champion.slug,
+        positions: champion.positions ?? [],
       })),
     [staticData]
   )
   const burnOf = useMemo(() => new Map(board.burned.map((burn) => [burn.championId, burn])), [board])
   const freed = useMemo(() => new Set(board.freed), [board])
 
-  const found = searchChampions(champions, query)
+  const found = searchChampions(champions, query).filter((champion) => matchesRole(champion.positions, role))
   const shown = hideBurned ? found.filter((champion) => !burnOf.has(champion.id)) : found
   const single = query.trim() && found.length === 1 ? found[0] : null
   const selected = champions.find((champion) => champion.id === selectedId) ?? null
@@ -71,6 +75,8 @@ export function FearlessGrid({
           {burnedCount} burned · {champions.length - burnedCount} free
         </span>
       </div>
+
+      <RoleFilterBar value={role} onChange={setRole} />
 
       {single && (
         <p

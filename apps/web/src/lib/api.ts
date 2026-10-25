@@ -573,7 +573,8 @@ export type AdminStatus = {
 
 export type StaticData = {
   version: string | null
-  champions: Record<string, { slug: string; name: string; title: string; tags: string[] }>
+  /** `positions`: the lanes a champion is played in, for the role filters. */
+  champions: Record<string, { slug: string; name: string; title: string; tags: string[]; positions?: string[] }>
   summonerSpells: Record<string, { slug: string; name: string }>
   queues: Record<string, { description: string | null; map: string | null }>
   /** Styles and runes together, keyed by the id a match payload uses. */
@@ -682,6 +683,21 @@ export type LesBoard = {
   }[]
 }
 
+/** A draft as everyone sees it, polled every second. */
+export type DraftView = {
+  id: number
+  nightId: number | null
+  serverTime: string
+  createdAt: string
+  stepStartedAt: string
+  finishedAt: string | null
+  seats: { blue: boolean; red: boolean }
+  hover: number | null
+  current: { step: number; side: 'blue' | 'red'; kind: 'ban' | 'pick' } | null
+  actions: import('@pasen/shared').DraftAction[]
+  burned: number[]
+}
+
 /** One group on the front page: who is in it, and what is happening there now. */
 export type GroupCard = {
   slug: string
@@ -737,6 +753,36 @@ export const api = {
     apiFetch<{ days: ActivityDay[] }>(`/api/groups/${slug}/activity${searchOf(params)}`),
 
   groups: () => apiFetch<{ groups: GroupCard[] }>('/api/groups'),
+  /** Undefined when the group never drafted. */
+  currentDraft: (slug: string) => apiFetch<DraftView | undefined>(`/api/groups/${slug}/drafts/current`),
+  nightDrafts: (slug: string, nightId: number) =>
+    apiFetch<{ drafts: DraftView[] }>(`/api/groups/${slug}/drafts?night=${nightId}`),
+  createDraft: (slug: string) => apiFetch<DraftView>(`/api/groups/${slug}/drafts`, { method: 'POST' }),
+  takeSeat: (slug: string, id: number, side: 'blue' | 'red') =>
+    apiFetch<{ side: 'blue' | 'red'; token: string }>(`/api/groups/${slug}/drafts/${id}/seats`, {
+      method: 'POST',
+      body: JSON.stringify({ side }),
+    }),
+  leaveSeat: (slug: string, id: number, side: 'blue' | 'red', token: string) =>
+    apiFetch<void>(`/api/groups/${slug}/drafts/${id}/seats/${side}`, {
+      method: 'DELETE',
+      headers: { 'x-draft-seat': token },
+    }),
+  hoverDraft: (slug: string, id: number, token: string, championId: number | null) =>
+    apiFetch<{ hover: number | null }>(`/api/groups/${slug}/drafts/${id}/hover`, {
+      method: 'PUT',
+      headers: { 'x-draft-seat': token },
+      body: JSON.stringify({ championId }),
+    }),
+  lockDraft: (slug: string, id: number, token: string, championId: number, role: string | null) =>
+    apiFetch<DraftView>(`/api/groups/${slug}/drafts/${id}/actions`, {
+      method: 'POST',
+      headers: { 'x-draft-seat': token },
+      body: JSON.stringify({ championId, role }),
+    }),
+  cancelDraft: (id: number) => apiFetch<void>(`/api/admin/drafts/${id}`, { method: 'DELETE' }),
+  freeDraftSeat: (id: number, side: 'blue' | 'red') =>
+    apiFetch<void>(`/api/admin/drafts/${id}/seats/${side}`, { method: 'DELETE' }),
   les: (slug: string) => apiFetch<LesBoard>(`/api/groups/${slug}/events/les`),
   roulette: (slug: string) => apiFetch<RouletteView>(`/api/groups/${slug}/roulette`),
   rouletteCards: (slug: string) =>

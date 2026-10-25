@@ -22,6 +22,13 @@ export default class StaticChampion extends BaseModel {
   })
   declare tags: string[]
 
+  /** Lanes the champion is played in: TOP, JUNGLE, MIDDLE, BOTTOM, UTILITY. */
+  @column({
+    prepare: (value: unknown) => JSON.stringify(value ?? []),
+    consume: (value: unknown) => value,
+  })
+  declare positions: string[]
+
   @column()
   declare image: string
 

@@ -1,6 +1,7 @@
-import { createFileRoute, useParams, useSearch } from '@tanstack/react-router'
+import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 
+import { FearlessDrafts } from '@/components/fearless/FearlessDrafts'
 import { FearlessGames } from '@/components/fearless/FearlessGames'
 import { FearlessGrid } from '@/components/fearless/FearlessGrid'
 import { FearlessHeader } from '@/components/fearless/FearlessHeader'
@@ -55,6 +56,14 @@ function FearlessPage() {
   return (
     <div className="space-y-6">
       <FearlessHeader board={board} group={group} admin={admin} timezone={timezone} />
+      <Link
+        to="/$group/draft"
+        params={{ group }}
+        search={{ scope }}
+        className="cut-tab tap display inline-flex items-center bg-accent px-4 py-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-on-accent"
+      >
+        Draft
+      </Link>
       {board && staticData && (
         <FearlessGrid board={board} staticData={staticData} group={group} admin={admin} />
       )}
@@ -68,6 +77,7 @@ function FearlessPage() {
           timezone={timezone}
         />
       )}
+      {board && <FearlessDrafts group={group} nightId={board.night.id} staticData={staticData} />}
     </div>
   )
 }

@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupRouteImport } from './routes/$group'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
+import { Route as GroupDraftRouteImport } from './routes/$group/draft'
 import { Route as GroupFearlessRouteImport } from './routes/$group/fearless'
 import { Route as GroupInsightsRouteImport } from './routes/$group/insights'
 import { Route as GroupLesRouteImport } from './routes/$group/les'
@@ -39,6 +40,11 @@ const AdminRoute = AdminRouteImport.update({
 const GroupIndexRoute = GroupIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => GroupRoute,
+} as any)
+const GroupDraftRoute = GroupDraftRouteImport.update({
+  id: '/draft',
+  path: '/draft',
   getParentRoute: () => GroupRoute,
 } as any)
 const GroupFearlessRoute = GroupFearlessRouteImport.update({
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
   '/admin': typeof AdminRoute
+  '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/les': typeof GroupLesRoute
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/les': typeof GroupLesRoute
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
   '/admin': typeof AdminRoute
+  '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
   '/$group/insights': typeof GroupInsightsRoute
   '/$group/les': typeof GroupLesRoute
@@ -122,6 +131,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$group'
     | '/admin'
+    | '/$group/draft'
     | '/$group/fearless'
     | '/$group/insights'
     | '/$group/les'
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/$group/draft'
     | '/$group/fearless'
     | '/$group/insights'
     | '/$group/les'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$group'
     | '/admin'
+    | '/$group/draft'
     | '/$group/fearless'
     | '/$group/insights'
     | '/$group/les'
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/$group/'
       preLoaderRoute: typeof GroupIndexRouteImport
+      parentRoute: typeof GroupRoute
+    }
+    '/$group/draft': {
+      id: '/$group/draft'
+      path: '/draft'
+      fullPath: '/$group/draft'
+      preLoaderRoute: typeof GroupDraftRouteImport
       parentRoute: typeof GroupRoute
     }
     '/$group/fearless': {
@@ -246,6 +265,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface GroupRouteChildren {
+  GroupDraftRoute: typeof GroupDraftRoute
   GroupFearlessRoute: typeof GroupFearlessRoute
   GroupInsightsRoute: typeof GroupInsightsRoute
   GroupLesRoute: typeof GroupLesRoute
@@ -257,6 +277,7 @@ interface GroupRouteChildren {
 }
 
 const GroupRouteChildren: GroupRouteChildren = {
+  GroupDraftRoute: GroupDraftRoute,
   GroupFearlessRoute: GroupFearlessRoute,
   GroupInsightsRoute: GroupInsightsRoute,
   GroupLesRoute: GroupLesRoute,

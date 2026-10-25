@@ -16,7 +16,7 @@ export default class StaticController {
   async index({ response }: HttpContext) {
     const [version, champions, spells, queues, runes] = await Promise.all([
       Setting.find('ddragon.version'),
-      StaticChampion.query().select('id', 'slug', 'name', 'title', 'tags'),
+      StaticChampion.query().select('id', 'slug', 'name', 'title', 'tags', 'positions'),
       StaticSummonerSpell.query().select('id', 'slug', 'name'),
       StaticQueue.query().select('queueId', 'description', 'map'),
       StaticRune.query().select('id', 'kind', 'name', 'image'),
@@ -39,7 +39,13 @@ export default class StaticController {
       champions: Object.fromEntries(
         champions.map((champion) => [
           champion.id,
-          { slug: champion.slug, name: champion.name, title: champion.title, tags: champion.tags },
+          {
+            slug: champion.slug,
+            name: champion.name,
+            title: champion.title,
+            tags: champion.tags,
+            positions: champion.positions ?? [],
+          },
         ])
       ),
       summonerSpells: Object.fromEntries(
