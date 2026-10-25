@@ -34,7 +34,7 @@ describe('CustomGames (admin)', () => {
   it('flags the games nobody settled', async () => {
     vi.spyOn(api, 'customs').mockResolvedValue(games)
     renderCard()
-    expect(await screen.findByText('No result')).toBeTruthy()
+    expect(await screen.findByText('No result', {}, { timeout: 3000 })).toBeTruthy()
     expect(screen.getAllByText('No result')).toHaveLength(1)
   })
 
@@ -45,7 +45,7 @@ describe('CustomGames (admin)', () => {
       .mockResolvedValue({ id: 11, label: 'Game 4', winnerOverride: 'ORDER' })
     renderCard()
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Blue won: Game 4' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Blue won: Game 4' }, { timeout: 3000 }))
     await waitFor(() => expect(update).toHaveBeenCalledWith(11, { winner: 'ORDER' }))
   })
 

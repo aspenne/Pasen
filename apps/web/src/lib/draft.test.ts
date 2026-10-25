@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DraftAction } from '@pasen/shared'
 
-import { bansOf, lockError, picksByRole, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
+import { bansOf, lockError, picksByRole, previewLane, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
 
 const actions: DraftAction[] = [
   { step: 0, side: 'blue', kind: 'ban', championId: 10, role: null },
@@ -60,5 +60,13 @@ describe('lockError', () => {
     expect(lockError(401)).toBe('Your seat was freed. Take it again to keep playing.')
     expect(lockError(422)).toBe('That champion is banned, picked or burned, or that lane is taken.')
     expect(lockError(403)).toBe('It is not your turn.')
+  })
+})
+
+describe('previewLane', () => {
+  it("shows the hovered champion in the lane it would take: its own if free, else the next free one", () => {
+    expect(previewLane(actions, 'blue', ['MIDDLE', 'UTILITY'])).toBe('UTILITY')
+    expect(previewLane(actions, 'red', ['MIDDLE'])).toBe('MIDDLE')
+    expect(previewLane(actions, 'red', [])).toBe('JUNGLE')
   })
 })

@@ -1,4 +1,4 @@
-import { Link, Outlet, createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
+import { Link, Outlet, createFileRoute, useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { DEFAULT_SCOPE, QUEUE_SCOPES, type QueueScope } from '@pasen/shared'
 
@@ -45,6 +45,16 @@ function GroupLayout() {
     queryFn: () => api.status(),
     refetchInterval: 5 * 60_000,
   })
+
+  // The drafter is a full-screen board, like a champion select: no menu, no column.
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  if (pathname.endsWith('/draft')) {
+    return (
+      <div className="min-h-screen bg-ground text-ink">
+        <Outlet />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-ground text-ink">

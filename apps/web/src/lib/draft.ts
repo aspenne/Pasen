@@ -1,4 +1,4 @@
-import { DRAFT_ROLES, type DraftAction, type DraftRole, type DraftSide } from '@pasen/shared'
+import { DRAFT_ROLES, defaultRole, type DraftAction, type DraftRole, type DraftSide } from '@pasen/shared'
 
 /** The length of a turn on the clock. Shown only: nothing happens at zero. */
 export const TURN_SECONDS = 30
@@ -64,4 +64,13 @@ export function lockError(status: number): string {
   if (status === 401) return 'Your seat was freed. Take it again to keep playing.'
   if (status === 403) return 'It is not your turn.'
   return 'That champion is banned, picked or burned, or that lane is taken.'
+}
+
+/**
+ * The lane a hovered champion would land in if locked now - the same default
+ * the server applies - so every screen previews it in the same card.
+ */
+export function previewLane(actions: readonly DraftAction[], side: DraftSide, positions: readonly string[]): DraftRole | null {
+  const taken = actions.filter((a) => a.side === side && a.kind === 'pick' && a.role).map((a) => a.role as string)
+  return defaultRole(positions, taken)
 }
