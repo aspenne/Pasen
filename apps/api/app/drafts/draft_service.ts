@@ -21,6 +21,17 @@ export class DraftError extends Error {
 
 const hash = (token: string) => createHash('sha256').update(token).digest('hex')
 
+/** Postgres refusing a write another request just made: a unique or foreign key clash. */
+const lostRace = (error: unknown) => ['23505', '23503'].includes((error as { code?: string })?.code ?? '')
+
+/**
+ * The burned list changes when a game is uploaded, not every second; every
+ * viewer polls the draft each second, so it is worked out once per night for
+ * a few seconds rather than once per request.
+ */
+const BURNED_TTL_MS = 10_000
+const burnedCache = new Map<number, { at: number; ids: number[] }>()
+
 export type DraftView = {
   id: number
   nightId: number | null
@@ -41,8 +52,13 @@ export type DraftView = {
  * @pasen/shared so the page shows exactly what this enforces.
  */
 export class DraftService {
+  /** The running draft if there is one, otherwise the last one played. */
   async current(group: Group): Promise<Draft | null> {
-    return Draft.query().where('group_id', group.id).orderBy('id', 'desc').first()
+    return Draft.query()
+      .where('group_id', group.id)
+      .orderByRaw('(finished_at IS NULL) DESC')
+      .orderBy('id', 'desc')
+      .first()
   }
 
   async create(group: Group): Promise<Draft> {
@@ -52,11 +68,19 @@ export class DraftService {
     const fearless = new FearlessService()
     const night = await fearless.latest(group)
     const active = night ? (await fearless.board(night)).night.active : false
-    return Draft.create({
-      groupId: group.id,
-      fearlessNightId: active ? night!.id : null,
-      stepStartedAt: DateTime.now(),
-    })
+    try {
+      // Its own transaction, so a clash rolls back alone instead of poisoning the connection.
+      return await db.transaction((trx) =>
+        Draft.create(
+          { groupId: group.id, fearlessNightId: active ? night!.id : null, stepStartedAt: DateTime.now() },
+          { client: trx }
+        )
+      )
+    } catch (error) {
+      // Someone else pressed New draft a moment earlier: theirs stands.
+      if (lostRace(error)) throw new DraftError(409, 'A draft is already running.')
+      throw error
+    }
   }
 
   async takeSeat(draft: Draft, side: DraftSide): Promise<string> {
@@ -107,6 +131,21 @@ export class DraftService {
       throw new DraftError(verdict.reason === 'not-your-turn' ? 403 : verdict.reason === 'finished' ? 409 : 422, verdict.reason)
     }
 
+    try {
+      await this.#record(draft, side, championId, verdict)
+    } catch (error) {
+      // A double click, or the other tab: the same step was just written.
+      if (lostRace(error)) throw new DraftError(409, 'Someone was quicker.')
+      throw error
+    }
+  }
+
+  async #record(
+    draft: Draft,
+    side: DraftSide,
+    championId: number,
+    verdict: { step: number; kind: 'ban' | 'pick'; role: DraftRole | null }
+  ) {
     await db.transaction(async (trx) => {
       await DraftActionRow.create(
         { draftId: draft.id, step: verdict.step, side, kind: verdict.kind, championId, role: verdict.role },
@@ -120,8 +159,8 @@ export class DraftService {
     })
   }
 
-  async view(draft: Draft): Promise<DraftView> {
-    await draft.load('actions', (actions) => actions.orderBy('step'))
+  async view(draft: Draft, options: { burned?: boolean } = {}): Promise<DraftView> {
+    if (!draft.$preloaded.actions) await draft.load('actions')
     const actions = this.#actions(draft)
     const index = currentStep(actions)
     return {
@@ -135,13 +174,18 @@ export class DraftService {
       hover: draft.hoverChampionId,
       current: index === null ? null : { step: index, ...DRAFT_STEPS[index] },
       actions,
-      burned: await this.#burned(draft),
+      // History does not need it: burned only matters while a draft is played.
+      burned: options.burned === false ? [] : await this.#burned(draft),
     }
   }
 
   async history(group: Group, nightId: number): Promise<DraftView[]> {
-    const drafts = await Draft.query().where('group_id', group.id).where('fearless_night_id', nightId).orderBy('id')
-    return Promise.all(drafts.map((draft) => this.view(draft)))
+    const drafts = await Draft.query()
+      .where('group_id', group.id)
+      .where('fearless_night_id', nightId)
+      .preload('actions')
+      .orderBy('id')
+    return Promise.all(drafts.map((draft) => this.view(draft, { burned: false })))
   }
 
   #actions(draft: Draft): DraftAction[] {
@@ -171,9 +215,13 @@ export class DraftService {
   /** Burned champions of the draft's fearless night, while that night runs. */
   async #burned(draft: Draft): Promise<number[]> {
     if (!draft.fearlessNightId) return []
+    const cached = burnedCache.get(draft.fearlessNightId)
+    if (cached && Date.now() - cached.at < BURNED_TTL_MS) return cached.ids
     const night = await FearlessNight.find(draft.fearlessNightId)
     if (!night) return []
     const board = await new FearlessService().board(night)
-    return board.night.active ? board.burned.map((burn) => burn.championId) : []
+    const ids = board.night.active ? board.burned.map((burn) => burn.championId) : []
+    burnedCache.set(draft.fearlessNightId, { at: Date.now(), ids })
+    return ids
   }
 }

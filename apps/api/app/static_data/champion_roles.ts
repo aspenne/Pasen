@@ -55,7 +55,7 @@ export class ChampionRoleService {
   async sync(): Promise<number> {
     let meraki: Meraki
     try {
-      const response = await (this.options.fetch ?? globalThis.fetch)(MERAKI)
+      const response = await (this.options.fetch ?? globalThis.fetch)(MERAKI, { signal: AbortSignal.timeout(20_000) })
       if (!response.ok) throw new Error(`Meraki answered ${response.status}`)
       meraki = (await response.json()) as Meraki
     } catch (error) {
@@ -64,6 +64,16 @@ export class ChampionRoleService {
     }
 
     const champions = await StaticChampion.query().select('id')
+    /*
+     * A 200 carrying an empty or reshaped body would otherwise wipe every
+     * champion's roles: too few champions recognised means keep what we have.
+     */
+    const known = new Set(Object.values(meraki ?? {}).map((entry) => entry?.id))
+    const matched = champions.filter((champion) => known.has(champion.id)).length
+    if (matched < Math.min(100, champions.length / 2)) {
+      this.options.logger?.warn({ matched }, 'Meraki answered with too little; champion roles kept')
+      return 0
+    }
     const rows = await db
       .from('match_participants')
       .whereNotNull('team_position')

@@ -49,3 +49,19 @@ export function writeSeat(draftId: number, seat: { side: DraftSide; token: strin
     // Private mode: the seat lasts as long as the page does.
   }
 }
+
+/**
+ * Whether the seat this browser remembers is still taken at all. When the
+ * admin frees it, the page must stop acting as that side's captain.
+ */
+export function seatStillHeld(seat: { side: DraftSide } | null, draft: { seats: Record<DraftSide, boolean> }): boolean {
+  return Boolean(seat && draft.seats[seat.side])
+}
+
+/** What to tell a captain whose lock the server refused. */
+export function lockError(status: number): string {
+  if (status === 409) return 'Someone was quicker. The draft has moved on.'
+  if (status === 401) return 'Your seat was freed. Take it again to keep playing.'
+  if (status === 403) return 'It is not your turn.'
+  return 'That champion is banned, picked or burned, or that lane is taken.'
+}

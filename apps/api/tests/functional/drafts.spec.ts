@@ -145,4 +145,23 @@ test.group('Drafts', (group) => {
     ;(await client.delete(`/api/admin/drafts/${id}`).loginAs(admin)).assertStatus(204)
     assert.equal((await client.get(`${BASE}/current`)).status(), 204)
   })
+
+  test('two locks at the same moment: one goes through, the other is told someone was quicker', async ({ client, assert }) => {
+    await setup()
+    const { id } = (await client.post(BASE)).body()
+    const blue = (await client.post(`${BASE}/${id}/seats`).json({ side: 'blue' })).body().token
+    const lock = (championId: number) =>
+      client.post(`${BASE}/${id}/actions`).header('x-draft-seat', blue).json({ championId })
+    const statuses = (await Promise.all([lock(3), lock(4)])).map((r) => r.status()).sort()
+    assert.deepEqual(statuses, [201, 409])
+    assert.lengthOf((await client.get(`${BASE}/current`)).body().actions, 1)
+  })
+
+  test('two people starting a draft at once make one draft, not two', async ({ client, assert }) => {
+    await setup()
+    const statuses = (await Promise.all([client.post(BASE), client.post(BASE), client.post(BASE)]))
+      .map((r) => r.status())
+      .sort()
+    assert.deepEqual(statuses, [201, 409, 409])
+  })
 })

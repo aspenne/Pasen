@@ -8,7 +8,7 @@ import { RoleFilterBar } from '@/components/RoleFilterBar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError, type DraftView, type StaticData } from '@/lib/api'
 import { championIcon, championCentered, useStaticData } from '@/lib/ddragon'
-import { bansOf, picksByRole, readSeat, secondsLeft, turnLabel, writeSeat } from '@/lib/draft'
+import { bansOf, lockError, picksByRole, readSeat, seatStillHeld, secondsLeft, turnLabel, writeSeat } from '@/lib/draft'
 import { searchChampions, type ChampionEntry } from '@/lib/fearless'
 import { matchesRole, type RoleFilter } from '@/lib/roles'
 import { ROLES, roleIcon } from '@/lib/roulette'
@@ -40,6 +40,14 @@ function DraftPage() {
   const offset = draft ? Date.parse(draft.serverTime) - draftQuery.dataUpdatedAt : 0
   const [seat, setSeat] = useState<{ side: DraftSide; token: string } | null>(null)
   useEffect(() => setSeat(draft ? readSeat(draft.id) : null), [draft?.id])
+  // The admin freed this seat: stop playing as that captain, and say so once.
+  useEffect(() => {
+    if (draft && seat && !seatStillHeld(seat, draft)) {
+      writeSeat(draft.id, null)
+      setSeat(null)
+      toast.info('Your seat was freed.')
+    }
+  }, [draft?.seats.blue, draft?.seats.red])
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['draft', group] })
   const failed = (error: unknown) =>
@@ -64,7 +72,11 @@ function DraftPage() {
     },
   })
   const cancel = useMutation({ mutationFn: () => api.cancelDraft(draft!.id), onSuccess: refresh, onError: failed })
-  const free = useMutation({ mutationFn: (side: DraftSide) => api.freeDraftSeat(draft!.id, side), onSuccess: refresh })
+  const free = useMutation({
+    mutationFn: (side: DraftSide) => api.freeDraftSeat(draft!.id, side),
+    onSuccess: refresh,
+    onError: () => toast.error('Could not free that seat. Are you still signed in?'),
+  })
 
   const admin = Boolean(session?.authenticated)
   const open = draft && !draft.finishedAt
@@ -124,7 +136,7 @@ function DraftPage() {
             group={group}
             staticData={staticData}
             roster={rosterOf(roulette)}
-            onLocked={refresh}
+            onLocked={(next) => queryClient.setQueryData(['draft', group], next)}
           />
         </>
       )}
@@ -211,7 +223,7 @@ function Board({
   group: string
   staticData: StaticData | undefined
   roster: Record<DraftSide, Partial<Record<DraftRole, string>>>
-  onLocked: () => void
+  onLocked: (next: DraftView) => void
 }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -325,7 +337,7 @@ function Pool({
   myTurn: boolean
   group: string
   staticData: StaticData | undefined
-  onLocked: () => void
+  onLocked: (next: DraftView) => void
 }) {
   const [query, setQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState<RoleFilter>('ALL')
@@ -360,8 +372,13 @@ function Pool({
 
   const lock = useMutation({
     mutationFn: () => api.lockDraft(group, draft.id, seat!.token, selected!, picking ? lane : null),
-    onSuccess: onLocked,
-    onError: () => toast.error('That champion cannot be taken now.'),
+    onSuccess: (next) => {
+      // Shown at once, so the same side playing twice in a row cannot lock the same click twice.
+      setSelected(null)
+      setRole(null)
+      onLocked(next)
+    },
+    onError: (error) => toast.error(lockError(error instanceof ApiError ? error.status : 422)),
   })
 
   const choose = (id: number) => {
