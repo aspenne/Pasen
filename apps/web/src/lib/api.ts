@@ -573,7 +573,8 @@ export type AdminStatus = {
 
 export type StaticData = {
   version: string | null
-  champions: Record<string, { slug: string; name: string; title: string; tags: string[] }>
+  /** `positions`: the lanes a champion is played in, for the role filters. */
+  champions: Record<string, { slug: string; name: string; title: string; tags: string[]; positions?: string[] }>
   summonerSpells: Record<string, { slug: string; name: string }>
   queues: Record<string, { description: string | null; map: string | null }>
   /** Styles and runes together, keyed by the id a match payload uses. */

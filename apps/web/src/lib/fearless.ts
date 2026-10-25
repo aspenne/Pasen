@@ -1,6 +1,6 @@
 import type { FearlessBurn } from '@/lib/api'
 
-export type ChampionEntry = { id: number; name: string; slug: string }
+export type ChampionEntry = { id: number; name: string; slug: string; positions?: string[] }
 
 /**
  * What a name looks like typed in a hurry during a draft: no case, no accents,

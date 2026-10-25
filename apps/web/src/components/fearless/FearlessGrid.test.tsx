@@ -8,9 +8,9 @@ import type { FearlessBoard, StaticData } from '@/lib/api'
 const staticData = {
   version: '16.20.1',
   champions: {
-    '103': { slug: 'Ahri', name: 'Ahri', title: '', tags: [] },
-    '145': { slug: 'Kaisa', name: "Kai'Sa", title: '', tags: [] },
-    '20': { slug: 'Nunu', name: 'Nunu & Willump', title: '', tags: [] },
+    '103': { slug: 'Ahri', name: 'Ahri', title: '', tags: [], positions: ['MIDDLE'] },
+    '145': { slug: 'Kaisa', name: "Kai'Sa", title: '', tags: [], positions: ['BOTTOM'] },
+    '20': { slug: 'Nunu', name: 'Nunu & Willump', title: '', tags: [], positions: ['JUNGLE'] },
   },
   summonerSpells: {},
   queues: {},
@@ -67,5 +67,14 @@ describe('FearlessGrid', () => {
     renderGrid(true)
     fireEvent.click(screen.getByRole('button', { name: /Kai'Sa, free/ }))
     expect(screen.getByRole('button', { name: 'Burn' })).toBeTruthy()
+  })
+
+  it('filters the grid by role', () => {
+    renderGrid()
+    fireEvent.click(screen.getByRole('radio', { name: 'Mid' }))
+    expect(screen.getByRole('button', { name: /Ahri/ })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Kai'Sa/ })).toBeNull()
+    fireEvent.click(screen.getByRole('radio', { name: 'All' }))
+    expect(screen.getByRole('button', { name: /Kai'Sa/ })).toBeTruthy()
   })
 })
