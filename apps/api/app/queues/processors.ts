@@ -26,6 +26,7 @@ import { DecayService, decayKey } from '#stats/decay_service'
 import { RiotKeyRejectedError } from '#riot/errors'
 import type { RedisLike } from '#riot/redis'
 import { DDragonService } from '#static_data/ddragon_service'
+import { ChampionRoleService } from '#static_data/champion_roles'
 
 /**
  * Budget per backfill step. Small on purpose: a step holds the shared Riot
@@ -281,6 +282,9 @@ export async function processStaticSync(): Promise<void> {
   if (!result.skipped) {
     logger.info(result, 'data dragon synced')
   }
+  // Every day, not only on a new patch: Meraki revises roles between patches,
+  // and a champion out this week only gets its role once it has been played.
+  await new ChampionRoleService({ logger }).sync()
 }
 
 export async function processPuuidRekey(): Promise<void> {
