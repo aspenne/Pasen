@@ -110,7 +110,7 @@ test.group('lesBoard', () => {
 
   test("tags each account with its member's LAN team, and sums each team", ({ assert }) => {
     const board = lesBoard(
-      [account(1, 'noah'), account(2, 'noah'), account(3, 'azizes'), account(4, 'chaf')],
+      [account(1, 'noah'), account(2, 'noah'), account(3, 'prince-bojji'), account(4, 'chaf')],
       [
         reading(1, at(-1), 'MASTER', 'I', 100, 0, 0), reading(1, at(2), 'MASTER', 'I', 300, 6, 2),
         reading(2, at(-1), 'GOLD', 'I', 0, 0, 0), reading(2, at(2), 'GOLD', 'I', 0, 1, 1),
@@ -122,7 +122,7 @@ test.group('lesBoard', () => {
     const teamOf = Object.fromEntries(board.entries.map((e) => [`${e.memberSlug}-${e.games}`, e.team]))
     assert.equal(teamOf['noah-8'], 'honest')
     assert.equal(teamOf['noah-2'], 'honest')
-    assert.equal(teamOf['azizes-3'], 'hungry')
+    assert.equal(teamOf['prince-bojji-3'], 'hungry')
     assert.isNull(teamOf['chaf-4'])
     assert.deepEqual(board.teams, [
       { key: 'honest', name: 'Honnêtes & Gourmets', lpGained: 200, games: 10, activeAccounts: 2, accounts: 2 },

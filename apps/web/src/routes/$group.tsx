@@ -1,6 +1,6 @@
 import { Link, Outlet, createFileRoute, useNavigate, useParams, useRouterState } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { DEFAULT_SCOPE, QUEUE_SCOPES, type QueueScope } from '@pasen/shared'
+import { QUEUE_SCOPES, SITE_SCOPE, type QueueScope } from '@pasen/shared'
 
 import { LiveRail } from '@/components/layout/LiveRail'
 import { RosterRail } from '@/components/layout/RosterRail'
@@ -21,7 +21,7 @@ export const Route = createFileRoute('/$group')({
   validateSearch: (search: Record<string, unknown>): { scope: QueueScope } => ({
     scope: QUEUE_SCOPES.includes(search.scope as QueueScope)
       ? (search.scope as QueueScope)
-      : DEFAULT_SCOPE,
+      : SITE_SCOPE,
   }),
   component: GroupLayout,
 })

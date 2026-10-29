@@ -25,7 +25,7 @@ export const LES_TEAMS = [
   {
     key: 'hungry',
     name: 'Malhonnêtes & Affamés',
-    members: ['3c-patate-chaude', 'adam-le-gourmand', 'azizes', 'loris-la-malice', 'koko'],
+    members: ['3c-patate-chaude', 'adam-le-gourmand', 'prince-bojji', 'loris-la-malice', 'koko'],
   },
 ] as const
 

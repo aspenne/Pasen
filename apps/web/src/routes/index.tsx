@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { DEFAULT_SCOPE } from '@pasen/shared'
+import { SITE_SCOPE } from '@pasen/shared'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type GroupCard, type StaticData } from '@/lib/api'
@@ -78,7 +78,7 @@ function GroupTile({ group, staticData }: { group: GroupCard; staticData: Static
     <Link
       to="/$group"
       params={{ group: group.slug }}
-      search={{ scope: DEFAULT_SCOPE }}
+      search={{ scope: SITE_SCOPE }}
       className="group/tile flex h-full flex-col gap-4 border border-line bg-panel px-5 py-5 transition-colors hover:border-line-strong hover:bg-panel-raised focus-visible:border-accent"
     >
       <div className="flex items-baseline justify-between gap-3">

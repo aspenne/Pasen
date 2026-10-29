@@ -49,6 +49,11 @@ export function kda(kills: number, deaths: number, assists: number): string {
   return (((kills + assists) / Math.max(deaths, 1)) * 1).toFixed(2)
 }
 
+/** Creep score, with the rate that compares across game lengths. */
+export function csLine(cs: number, seconds: number): string {
+  return seconds > 0 ? `${cs} cs · ${(cs / (seconds / 60)).toFixed(1)}/min` : `${cs} cs`
+}
+
 export function timeAgo(iso: string, now = Date.now()): string {
   const minutes = Math.round((now - new Date(iso).getTime()) / 60000)
   if (minutes < 1) return 'just now'

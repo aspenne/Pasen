@@ -5,7 +5,7 @@ import { ItemRow } from '@/components/ItemRow'
 import { RunePair } from '@/components/RunePair'
 import { Reveal } from '@/components/Reveal'
 import type { MatchDetail, MatchDetailSide, StaticData } from '@/lib/api'
-import { kda, positionLabel } from '@/lib/format'
+import { csLine, kda, positionLabel } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
 
 type MatchScoreboardProps = {
@@ -88,7 +88,7 @@ export function MatchScoreboard({
                       {player.kills} / {player.deaths} / {player.assists}
                     </div>
                     <div className="tnum text-[11px] text-ink-dim">
-                      {kda(player.kills, player.deaths, player.assists)} · {player.cs} cs
+                      {kda(player.kills, player.deaths, player.assists)} · {csLine(player.cs, detail.gameDuration)}
                     </div>
                   </div>
                 </div>

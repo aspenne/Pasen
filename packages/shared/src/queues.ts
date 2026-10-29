@@ -138,6 +138,12 @@ export function groupsInScope(scope: QueueScope): QueueGroup[] | null {
 
 export const DEFAULT_SCOPE: QueueScope = 'rift'
 
+/**
+ * The scope the site opens on: Solo/Duo, the queue people mean by their stats.
+ * The API keeps DEFAULT_SCOPE for a request that names none.
+ */
+export const SITE_SCOPE: QueueScope = 'ranked_solo'
+
 /** Queues we never want polluting averages: customs, bots, tutorials. */
 const EXCLUDED_QUEUE_IDS = new Set([0, 830, 840, 850, 870, 880, 890, 2000, 2010, 2020])
 const EXCLUDED_GAME_MODES = new Set([

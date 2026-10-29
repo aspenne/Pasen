@@ -17,7 +17,7 @@ import { api, type FeedMatch, type StaticData } from '@/lib/api'
 import { customGameIdOf } from '@/lib/customs'
 import type { QueueScope } from '@pasen/shared'
 
-import { clockTime, duration, kda, positionLabel, queueLabel } from '@/lib/format'
+import { clockTime, csLine, duration, kda, positionLabel, queueLabel } from '@/lib/format'
 
 type FeedMatchCardProps = {
   match: FeedMatch
@@ -174,7 +174,7 @@ export function FeedMatchCard({
                   {member.kills} / {member.deaths} / {member.assists}
                 </div>
                 <div className="tnum mt-0.5 text-[11px] text-ink-muted">
-                  {kda(member.kills, member.deaths, member.assists)} KDA · {member.cs} cs
+                  {kda(member.kills, member.deaths, member.assists)} KDA · {csLine(member.cs, match.gameDuration)}
                 </div>
               </div>
             </div>

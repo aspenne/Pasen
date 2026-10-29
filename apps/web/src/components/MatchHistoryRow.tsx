@@ -14,7 +14,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, type MatchHistoryEntry, type StaticData } from '@/lib/api'
 import { customGameIdOf } from '@/lib/customs'
-import { duration, kda, positionLabel, queueLabel, timeAgo } from '@/lib/format'
+import { csLine, duration, kda, positionLabel, queueLabel, timeAgo } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
 
 type MatchHistoryRowProps = {
@@ -79,7 +79,7 @@ export function MatchHistoryRow({
               {entry.kills}/{entry.deaths}/{entry.assists}
             </div>
             <div className="tnum text-[11px] text-ink-muted">
-              {kda(entry.kills, entry.deaths, entry.assists)} · {entry.cs} cs
+              {kda(entry.kills, entry.deaths, entry.assists)} · {csLine(entry.cs, entry.gameDuration)}
             </div>
           </div>
 

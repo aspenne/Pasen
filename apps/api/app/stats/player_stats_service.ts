@@ -13,7 +13,7 @@ export type ChampionPoolEntry = {
   wins: number
   winRate: number
   kda: number
-  averageCs: number
+  csPerMinute: number
   lastPlayedAt: string
 }
 
@@ -85,7 +85,8 @@ export class PlayerStatsService {
       .sum({ kills: 'p.kills' })
       .sum({ deaths: 'p.deaths' })
       .sum({ assists: 'p.assists' })
-      .avg({ avg_cs: 'p.cs' })
+      .sum({ cs: 'p.cs' })
+      .sum({ seconds: 'm.game_duration' })
       .max({ last_played: 'm.game_creation' })
       .orderBy('games', 'desc')
 
@@ -113,7 +114,9 @@ export class PlayerStatsService {
           kda:
             Math.round(((Number(row.kills) + Number(row.assists)) / Math.max(deaths, 1)) * 100) /
             100,
-          averageCs: Math.round(Number(row.avg_cs)),
+          // Per minute, not per game: a 40-minute game is not a better farmer's.
+          csPerMinute:
+            Number(row.seconds) > 0 ? Math.round((Number(row.cs) / (Number(row.seconds) / 60)) * 10) / 10 : 0,
           lastPlayedAt: DateTime.fromJSDate(new Date(row.last_played)).toUTC().toISO()!,
         }
       }),

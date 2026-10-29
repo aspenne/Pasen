@@ -127,6 +127,7 @@ function CustomGamePage() {
             team={team}
             staticData={staticData}
             groupSlug={group}
+            duration={game.duration}
           />
         ))}
       </div>

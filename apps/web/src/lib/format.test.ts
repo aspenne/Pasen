@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { rankedQueueFor, rankScore } from '@/lib/format'
+import { csLine, rankedQueueFor, rankScore } from '@/lib/format'
 
 const at = (tier: string | null, division: string | null, leaguePoints: number) => ({
   tier,
@@ -67,5 +67,15 @@ describe('rankedQueueFor', () => {
     for (const scope of ['rift', 'normal', 'clash', 'aram', 'arena', 'all']) {
       expect(rankedQueueFor(scope)).toBe('RANKED_SOLO_5x5')
     }
+  })
+})
+
+describe('csLine', () => {
+  it('gives the total and the rate per minute', () => {
+    expect(csLine(187, 25 * 60 + 30)).toBe('187 cs · 7.3/min')
+  })
+
+  it('leaves the rate out of a game with no length', () => {
+    expect(csLine(12, 0)).toBe('12 cs')
   })
 })

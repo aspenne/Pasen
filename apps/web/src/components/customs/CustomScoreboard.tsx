@@ -4,7 +4,7 @@ import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
 import { RunePair } from '@/components/RunePair'
 import type { CustomTeam, StaticData } from '@/lib/api'
-import { kda, positionLabel } from '@/lib/format'
+import { csLine, kda, positionLabel } from '@/lib/format'
 import { CUSTOM_SCOPE } from '@/lib/customs'
 
 const SIDE_NAMES = { ORDER: 'Blue side', CHAOS: 'Red side' } as const
@@ -33,10 +33,13 @@ export function CustomScoreboard({
   team,
   staticData,
   groupSlug,
+  duration,
 }: {
   team: CustomTeam
   staticData?: StaticData
   groupSlug: string
+  /** The game's length in seconds, for CS per minute. */
+  duration: number
 }) {
   const verdict =
     team.won === null ? null : team.won ? (
@@ -154,7 +157,7 @@ export function CustomScoreboard({
                   {player.kills} / {player.deaths} / {player.assists}
                 </div>
                 <div className="tnum text-[11px] text-ink-dim">
-                  {kda(player.kills, player.deaths, player.assists)} · {player.cs} cs
+                  {kda(player.kills, player.deaths, player.assists)} · {csLine(player.cs, duration)}
                 </div>
               </div>
             </li>

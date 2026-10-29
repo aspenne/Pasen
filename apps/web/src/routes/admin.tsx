@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { DEFAULT_SCOPE } from '@pasen/shared'
+import { SITE_SCOPE } from '@pasen/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
@@ -50,7 +50,7 @@ function Admin() {
             <Link
               to="/$group"
               params={{ group: DEFAULT_GROUP }}
-              search={{ scope: DEFAULT_SCOPE }}
+              search={{ scope: SITE_SCOPE }}
               className="tap inline-flex items-center text-[12px] text-ink-dim transition-colors hover:text-ink"
             >
               ← Back to the site

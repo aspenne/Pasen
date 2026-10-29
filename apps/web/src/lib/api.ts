@@ -382,7 +382,7 @@ export type ChampionPoolEntry = {
   wins: number
   winRate: number
   kda: number
-  averageCs: number
+  csPerMinute: number
   lastPlayedAt: string
 }
 

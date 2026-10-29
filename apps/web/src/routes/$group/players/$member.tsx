@@ -379,8 +379,8 @@ function ChampionTable({
               <SortableHead column="kda" activeKey={key} direction={direction} onSort={toggle} align="right">
                 KDA
               </SortableHead>
-              <SortableHead column="averageCs" activeKey={key} direction={direction} onSort={toggle} align="right">
-                CS
+              <SortableHead column="csPerMinute" activeKey={key} direction={direction} onSort={toggle} align="right">
+                CS/min
               </SortableHead>
               <SortableHead column="lastPlayedAt" activeKey={key} direction={direction} onSort={toggle} align="right">
                 Last
@@ -427,7 +427,7 @@ function ChampionTable({
                   </div>
                 </TableCell>
                 <TableCell className="tnum text-right text-ink-muted">{entry.kda}</TableCell>
-                <TableCell className="tnum text-right text-ink-muted">{entry.averageCs}</TableCell>
+                <TableCell className="tnum text-right text-ink-muted">{entry.csPerMinute}</TableCell>
                 <TableCell className="text-right text-ink-dim">
                   {timeAgo(entry.lastPlayedAt)}
                 </TableCell>
