@@ -49,6 +49,18 @@ export function kda(kills: number, deaths: number, assists: number): string {
   return (((kills + assists) / Math.max(deaths, 1)) * 1).toFixed(2)
 }
 
+/** A player's page on dpm.lol, from their Riot ID. */
+export function dpmUrl(riotId: string | null): string | null {
+  const at = riotId?.lastIndexOf('#') ?? -1
+  if (!riotId || at <= 0 || at === riotId.length - 1) return null
+  return `https://dpm.lol/${encodeURIComponent(riotId.slice(0, at))}-${encodeURIComponent(riotId.slice(at + 1))}`
+}
+
+/** 24312 as 24.3k: damage and gold read in thousands. */
+export function compactNumber(value: number): string {
+  return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)
+}
+
 /** Creep score, with the rate that compares across game lengths. */
 export function csLine(cs: number, seconds: number): string {
   return seconds > 0 ? `${cs} cs · ${(cs / (seconds / 60)).toFixed(1)}/min` : `${cs} cs`

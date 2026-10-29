@@ -2,10 +2,10 @@ import { Link } from '@tanstack/react-router'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
-import { RunePair } from '@/components/RunePair'
+import { RunePageButton } from '@/components/RunePageButton'
 import { Reveal } from '@/components/Reveal'
 import type { MatchDetail, MatchDetailSide, StaticData } from '@/lib/api'
-import { csLine, kda, positionLabel } from '@/lib/format'
+import { compactNumber, csLine, dpmUrl, kda, positionLabel } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
 
 type MatchScoreboardProps = {
@@ -28,6 +28,8 @@ export function MatchScoreboard({
   scope,
 }: MatchScoreboardProps) {
   const arena = detail.queueGroup === 'arena'
+  // Bars are against the game's best, so the top damage dealer fills theirs.
+  const topDamage = Math.max(1, ...detail.sides.flatMap((side) => side.players.map((player) => player.damageDealt)))
 
   return (
     <Reveal
@@ -47,9 +49,11 @@ export function MatchScoreboard({
 
           <div className="space-y-1.5">
             {side.players.map((player) => {
-              const name = player.displayName ?? player.riotId ?? 'Unknown'
+              // The tag is on dpm.lol a click away; on the row it only crowds the name out.
+              const name = player.displayName ?? player.riotId?.split('#')[0] ?? 'Unknown'
+              const dpm = dpmUrl(player.riotId)
               return (
-                <div key={player.puuid} className="flex items-center gap-2.5">
+                <div key={player.puuid} className="flex items-center gap-2">
                   <ChampionIcon
                     championId={player.championId}
                     championName={player.championName}
@@ -70,25 +74,53 @@ export function MatchScoreboard({
                     ) : (
                       <span className="block truncate text-[13px] text-ink-muted">{name}</span>
                     )}
-                    <span className="block truncate text-[11px] text-ink-dim">
-                      {player.championName}
-                      {positionLabel(player.teamPosition) &&
-                        ` · ${positionLabel(player.teamPosition)}`}
+                    <span className="flex items-center gap-1.5 text-[11px] text-ink-dim">
+                      <span className="truncate">
+                        {player.championName}
+                        {positionLabel(player.teamPosition) &&
+                          ` · ${positionLabel(player.teamPosition)}`}
+                      </span>
+                      {dpm && (
+                        <a
+                          href={dpm}
+                          target="_blank"
+                          rel="noreferrer"
+                          aria-label={`${name} on dpm.lol`}
+                          className="shrink-0 rounded-[3px] border border-line px-1 text-[9.5px] uppercase tracking-[0.08em] text-ink-muted transition-colors hover:border-accent hover:text-accent"
+                        >
+                          dpm
+                        </a>
+                      )}
                     </span>
                   </div>
 
-                  <RunePair perks={player.perks} staticData={staticData} size={20} />
+                  <RunePageButton perks={player.perks} staticData={staticData} name={name} />
+
+                  {!arena && (
+                    <div className="w-[46px] shrink-0" title={`${player.damageDealt.toLocaleString('en-GB')} damage to champions`}>
+                      <div className="tnum text-right text-[11px] text-ink-muted">{compactNumber(player.damageDealt)}</div>
+                      <div className="mt-1 h-1 overflow-hidden rounded-[2px] bg-line-strong">
+                        <div
+                          className={`h-full ${side.win ? 'bg-win' : 'bg-loss'}`}
+                          style={{ width: `${Math.round((player.damageDealt / topDamage) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="hidden shrink-0 @4xl:block">
                     <ItemRow items={player.items} staticData={staticData} />
                   </div>
 
-                  <div className="w-[84px] shrink-0 text-right sm:w-[92px]">
+                  <div className="w-[84px] shrink-0 text-right">
                     <div className="tnum text-[12px] text-ink">
                       {player.kills} / {player.deaths} / {player.assists}
                     </div>
                     <div className="tnum text-[11px] text-ink-dim">
-                      {kda(player.kills, player.deaths, player.assists)} · {csLine(player.cs, detail.gameDuration)}
+                      {kda(player.kills, player.deaths, player.assists)} KDA
+                    </div>
+                    <div className="tnum whitespace-nowrap text-[10.5px] text-ink-dim">
+                      {csLine(player.cs, detail.gameDuration)}
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { csLine, rankedQueueFor, rankScore } from '@/lib/format'
+import { compactNumber, csLine, dpmUrl, rankedQueueFor, rankScore } from '@/lib/format'
 
 const at = (tier: string | null, division: string | null, leaguePoints: number) => ({
   tier,
@@ -77,5 +77,23 @@ describe('csLine', () => {
 
   it('leaves the rate out of a game with no length', () => {
     expect(csLine(12, 0)).toBe('12 cs')
+  })
+})
+
+describe('dpmUrl', () => {
+  it('builds the dpm.lol page of a Riot ID', () => {
+    expect(dpmUrl('Hide on bush#KR1')).toBe('https://dpm.lol/Hide%20on%20bush-KR1')
+  })
+
+  it('has none without a full Riot ID', () => {
+    expect(dpmUrl(null)).toBeNull()
+    expect(dpmUrl('NoTag')).toBeNull()
+  })
+})
+
+describe('compactNumber', () => {
+  it('writes thousands with a k', () => {
+    expect(compactNumber(24_312)).toBe('24.3k')
+    expect(compactNumber(812)).toBe('812')
   })
 })
