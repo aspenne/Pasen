@@ -3,6 +3,7 @@ import redis from '@adonisjs/redis/services/main'
 import testUtils from '@adonisjs/core/services/test_utils'
 import { DateTime } from 'luxon'
 
+import LeagueEntry from '#models/league_entry'
 import Member from '#models/member'
 import RiotAccount from '#models/riot_account'
 import { addParticipant, seedGroup, seedMatch } from '#tests/helpers'
@@ -76,6 +77,42 @@ test.group('Group API', (group) => {
     assert.lengthOf(body.matches[0].members, 2)
   })
 
+  test("measures the day's LP from the recorded standings", async ({ client, assert }) => {
+    const seeded = await seedGroup('Europe/Paris')
+    const reading = (
+      at: string,
+      tier: string,
+      rank: string,
+      leaguePoints: number,
+      queueType = 'RANKED_SOLO_5x5'
+    ) =>
+      LeagueEntry.create({
+        riotAccountId: seeded.account.id,
+        queueType,
+        tier,
+        rank,
+        leaguePoints,
+        wins: 0,
+        losses: 0,
+        hotStreak: false,
+        inactive: false,
+        capturedAt: DateTime.fromISO(at, { zone: 'Europe/Paris' }),
+      })
+    // Last night's final game, read a few minutes after midnight, belongs to last night.
+    await reading('2026-09-15T22:00:00', 'GOLD', 'I', 60)
+    await reading('2026-09-16T00:04:00', 'GOLD', 'I', 80)
+    // Then a win into Platinum, and a loss Riot refunded: the standing never dropped.
+    await reading('2026-09-16T20:30:00', 'PLATINUM', 'IV', 2)
+    await reading('2026-09-16T21:15:00', 'PLATINUM', 'IV', 2)
+    await reading('2026-09-16T20:30:00', 'SILVER', 'II', 50, 'RANKED_FLEX_SR')
+
+    const solo = await client.get('/api/groups/arigafion/feed?date=2026-09-16&scope=ranked_solo')
+    assert.deepEqual(solo.body().lp, { [seeded.member.slug]: 22 })
+
+    const aram = await client.get('/api/groups/arigafion/feed?date=2026-09-16&scope=aram')
+    assert.isNull(aram.body().lp, 'ARAM has no LP')
+  })
+
   test('filters the feed by queue', async ({ client, assert }) => {
     const seeded = await seedGroup()
     const at = DateTime.fromISO('2026-09-16T20:00:00', { zone: 'Europe/Paris' })
@@ -131,8 +168,24 @@ test.group('Group API', (group) => {
           startedAt: '2026-09-16T20:00:00.000Z',
           lengthSeconds: 600,
           participants: [
-            { puuid: seeded.account.puuid, teamId: 100, championId: 266, spell1Id: 4, spell2Id: 12, riotId: 'Patate#CCC', tracked: true },
-            { puuid: 'stranger', teamId: 200, championId: 103, spell1Id: 4, spell2Id: 14, riotId: 'Foe#EUW', tracked: false },
+            {
+              puuid: seeded.account.puuid,
+              teamId: 100,
+              championId: 266,
+              spell1Id: 4,
+              spell2Id: 12,
+              riotId: 'Patate#CCC',
+              tracked: true,
+            },
+            {
+              puuid: 'stranger',
+              teamId: 200,
+              championId: 103,
+              spell1Id: 4,
+              spell2Id: 14,
+              riotId: 'Foe#EUW',
+              tracked: false,
+            },
           ],
         },
         {
@@ -143,7 +196,15 @@ test.group('Group API', (group) => {
           startedAt: '2026-09-16T20:00:00.000Z',
           lengthSeconds: 600,
           participants: [
-            { puuid: 'someone-elses-group', teamId: 100, championId: 1, spell1Id: 4, spell2Id: 12, riotId: 'Other#EUW', tracked: true },
+            {
+              puuid: 'someone-elses-group',
+              teamId: 100,
+              championId: 1,
+              spell1Id: 4,
+              spell2Id: 12,
+              riotId: 'Other#EUW',
+              tracked: true,
+            },
           ],
         },
       ])

@@ -33,6 +33,12 @@ describe('dayStandings', () => {
     expect(standings.map((s) => [s.memberSlug, s.wins, s.losses])).toEqual([['a', 1, 0], ['b', 0, 1]])
   })
 
+  it('gives each member the day’s LP, zero for one whose standing did not move', () => {
+    const matches = [match(member('noah', true)), match(member('zed', false))]
+    expect(dayStandings(matches, { noah: 21 }).map((s) => [s.memberSlug, s.lp])).toEqual([['noah', 21], ['zed', 0]])
+    expect(dayStandings(matches, null).map((s) => s.lp)).toEqual([null, null])
+  })
+
   it('ranks a long good evening above a single win', () => {
     const matches = [
       match(member('once', true)),

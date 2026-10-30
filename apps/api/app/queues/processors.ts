@@ -103,6 +103,7 @@ export async function processRecentSync(): Promise<void> {
     const outcome = await service.syncRecent(account)
     if (outcome.ingested > 0) {
       logger.info({ account: account.riotId, ...outcome }, 'recent sync')
+      await snapshotRank(account)
     }
   }
 }
@@ -116,30 +117,58 @@ export async function processRecentSyncAccount(job: Job<RecentSyncAccountPayload
   const outcome = await new MatchSyncService(riot()).syncRecent(account)
   logger.info({ account: account.riotId, ...outcome }, 'post-game sync')
 
-  if (outcome.ingested > 0) await announceFrom(account)
+  if (outcome.ingested > 0) {
+    await snapshotRank(account)
+    await announceFrom(account)
+  }
 }
 
 export async function processRankSnapshot(): Promise<void> {
   const service = new RankService(riot())
   const discord = new DiscordService()
-  const today = DateTime.utc().toISODate()!
 
   for (const account of await trackedAccounts()) {
-    const result = await service.snapshot(account)
-    if (result.recorded.length > 0) {
-      logger.info({ account: account.riotId, queues: result.recorded }, 'rank moved')
-    }
-
-    if (result.moves.length === 0) continue
-
-    await account.load('member')
-    for (const move of result.moves) {
-      const announcement = rankAnnouncement(account.member.displayName, account.id, move, today)
-      if (announcement) await discord.announce(announcement)
-    }
+    await snapshotRank(account, service, discord)
   }
 
   await announceDecay(discord)
+}
+
+/**
+ * Records where an account stands now, and tells the channel when it changed
+ * division.
+ *
+ * Runs on the hourly pass and again as soon as a game is ingested. The second
+ * is what puts a game's LP on the day it was played: an hourly reading alone
+ * would put a game finished at 23:50 on the next day's count. A failure here
+ * must not cost the game itself, which is already stored, so it is logged and
+ * left for the hourly pass.
+ */
+async function snapshotRank(
+  account: RiotAccount,
+  service = new RankService(riot()),
+  discord = new DiscordService()
+): Promise<void> {
+  let result
+  try {
+    result = await service.snapshot(account)
+  } catch (error) {
+    if (error instanceof RiotKeyRejectedError) throw error
+    logger.warn({ account: account.riotId, error }, 'rank snapshot failed')
+    return
+  }
+  if (result.recorded.length > 0) {
+    logger.info({ account: account.riotId, queues: result.recorded }, 'rank moved')
+  }
+
+  if (result.moves.length === 0) return
+
+  const today = DateTime.utc().toISODate()!
+  await account.load('member')
+  for (const move of result.moves) {
+    const announcement = rankAnnouncement(account.member.displayName, account.id, move, today)
+    if (announcement) await discord.announce(announcement)
+  }
 }
 
 /**
