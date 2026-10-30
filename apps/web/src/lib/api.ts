@@ -298,6 +298,12 @@ export type DailyFeed = {
     championsPlayed: number
   }
   matches: FeedMatch[]
+  /**
+   * LP won or lost that day by member slug, measured from the standings, so a
+   * refunded loss costs nothing. Null for a scope without LP; missing from an
+   * API older than the field.
+   */
+  lp?: Record<string, number> | null
 }
 
 export type LiveRank = {

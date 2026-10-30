@@ -20,6 +20,7 @@ import { api } from '@/lib/api'
 import { dayStandings } from '@/lib/day'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor } from '@/lib/format'
+import { signed } from '@/lib/ladder'
 
 /** Enough to show what kind of day it was without scrolling past it. */
 const FEED_PREVIEW = 6
@@ -78,7 +79,9 @@ function Dashboard() {
   const shownMatches = showAll ? allMatches : allMatches.slice(0, FEED_PREVIEW)
   const hiddenMatches = allMatches.length - shownMatches.length
 
-  const standings = useMemo(() => dayStandings(allMatches), [allMatches])
+  const standings = useMemo(() => dayStandings(feed?.matches ?? [], feed?.lp), [feed?.matches, feed?.lp])
+  // Only who played: a decaying account nobody touched is not part of the day.
+  const dayLp = feed?.lp ? standings.reduce((sum, standing) => sum + (standing.lp ?? 0), 0) : null
 
   const totals = feed?.totals
   const totalGames = overview?.members.reduce((sum, m) => sum + m.totals.games, 0) ?? 0
@@ -161,7 +164,7 @@ function Dashboard() {
           <KpiTile
             title="Win rate"
             value={`${totals?.winRate ?? 0}%`}
-            detail={`${totals?.wins ?? 0}W ${totals?.losses ?? 0}L ${selected === today ? 'today' : 'that day'}`}
+            detail={`${totals?.wins ?? 0}W ${totals?.losses ?? 0}L${dayLp !== null && standings.length > 0 ? ` · ${signed(dayLp)} LP` : ''} ${selected === today ? 'today' : 'that day'}`}
             tone={(totals?.games ?? 0) === 0 ? 'text-ink' : (totals?.winRate ?? 0) >= 50 ? 'text-win' : 'text-loss'}
           />
           <KpiTile

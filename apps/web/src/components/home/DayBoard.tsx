@@ -5,6 +5,7 @@ import { ChampionIcon } from '@/components/ChampionIcon'
 import type { StaticData } from '@/lib/api'
 import type { DayStanding } from '@/lib/day'
 import { kda } from '@/lib/format'
+import { signed } from '@/lib/ladder'
 
 /** More than this and the row wraps on a phone; the rest is in the games below. */
 const CHAMPIONS_SHOWN = 4
@@ -29,7 +30,8 @@ export function DayBoard({
   if (standings.length === 0) return null
 
   return (
-    <ol className="grid gap-px overflow-hidden rounded-[8px] border border-line bg-line">
+    // minmax(0, 1fr): an auto column would grow to the longest name and push the win rate off a phone.
+    <ol className="grid grid-cols-[minmax(0,1fr)] gap-px overflow-hidden rounded-[8px] border border-line bg-line">
       {standings.map((standing, place) => {
         const extra = standing.champions.length - CHAMPIONS_SHOWN
         return (
@@ -66,6 +68,16 @@ export function DayBoard({
               <span className="tnum hidden w-16 shrink-0 text-right text-[11.5px] text-ink-muted min-[380px]:block">
                 {kda(standing.kills, standing.deaths, standing.assists)} <span className="text-ink-dim">KDA</span>
               </span>
+              {standing.lp !== null && (
+                <span
+                  title="LP won or lost that day, refunded losses included"
+                  className={`tnum w-[58px] shrink-0 text-right text-[11.5px] ${
+                    standing.lp > 0 ? 'text-win' : standing.lp < 0 ? 'text-loss' : 'text-ink-dim'
+                  }`}
+                >
+                  {signed(standing.lp)} LP
+                </span>
+              )}
               <span className="tnum w-14 shrink-0 text-right text-[11.5px] text-ink-muted">
                 {standing.wins}W {standing.losses}L
               </span>

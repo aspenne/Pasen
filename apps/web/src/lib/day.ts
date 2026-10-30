@@ -12,6 +12,8 @@ export type DayStanding = {
   assists: number
   /** Champions in the order they were first played that day, most played first. */
   champions: { championId: number; championName: string; games: number }[]
+  /** LP won or lost that day; null when the scope has none to count. */
+  lp: number | null
 }
 
 /**
@@ -21,7 +23,7 @@ export type DayStanding = {
  * win, which a plain win rate would rank above it. Ties go to the one who
  * played more, then to the better rate.
  */
-export function dayStandings(matches: FeedMatch[]): DayStanding[] {
+export function dayStandings(matches: FeedMatch[], lp?: Record<string, number> | null): DayStanding[] {
   const bySlug = new Map<string, DayStanding & { championGames: Map<number, DayStanding['champions'][number]> }>()
 
   for (const match of matches) {
@@ -39,6 +41,8 @@ export function dayStandings(matches: FeedMatch[]): DayStanding[] {
           deaths: 0,
           assists: 0,
           champions: [],
+          // A member who played but whose standing did not move is at zero, not unknown.
+          lp: lp ? (lp[member.memberSlug] ?? 0) : null,
           championGames: new Map(),
         }
         bySlug.set(member.memberSlug, standing)

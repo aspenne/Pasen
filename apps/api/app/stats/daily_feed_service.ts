@@ -1,5 +1,5 @@
 import db from '@adonisjs/lucid/services/db'
-import type { QueueGroup } from '@pasen/shared'
+import { lpBetween, type QueueGroup } from '@pasen/shared'
 import { DateTime } from 'luxon'
 
 import Group from '#models/group'
@@ -56,7 +56,32 @@ export type DailyFeed = {
   timezone: string
   totals: FeedTotals
   matches: FeedMatch[]
+  /**
+   * LP won or lost that day, by member slug, from the recorded standings - so
+   * a refunded loss is not counted as one. Only members whose standing moved
+   * are listed. Null for a scope without LP: normals, ARAM, Arena, customs.
+   */
+  lp: Record<string, number> | null
 }
+
+const SOLO = 'RANKED_SOLO_5x5'
+const FLEX = 'RANKED_FLEX_SR'
+
+/** The ranked queues each scope's LP comes from. */
+const LP_QUEUES: Partial<Record<QueueScope, string[]>> = {
+  ranked_solo: [SOLO],
+  ranked_flex: [FLEX],
+  rift: [SOLO, FLEX],
+  all: [SOLO, FLEX],
+}
+
+/**
+ * How late a game's standing can be recorded. The worker reads the rank as
+ * soon as it has ingested a game, a few minutes after it ends, so the day's
+ * window for LP closes this much after midnight - and opens this much after
+ * the previous one, which leaves last night's final game out of today.
+ */
+const READING_LAG = { minutes: 10 }
 
 export type FeedQuery = {
   /** ISO date in the group's own timezone. Defaults to today there. */
@@ -74,9 +99,7 @@ export type FeedQuery = {
 export class DailyFeedService {
   async forGroup(group: Group, query: FeedQuery = {}): Promise<DailyFeed> {
     const zone = group.timezone
-    const day = query.date
-      ? DateTime.fromISO(query.date, { zone })
-      : DateTime.now().setZone(zone)
+    const day = query.date ? DateTime.fromISO(query.date, { zone }) : DateTime.now().setZone(zone)
 
     if (!day.isValid) {
       throw new Error(`Invalid date "${query.date}"`)
@@ -166,7 +189,7 @@ export class DailyFeedService {
         visionScore: row.vision_score,
         goldEarned: row.gold_earned,
         items: row.items,
-      perks: row.perks ?? null,
+        perks: row.perks ?? null,
         summonerSpells: [row.summoner1_id, row.summoner2_id],
         subteamPlacement: row.subteam_placement,
       })
@@ -188,6 +211,83 @@ export class DailyFeedService {
         championsPlayed: champions.size,
       },
       matches: [...matches.values()],
+      lp: await this.#lp(
+        group,
+        query.scope ?? DEFAULT_SCOPE,
+        from.plus(READING_LAG),
+        to.plus(READING_LAG)
+      ),
     }
+  }
+
+  async #lp(
+    group: Group,
+    scope: QueueScope,
+    from: DateTime,
+    to: DateTime
+  ): Promise<Record<string, number> | null> {
+    const queues = LP_QUEUES[scope]
+    if (!queues) return null
+
+    const accounts = await db
+      .from('riot_accounts as a')
+      .join('group_members as gm', 'gm.member_id', 'a.member_id')
+      .join('members as mem', 'mem.id', 'a.member_id')
+      .where('gm.group_id', group.id)
+      .select('a.id', 'mem.slug')
+    if (accounts.length === 0) return {}
+
+    const ids = accounts.map((account: { id: number }) => account.id)
+    const columns = [
+      'riot_account_id',
+      'queue_type',
+      'captured_at',
+      'tier',
+      'rank',
+      'league_points',
+    ]
+    const [inside, before] = await Promise.all([
+      db
+        .from('league_entries')
+        .whereIn('riot_account_id', ids)
+        .whereIn('queue_type', queues)
+        .where('captured_at', '>', from.toUTC().toSQL()!)
+        .andWhere('captured_at', '<=', to.toUTC().toSQL()!)
+        .select(columns),
+      // Only the last standing before the day matters, however long ago it was.
+      db
+        .from('league_entries')
+        .distinctOn('riot_account_id', 'queue_type')
+        .whereIn('riot_account_id', ids)
+        .whereIn('queue_type', queues)
+        .where('captured_at', '<=', from.toUTC().toSQL()!)
+        .orderBy([
+          { column: 'riot_account_id' },
+          { column: 'queue_type' },
+          { column: 'captured_at', order: 'desc' },
+        ])
+        .select(columns),
+    ])
+
+    const gained = lpBetween(
+      [...before, ...inside].map((row) => ({
+        accountId: row.riot_account_id,
+        queueType: row.queue_type,
+        capturedAt: new Date(row.captured_at),
+        tier: row.tier,
+        rank: row.rank,
+        leaguePoints: row.league_points,
+      })),
+      from.toJSDate(),
+      to.toJSDate()
+    )
+
+    // Members with several accounts get one total.
+    const bySlug: Record<string, number> = {}
+    for (const account of accounts as { id: number; slug: string }[]) {
+      const lp = gained.get(account.id)
+      if (lp !== undefined) bySlug[account.slug] = (bySlug[account.slug] ?? 0) + lp
+    }
+    return bySlug
   }
 }
