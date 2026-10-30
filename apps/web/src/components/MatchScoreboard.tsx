@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router'
 
 import { ChampionIcon } from '@/components/ChampionIcon'
 import { ItemRow } from '@/components/ItemRow'
-import { RunePageButton } from '@/components/RunePageButton'
 import { Reveal } from '@/components/Reveal'
+import { RuneStrip } from '@/components/RuneStrip'
 import type { MatchDetail, MatchDetailSide, StaticData } from '@/lib/api'
 import { compactNumber, dpmUrl, kda, positionLabel } from '@/lib/format'
 import type { QueueScope } from '@pasen/shared'
@@ -23,14 +23,15 @@ function sideLabel(side: MatchDetailSide, arena: boolean): string {
 
 /*
  * One grid for the header and every row, so the columns line up down the
- * team. On a phone the row keeps only the player and the score; runes, items
- * and damage go on a second line. Damage and CS get columns from a medium side
- * up, the items from a wide one.
+ * team. On a phone the row keeps only the player and the score; the runes, the
+ * items and the damage go on a line of their own below, wrapping as they need.
+ * Damage and CS get columns from a medium side up, runes and items only on a
+ * wide one: the full rune page is as wide as the items.
  */
 const RIFT_COLUMNS =
-  'grid-cols-[minmax(0,1fr)_72px] @lg:grid-cols-[minmax(0,1fr)_72px_88px_64px] @2xl:grid-cols-[minmax(0,1fr)_72px_88px_64px_206px]'
+  'grid-cols-[minmax(0,1fr)_72px] @lg:grid-cols-[minmax(0,1fr)_72px_88px_64px] @4xl:grid-cols-[minmax(0,1fr)_184px_72px_88px_64px_206px]'
 const ARENA_COLUMNS =
-  'grid-cols-[minmax(0,1fr)_72px] @lg:grid-cols-[minmax(0,1fr)_72px_64px] @2xl:grid-cols-[minmax(0,1fr)_72px_64px_206px]'
+  'grid-cols-[minmax(0,1fr)_72px] @lg:grid-cols-[minmax(0,1fr)_72px_64px] @4xl:grid-cols-[minmax(0,1fr)_72px_64px_206px]'
 
 /**
  * The teams one above the other, each as wide as the card. Side by side, the
@@ -68,10 +69,11 @@ export function MatchScoreboard({
 
           <div className={`mt-2 hidden gap-x-3 pb-1.5 text-[10.5px] uppercase tracking-[0.12em] text-ink-dim @lg:grid ${columns}`}>
             <span>Player</span>
+            {!arena && <span className="hidden @4xl:block">Runes</span>}
             <span className="text-right">KDA</span>
             {!arena && <span>Damage</span>}
             <span className="text-right">CS</span>
-            <span className="hidden @2xl:block">Items</span>
+            <span className="hidden @4xl:block">Items</span>
           </div>
 
           <div className="mt-1.5 @lg:mt-0">
@@ -80,7 +82,8 @@ export function MatchScoreboard({
               const name = player.displayName ?? player.riotId?.split('#')[0] ?? 'Unknown'
               const dpm = dpmUrl(player.riotId)
               const position = positionLabel(player.teamPosition)
-              const runes = <RunePageButton perks={player.perks} staticData={staticData} name={name} />
+              const runes = !arena && <RuneStrip perks={player.perks} staticData={staticData} />
+              const items = <ItemRow items={player.items} staticData={staticData} slotClassName="size-[22px] @lg:size-[26px]" />
               const damage = !arena && (
                 <div title={`${player.damageDealt.toLocaleString('en-GB')} damage to champions`}>
                   <div className="tnum text-[11.5px] text-ink-muted">{compactNumber(player.damageDealt)}</div>
@@ -132,8 +135,9 @@ export function MatchScoreboard({
                         )}
                       </span>
                     </div>
-                    <span className="ml-auto hidden shrink-0 @lg:block">{runes}</span>
                   </div>
+
+                  {runes && <div className="hidden @4xl:block">{runes}</div>}
 
                   <div className="text-right">
                     <div className="tnum text-[12.5px] whitespace-nowrap text-ink">
@@ -155,11 +159,13 @@ export function MatchScoreboard({
                     )}
                   </div>
 
-                  {/* Under the player on a narrow side, a column of its own on a wide one. */}
-                  <div className="col-span-full flex items-center gap-2 @lg:pl-[42px] @2xl:col-span-1 @2xl:pl-0">
-                    <span className="shrink-0 @lg:hidden">{runes}</span>
-                    <ItemRow items={player.items} staticData={staticData} slotClassName="size-[22px] @lg:size-[26px]" />
-                    {damage && <div className="min-w-0 flex-1 @lg:hidden">{damage}</div>}
+                  <div className="hidden @4xl:block">{items}</div>
+
+                  {/* Until the side is wide enough for their columns, a line of their own under the player. */}
+                  <div className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2 @lg:pl-[42px] @4xl:hidden">
+                    {runes}
+                    {items}
+                    {damage && <div className="min-w-[64px] flex-1 @lg:hidden">{damage}</div>}
                   </div>
                 </div>
               )

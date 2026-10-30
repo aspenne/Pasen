@@ -13,6 +13,10 @@ export default class StaticItem extends BaseModel {
   @column()
   declare plaintext: string | null
 
+  /** Stats, passives and actives as plain text, lines kept. */
+  @column()
+  declare description: string | null
+
   @column()
   declare goldTotal: number
 

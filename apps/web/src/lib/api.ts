@@ -578,7 +578,12 @@ export type StaticData = {
   summonerSpells: Record<string, { slug: string; name: string }>
   queues: Record<string, { description: string | null; map: string | null }>
   /** Styles and runes together, keyed by the id a match payload uses. */
-  runes: Record<string, { kind: 'style' | 'perk'; name: string; image: string }>
+  runes: Record<string, { kind: 'style' | 'perk'; name: string; image: string; description?: string | null }>
+  /**
+   * For the tooltips. Optional, like each `description`: a browser can hold a
+   * copy of this payload from before they were added.
+   */
+  items?: Record<string, { name: string; description: string | null; gold: number }>
 }
 
 /** Every stats call takes the same scope, so one control drives the whole site. */

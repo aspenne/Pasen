@@ -7,6 +7,7 @@ import StaticItem from '#models/static_item'
 import StaticQueue from '#models/static_queue'
 import StaticRune from '#models/static_rune'
 import StaticSummonerSpell from '#models/static_summoner_spell'
+import { ddragonText } from '#static_data/ddragon_text'
 
 const DDRAGON = 'https://ddragon.leagueoflegends.com'
 const QUEUES_URL = 'https://static.developer.riotgames.com/docs/lol/queues.json'
@@ -25,6 +26,7 @@ type ChampionEntry = {
 type ItemEntry = {
   name: string
   plaintext?: string
+  description?: string
   gold?: { total?: number }
   image: { full: string }
 }
@@ -41,7 +43,7 @@ type RuneStyleEntry = {
   key: string
   name: string
   icon: string
-  slots: { runes: { id: number; key: string; name: string; icon: string }[] }[]
+  slots: { runes: { id: number; key: string; name: string; icon: string; longDesc?: string }[] }[]
 }
 
 type QueueEntry = {
@@ -143,6 +145,7 @@ export class DDragonService {
         id: Number(id),
         name: item.name,
         plaintext: item.plaintext || null,
+        description: ddragonText(item.description),
         goldTotal: item.gold?.total ?? 0,
         image: item.image.full,
         version,
@@ -163,7 +166,15 @@ export class DDragonService {
      * are stored exactly as given.
      */
     const runeRows = runes.flatMap((style) => [
-      { id: style.id, kind: 'style' as const, name: style.name, slug: style.key, image: style.icon, version },
+      {
+        id: style.id,
+        kind: 'style' as const,
+        name: style.name,
+        slug: style.key,
+        image: style.icon,
+        description: null,
+        version,
+      },
       ...style.slots.flatMap((slot) =>
         slot.runes.map((rune) => ({
           id: rune.id,
@@ -171,6 +182,8 @@ export class DDragonService {
           name: rune.name,
           slug: rune.key,
           image: rune.icon,
+          // The long text, which has the numbers; the short one only names the effect.
+          description: ddragonText(rune.longDesc),
           version,
         }))
       ),
