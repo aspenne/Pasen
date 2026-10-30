@@ -58,9 +58,9 @@ export function MatchScoreboard({
       {detail.sides.map((side) => (
         <section key={side.id} className="@container min-w-0 rounded-[6px] border border-line bg-ground/50 px-3 pt-2.5 pb-1 @lg:px-4">
           <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
-            <span className={side.win ? 'text-win' : 'text-loss'}>
+            <span className={detail.remake ? 'text-ink-muted' : side.win ? 'text-win' : 'text-loss'}>
               {sideLabel(side, arena)}
-              {!arena && ` · ${side.win ? 'Victory' : 'Defeat'}`}
+              {!arena && ` · ${detail.remake ? 'Remake' : side.win ? 'Victory' : 'Defeat'}`}
             </span>
             <span className="tnum text-ink-dim">
               {side.kills} kills · {(side.goldEarned / 1000).toFixed(1)}k gold

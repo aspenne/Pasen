@@ -113,6 +113,28 @@ test.group('Group API', (group) => {
     assert.isNull(aram.body().lp, 'ARAM has no LP')
   })
 
+  test('shows a remake but counts it as neither a win nor a loss', async ({ client, assert }) => {
+    const seeded = await seedGroup()
+    const at = DateTime.fromISO('2026-09-16T20:00:00', { zone: 'Europe/Paris' })
+    await seedMatch('EUW1_win', at, seeded.account.puuid)
+    await seedMatch(
+      'EUW1_remake',
+      at.plus({ hours: 1 }),
+      seeded.account.puuid,
+      { remake: true, statsEligible: false, gameDuration: 200 },
+      { win: false }
+    )
+
+    const response = await client.get('/api/groups/arigafion/feed?date=2026-09-16')
+    const body = response.body()
+
+    assert.equal(body.totals.games, 2, 'still on the page')
+    assert.equal(body.totals.remakes, 1)
+    assert.equal(body.totals.losses, 0)
+    assert.equal(body.totals.winRate, 100)
+    assert.isTrue(body.matches.find((m: { matchId: string }) => m.matchId === 'EUW1_remake').remake)
+  })
+
   test('filters the feed by queue', async ({ client, assert }) => {
     const seeded = await seedGroup()
     const at = DateTime.fromISO('2026-09-16T20:00:00', { zone: 'Europe/Paris' })

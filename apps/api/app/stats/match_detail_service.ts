@@ -47,6 +47,8 @@ export type MatchDetail = {
   gameMode: string
   gameCreation: string
   gameDuration: number
+  /** Ended by the early vote after a leaver: no side won or lost it. */
+  remake: boolean
   sides: MatchDetailSide[]
 }
 
@@ -68,7 +70,8 @@ export class MatchDetailService {
         'queue_group',
         'game_mode',
         'game_creation',
-        'game_duration'
+        'game_duration',
+        'remake'
       )
       .first()
 
@@ -177,6 +180,7 @@ export class MatchDetailService {
       gameMode: match.game_mode,
       gameCreation: new Date(match.game_creation).toISOString(),
       gameDuration: match.game_duration,
+      remake: match.remake,
       sides: ordered,
     }
   }

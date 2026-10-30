@@ -164,7 +164,7 @@ function Dashboard() {
           <KpiTile
             title="Win rate"
             value={`${totals?.winRate ?? 0}%`}
-            detail={`${totals?.wins ?? 0}W ${totals?.losses ?? 0}L${dayLp !== null && standings.length > 0 ? ` · ${signed(dayLp)} LP` : ''} ${selected === today ? 'today' : 'that day'}`}
+            detail={`${totals?.wins ?? 0}W ${totals?.losses ?? 0}L${totals?.remakes ? ` ${totals.remakes}R` : ''}${dayLp !== null && standings.length > 0 ? ` · ${signed(dayLp)} LP` : ''} ${selected === today ? 'today' : 'that day'}`}
             tone={(totals?.games ?? 0) === 0 ? 'text-ink' : (totals?.winRate ?? 0) >= 50 ? 'text-win' : 'text-loss'}
           />
           <KpiTile

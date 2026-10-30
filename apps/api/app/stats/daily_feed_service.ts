@@ -35,6 +35,8 @@ export type FeedMatch = {
   gameMode: string
   gameCreation: string
   gameDuration: number
+  /** Ended by the early vote after a leaver: neither a win nor a loss for anyone in it. */
+  remake: boolean
   /** Everyone from the group who was in this game, on either side. */
   members: FeedMember[]
 }
@@ -44,9 +46,11 @@ export type FeedTotals = {
   games: number
   /** Member participations. A five-stack counts five. */
   memberGames: number
+  /** Participations in remakes, which count as neither wins nor losses. */
+  remakes: number
   wins: number
   losses: number
-  /** Over participations, not matches: two members on opposite sides is 1-1. */
+  /** Over decided participations, not matches: two members on opposite sides is 1-1. */
   winRate: number
   championsPlayed: number
 }
@@ -125,6 +129,7 @@ export class DailyFeedService {
         'm.game_mode',
         'm.game_creation',
         'm.game_duration',
+        'm.remake',
         'mem.slug as member_slug',
         'mem.display_name',
         'mem.accent_color',
@@ -155,6 +160,7 @@ export class DailyFeedService {
     const champions = new Set<number>()
     let wins = 0
     let memberGames = 0
+    let remakes = 0
 
     for (const row of rows) {
       let match = matches.get(row.match_id)
@@ -167,6 +173,7 @@ export class DailyFeedService {
           gameMode: row.game_mode,
           gameCreation: DateTime.fromJSDate(new Date(row.game_creation)).toUTC().toISO()!,
           gameDuration: row.game_duration,
+          remake: row.remake,
           members: [],
         }
         matches.set(row.match_id, match)
@@ -196,8 +203,10 @@ export class DailyFeedService {
 
       champions.add(row.champion_id)
       memberGames++
-      if (row.win) wins++
+      if (row.remake) remakes++
+      else if (row.win) wins++
     }
+    const decided = memberGames - remakes
 
     return {
       date: from.toISODate()!,
@@ -205,9 +214,10 @@ export class DailyFeedService {
       totals: {
         games: matches.size,
         memberGames,
+        remakes,
         wins,
-        losses: memberGames - wins,
-        winRate: memberGames === 0 ? 0 : Math.round((wins / memberGames) * 1000) / 10,
+        losses: memberGames - remakes - wins,
+        winRate: decided === 0 ? 0 : Math.round((wins / decided) * 1000) / 10,
         championsPlayed: champions.size,
       },
       matches: [...matches.values()],

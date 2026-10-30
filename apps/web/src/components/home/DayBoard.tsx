@@ -78,13 +78,19 @@ export function DayBoard({
                   {signed(standing.lp)} LP
                 </span>
               )}
-              <span className="tnum w-14 shrink-0 text-right text-[11.5px] text-ink-muted">
+              <span
+                title={standing.remakes > 0 ? `${standing.remakes} remake${standing.remakes === 1 ? '' : 's'}, neither won nor lost` : undefined}
+                className="tnum shrink-0 whitespace-nowrap text-right text-[11.5px] text-ink-muted min-w-14"
+              >
                 {standing.wins}W {standing.losses}L
+                {standing.remakes > 0 && <span className="text-ink-dim"> {standing.remakes}R</span>}
               </span>
               <span
-                className={`tnum w-12 shrink-0 text-right text-[12.5px] ${standing.winRate >= 50 ? 'text-win' : 'text-loss'}`}
+                className={`tnum w-12 shrink-0 text-right text-[12.5px] ${
+                  standing.winRate === null ? 'text-ink-dim' : standing.winRate >= 50 ? 'text-win' : 'text-loss'
+                }`}
               >
-                {Math.round(standing.winRate)}%
+                {standing.winRate === null ? '–' : `${Math.round(standing.winRate)}%`}
               </span>
             </Link>
           </li>

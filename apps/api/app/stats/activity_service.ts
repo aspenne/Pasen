@@ -55,7 +55,8 @@ export class ActivityService {
        */
       .countDistinct('m.match_id as games')
       .count('* as member_games')
-      .sum({ wins: db.raw('case when p.win then 1 else 0 end') })
+      // A remake's winning side won nothing, as in the feed.
+      .sum({ wins: db.raw('case when p.win and not m.remake then 1 else 0 end') })
       .orderBy('day', 'asc')
 
     applyScope(query, scope)

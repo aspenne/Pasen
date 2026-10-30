@@ -6,7 +6,10 @@ export type DayStanding = {
   games: number
   wins: number
   losses: number
-  winRate: number
+  /** Games ended by the early vote after a leaver: counted as played, neither won nor lost. */
+  remakes: number
+  /** Over the games that were decided; null when every one was a remake. */
+  winRate: number | null
   kills: number
   deaths: number
   assists: number
@@ -36,7 +39,8 @@ export function dayStandings(matches: FeedMatch[], lp?: Record<string, number> |
           games: 0,
           wins: 0,
           losses: 0,
-          winRate: 0,
+          remakes: 0,
+          winRate: null,
           kills: 0,
           deaths: 0,
           assists: 0,
@@ -49,7 +53,8 @@ export function dayStandings(matches: FeedMatch[], lp?: Record<string, number> |
       }
 
       standing.games++
-      if (member.win) standing.wins++
+      if (match.remake) standing.remakes++
+      else if (member.win) standing.wins++
       else standing.losses++
       standing.kills += member.kills
       standing.deaths += member.deaths
@@ -62,14 +67,19 @@ export function dayStandings(matches: FeedMatch[], lp?: Record<string, number> |
   }
 
   return [...bySlug.values()]
-    .map(({ championGames, ...standing }) => ({
-      ...standing,
-      winRate: Math.round((standing.wins / standing.games) * 1000) / 10,
-      // Stable sort keeps first-seen order among equals.
-      champions: [...championGames.values()].sort((a, b) => b.games - a.games),
-    }))
+    .map(({ championGames, ...standing }) => {
+      const decided = standing.wins + standing.losses
+      return {
+        ...standing,
+        winRate: decided === 0 ? null : Math.round((standing.wins / decided) * 1000) / 10,
+        // Stable sort keeps first-seen order among equals.
+        champions: [...championGames.values()].sort((a, b) => b.games - a.games),
+      }
+    })
     .sort(
       (a, b) =>
-        b.wins - b.losses - (a.wins - a.losses) || b.games - a.games || b.winRate - a.winRate
+        b.wins - b.losses - (a.wins - a.losses) ||
+        b.games - a.games ||
+        (b.winRate ?? -1) - (a.winRate ?? -1)
     )
 }

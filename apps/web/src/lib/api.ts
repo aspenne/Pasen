@@ -283,6 +283,11 @@ export type FeedMatch = {
   gameMode: string
   gameCreation: string
   gameDuration: number
+  /**
+   * Ended by the early vote after a leaver: neither a win nor a loss. Optional
+   * like every field added later, for an API older than it.
+   */
+  remake?: boolean
   members: FeedMember[]
 }
 
@@ -292,6 +297,8 @@ export type DailyFeed = {
   totals: {
     games: number
     memberGames: number
+    /** Participations in remakes, left out of wins, losses and the rate. */
+    remakes?: number
     wins: number
     losses: number
     winRate: number
@@ -378,6 +385,8 @@ export type MatchDetail = {
   gameMode: string
   gameCreation: string
   gameDuration: number
+  /** Ended by the early vote after a leaver: no side won or lost it. */
+  remake?: boolean
   sides: MatchDetailSide[]
 }
 
@@ -405,6 +414,8 @@ export type MatchHistoryEntry = {
   gameMode: string
   gameCreation: string
   gameDuration: number
+  /** Ended by the early vote after a leaver: `win` says nothing then. */
+  remake?: boolean
   riotId: string
   championId: number
   championName: string

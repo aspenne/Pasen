@@ -48,6 +48,9 @@ export class MatchIngestService {
     const gameCreation = DateTime.fromMillis(info.gameCreation, { zone: 'utc' })
     const durationSeconds = durationSecondsOf(info)
 
+    // Riot sets the flag on every participant of a remake; any one of them is enough.
+    const remake = info.participants.some((p) => p.gameEndedInEarlySurrender === true)
+
     /*
      * A real upsert, not updateOrCreate. That does a SELECT then an INSERT, and
      * the two are not atomic: with a group sharing games, the recent-sync and
@@ -73,7 +76,9 @@ export class MatchIngestService {
           ? DateTime.fromMillis(info.gameEndTimestamp, { zone: 'utc' }).toISO()
           : null,
         participant_count: info.participants.length,
-        stats_eligible: isStatsEligible(info.queueId, info.gameMode),
+        // A remake is neither won nor lost, so it stays out of the averages too.
+        stats_eligible: isStatsEligible(info.queueId, info.gameMode) && !remake,
+        remake,
         raw: JSON.stringify(match),
         ingested_at: DateTime.utc().toISO()!,
       })

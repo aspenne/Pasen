@@ -48,6 +48,10 @@ export default class Match extends BaseModel {
   @column()
   declare statsEligible: boolean
 
+  /** Ended by the early vote after a leaver: neither won nor lost, and out of every average. */
+  @column()
+  declare remake: boolean
+
   @column({
     prepare: (value: unknown) => JSON.stringify(value),
     consume: (value: unknown) => value,
