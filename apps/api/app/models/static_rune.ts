@@ -21,6 +21,10 @@ export default class StaticRune extends BaseModel {
   @column()
   declare image: string
 
+  /** What the rune does, as plain text. Styles have none. */
+  @column()
+  declare description: string | null
+
   @column()
   declare version: string
 

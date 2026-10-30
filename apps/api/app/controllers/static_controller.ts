@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 
 import Setting from '#models/setting'
 import StaticChampion from '#models/static_champion'
+import StaticItem from '#models/static_item'
 import StaticQueue from '#models/static_queue'
 import StaticRune from '#models/static_rune'
 import StaticSummonerSpell from '#models/static_summoner_spell'
@@ -14,12 +15,13 @@ import StaticSummonerSpell from '#models/static_summoner_spell'
  */
 export default class StaticController {
   async index({ response }: HttpContext) {
-    const [version, champions, spells, queues, runes] = await Promise.all([
+    const [version, champions, spells, queues, runes, items] = await Promise.all([
       Setting.find('ddragon.version'),
       StaticChampion.query().select('id', 'slug', 'name', 'title', 'tags', 'positions'),
       StaticSummonerSpell.query().select('id', 'slug', 'name'),
       StaticQueue.query().select('queueId', 'description', 'map'),
-      StaticRune.query().select('id', 'kind', 'name', 'image'),
+      StaticRune.query().select('id', 'kind', 'name', 'image', 'description'),
+      StaticItem.query().select('id', 'name', 'description', 'goldTotal'),
     ])
 
     // The patch only moves once every couple of weeks, and every id below is
@@ -57,7 +59,17 @@ export default class StaticController {
       // The image path is stored whole, because Data Dragon serves rune art
       // from an unversioned root and the path already carries the tree.
       runes: Object.fromEntries(
-        runes.map((rune) => [rune.id, { kind: rune.kind, name: rune.name, image: rune.image }])
+        runes.map((rune) => [
+          rune.id,
+          { kind: rune.kind, name: rune.name, image: rune.image, description: rune.description },
+        ])
+      ),
+      // For the tooltips only: the icons are built from the id alone.
+      items: Object.fromEntries(
+        items.map((item) => [
+          item.id,
+          { name: item.name, description: item.description, gold: item.goldTotal },
+        ])
       ),
     }
   }
