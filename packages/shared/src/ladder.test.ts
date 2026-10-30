@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { ladderPoints, lpBetween, pointsLabel } from './ladder.js'
+import { ladderPoints, lpOverGames, pointsLabel } from './ladder.js'
 
 const r = (tier: string | null, rank: string | null, leaguePoints: number) => ({ tier, rank, leaguePoints })
 
@@ -32,7 +32,7 @@ describe('pointsLabel', () => {
   })
 })
 
-describe('lpBetween', () => {
+describe('lpOverGames', () => {
   const at = (hour: number) => new Date(Date.UTC(2026, 9, 30) + hour * 3_600_000)
   const reading = (hour: number, tier: string | null, rank: string | null, leaguePoints: number, queueType = 'RANKED_SOLO_5x5', accountId = 1) => ({
     accountId,
@@ -42,29 +42,39 @@ describe('lpBetween', () => {
     rank,
     leaguePoints,
   })
-  const from = at(6)
-  const to = at(23)
+  const game = (hour: number, queueType = 'RANKED_SOLO_5x5', accountId = 1) => ({ accountId, queueType, startedAt: at(hour) })
 
-  it('measures from the last reading before the window to the last inside it, promotions included', () => {
+  it('measures from the last reading before the first game to the latest, promotions included', () => {
     const readings = [reading(2, 'GOLD', 'I', 80), reading(10, 'GOLD', 'I', 99), reading(12, 'PLATINUM', 'IV', 15)]
-    expect(lpBetween(readings, from, to).get(1)).toBe(35)
+    expect(lpOverGames(readings, [game(9), game(11)]).get(1)).toBe(35)
   })
 
   it('counts what the ladder shows, so a refunded loss costs nothing', () => {
     // Won 20, lost a game a leaver made Riot refund: the standing never dropped.
     const readings = [reading(2, 'GOLD', 'II', 40), reading(10, 'GOLD', 'II', 60), reading(11, 'GOLD', 'II', 60)]
-    expect(lpBetween(readings, from, to).get(1)).toBe(20)
+    expect(lpOverGames(readings, [game(9), game(10.5)]).get(1)).toBe(20)
   })
 
-  it('ignores readings after the window and accounts that did not move in it', () => {
-    const readings = [reading(2, 'GOLD', 'II', 40), reading(23.5, 'GOLD', 'II', 90), reading(1, 'SILVER', 'I', 10, 'RANKED_SOLO_5x5', 2)]
-    const gained = lpBetween(readings, from, to)
-    expect(gained.has(1)).toBe(false)
-    expect(gained.has(2)).toBe(false)
+  it('leaves the night before out, however late its reading came', () => {
+    // A loss at 23:00 the day before, read at 01:00; the day itself lost 20 and won 18.
+    const readings = [reading(-5, 'GOLD', 'II', 49), reading(1, 'GOLD', 'II', 28), reading(15, 'GOLD', 'II', 8), reading(16, 'GOLD', 'II', 26)]
+    expect(lpOverGames(readings, [game(14), game(15.5)]).get(1)).toBe(-2)
   })
 
-  it('starts an account first seen inside the window at that first reading', () => {
-    expect(lpBetween([reading(9, 'SILVER', 'I', 10), reading(11, 'SILVER', 'I', 30)], from, to).get(1)).toBe(20)
+  it('stops at the next game, and keeps a refund that lands before it', () => {
+    // Lost 22 at 21:00, refunded at 23:30, then played again the next day.
+    const readings = [reading(20, 'GOLD', 'II', 50), reading(22, 'GOLD', 'II', 28), reading(23.5, 'GOLD', 'II', 50), reading(26, 'GOLD', 'II', 70)]
+    expect(lpOverGames(readings, [game(21)], [game(25)]).get(1)).toBe(0)
+  })
+
+  it('leaves out a ladder the account did not play on', () => {
+    const readings = [reading(2, 'GOLD', 'II', 40), reading(10, 'GOLD', 'II', 20), reading(1, 'SILVER', 'I', 10, 'RANKED_FLEX_SR'), reading(12, 'SILVER', 'I', 0, 'RANKED_FLEX_SR')]
+    expect(lpOverGames(readings, [game(9)]).get(1)).toBe(-20)
+    expect(lpOverGames(readings, []).has(1)).toBe(false)
+  })
+
+  it('starts an account first seen after its first game at that first reading', () => {
+    expect(lpOverGames([reading(9, 'SILVER', 'I', 10), reading(11, 'SILVER', 'I', 30)], [game(8), game(10)]).get(1)).toBe(20)
   })
 
   it('adds up an account’s queues, and skips one with no rank to measure', () => {
@@ -76,6 +86,7 @@ describe('lpBetween', () => {
       reading(2, null, null, 0, 'RANKED_TFT'),
       reading(12, 'IRON', 'IV', 0, 'RANKED_TFT'),
     ]
-    expect(lpBetween(readings, from, to).get(1)).toBe(-5)
+    const games = [game(9), game(11, 'RANKED_FLEX_SR'), game(11, 'RANKED_TFT')]
+    expect(lpOverGames(readings, games).get(1)).toBe(-5)
   })
 })

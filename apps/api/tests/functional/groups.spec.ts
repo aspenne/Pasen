@@ -98,13 +98,22 @@ test.group('Group API', (group) => {
         inactive: false,
         capturedAt: DateTime.fromISO(at, { zone: 'Europe/Paris' }),
       })
-    // Last night's final game, read a few minutes after midnight, belongs to last night.
+    const game = (id: string, at: string) =>
+      seedMatch(id, DateTime.fromISO(at, { zone: 'Europe/Paris' }), seeded.account.puuid)
+    // Last night's final game, only read the next morning, belongs to last night.
+    await game('EUW1_late', '2026-09-15T23:30:00')
     await reading('2026-09-15T22:00:00', 'GOLD', 'I', 60)
-    await reading('2026-09-16T00:04:00', 'GOLD', 'I', 80)
+    await reading('2026-09-16T00:50:00', 'GOLD', 'I', 80)
     // Then a win into Platinum, and a loss Riot refunded: the standing never dropped.
+    await game('EUW1_win', '2026-09-16T20:00:00')
+    await game('EUW1_refunded', '2026-09-16T20:40:00')
     await reading('2026-09-16T20:30:00', 'PLATINUM', 'IV', 2)
     await reading('2026-09-16T21:15:00', 'PLATINUM', 'IV', 2)
+    // A ladder nobody played on that day is not part of it.
     await reading('2026-09-16T20:30:00', 'SILVER', 'II', 50, 'RANKED_FLEX_SR')
+    // The next day's game is the next day's.
+    await game('EUW1_next', '2026-09-17T18:00:00')
+    await reading('2026-09-17T18:40:00', 'PLATINUM', 'IV', 22)
 
     const solo = await client.get('/api/groups/arigafion/feed?date=2026-09-16&scope=ranked_solo')
     assert.deepEqual(solo.body().lp, { [seeded.member.slug]: 22 })
