@@ -36,35 +36,57 @@ export function pointsLabel(points: number): string {
 /** One recorded standing: an account's rank in one queue at one moment. */
 export type LadderReading = RankReading & { accountId: number; queueType: string; capturedAt: Date }
 
+/** A ranked game an account played: the ladder it counts for and when it began. */
+export type LadderGame = { accountId: number; queueType: string; startedAt: Date }
+
 /**
- * LP won or lost by each account between two moments, every queue given summed.
+ * LP won or lost by each account over a run of games, every queue summed.
  *
  * Measured from the recorded standings, not counted from wins and losses: a
  * loss Riot refunded after a leaver costs nothing here, which is the point.
- * The start is the last reading at or before `from`; an account first seen
- * inside the window counts from that first reading. An account with no
- * reading inside the window did not move. A standing with no rank (placements)
- * at either end is skipped, since there is no LP to subtract.
+ *
+ * Anchored to the games rather than to the clock. The standing before is the
+ * last reading taken before the first of them began; the standing after is
+ * the last one taken before the account's next game in that queue (`next`),
+ * or the latest there is. A late game is therefore counted on the day it was
+ * played however late its reading came, and a refund that lands before the
+ * next game is counted with the loss it refunds. A ladder the account did not
+ * play on, decaying or not, is left out. An account first seen after its first
+ * game counts from that first reading. A standing with no rank (placements) at
+ * either end is skipped, since there is no LP to subtract.
  */
-export function lpBetween(readings: LadderReading[], from: Date, to: Date): Map<number, number> {
+export function lpOverGames(readings: LadderReading[], games: LadderGame[], next: LadderGame[] = []): Map<number, number> {
+  const key = (entry: { accountId: number; queueType: string }) => `${entry.accountId}:${entry.queueType}`
+  const earliest = (list: LadderGame[]) => {
+    const firsts = new Map<string, number>()
+    for (const game of list) {
+      const time = game.startedAt.getTime()
+      if (time < (firsts.get(key(game)) ?? Infinity)) firsts.set(key(game), time)
+    }
+    return firsts
+  }
+  const firsts = earliest(games)
+  const nexts = earliest(next)
+
   const series = new Map<string, LadderReading[]>()
   for (const reading of readings) {
-    if (reading.capturedAt.getTime() > to.getTime()) continue
-    const key = `${reading.accountId}:${reading.queueType}`
-    const list = series.get(key) ?? []
+    if (!firsts.has(key(reading))) continue
+    const list = series.get(key(reading)) ?? []
     list.push(reading)
-    series.set(key, list)
+    series.set(key(reading), list)
   }
 
   const gained = new Map<number, number>()
-  for (const list of series.values()) {
+  for (const [ladder, list] of series) {
     list.sort((a, b) => a.capturedAt.getTime() - b.capturedAt.getTime())
-    const inside = list.filter((reading) => reading.capturedAt.getTime() > from.getTime())
-    if (inside.length === 0) continue
+    const first = firsts.get(ladder)!
+    const until = nexts.get(ladder) ?? Infinity
+    const start = list.filter((reading) => reading.capturedAt.getTime() < first).at(-1) ?? list[0]
+    const end = list.filter((reading) => reading.capturedAt.getTime() < until).at(-1)
+    if (!end || end.capturedAt.getTime() < start.capturedAt.getTime()) continue
 
-    const start = list.filter((reading) => reading.capturedAt.getTime() <= from.getTime()).at(-1) ?? inside[0]
     const before = ladderPoints(start)
-    const after = ladderPoints(inside.at(-1))
+    const after = ladderPoints(end)
     if (before === null || after === null) continue
 
     const accountId = list[0].accountId
