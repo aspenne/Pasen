@@ -28,6 +28,28 @@ test.group('MatchIngestService', (group) => {
     assert.equal(stored?.gameMode, 'CLASSIC')
     assert.equal(stored?.participantCount, 10)
     assert.isTrue(stored?.statsEligible)
+    assert.isFalse(stored?.remake)
+  })
+
+  test('flags a remake and keeps it out of the averages', async ({ assert }) => {
+    const match = await fixture('match_ranked_sr')
+    const remake = {
+      ...match,
+      info: {
+        ...match.info,
+        gameDuration: 210,
+        participants: match.info.participants.map((p) => ({
+          ...p,
+          gameEndedInEarlySurrender: true,
+        })),
+      },
+    }
+
+    await new MatchIngestService().ingest(remake)
+
+    const stored = await Match.find(match.metadata.matchId)
+    assert.isTrue(stored?.remake)
+    assert.isFalse(stored?.statsEligible, 'neither a win nor a loss')
   })
 
   /*

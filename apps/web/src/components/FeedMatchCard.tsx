@@ -61,7 +61,8 @@ export function FeedMatchCard({
   })
 
   const results = new Set(match.members.map((member) => member.win))
-  const outcome = results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
+  // A remake's winning side won nothing, so it reads as neither.
+  const outcome = match.remake ? 'remake' : results.size > 1 ? 'split' : match.members[0].win ? 'win' : 'loss'
   const shared = match.members.length > 1
 
   /*
@@ -74,6 +75,7 @@ export function FeedMatchCard({
     win: 'border-l-win',
     loss: 'border-l-loss',
     split: 'border-l-line-strong',
+    remake: 'border-l-line-strong',
   }[outcome]
 
   return (
@@ -149,11 +151,12 @@ export function FeedMatchCard({
             */}
             <div className="shrink-0 text-right sm:order-1 sm:w-[104px]">
               <span
+                title={match.remake ? 'Ended early after a leaver: neither a win nor a loss' : undefined}
                 className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                  member.win ? 'bg-win/15 text-win' : 'bg-loss/15 text-loss'
+                  match.remake ? 'bg-line-strong/60 text-ink-muted' : member.win ? 'bg-win/15 text-win' : 'bg-loss/15 text-loss'
                 }`}
               >
-                {member.win ? 'Victory' : 'Defeat'}
+                {match.remake ? 'Remake' : member.win ? 'Victory' : 'Defeat'}
               </span>
               {!shared && (
                 <div className="tnum mt-1 text-[11px] text-ink-dim">

@@ -39,6 +39,15 @@ describe('dayStandings', () => {
     expect(dayStandings(matches, null).map((s) => s.lp)).toEqual([null, null])
   })
 
+  it('counts a remake as played but neither won nor lost', () => {
+    const remake = { ...match(member('noah', false)), remake: true }
+    const [noah] = dayStandings([match(member('noah', true)), remake])
+    expect(noah).toMatchObject({ games: 2, wins: 1, losses: 0, remakes: 1, winRate: 100 })
+
+    const [only] = dayStandings([{ ...match(member('zed', false)), remake: true }])
+    expect(only).toMatchObject({ games: 1, wins: 0, losses: 0, remakes: 1, winRate: null })
+  })
+
   it('ranks a long good evening above a single win', () => {
     const matches = [
       match(member('once', true)),

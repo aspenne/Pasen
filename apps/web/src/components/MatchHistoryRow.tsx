@@ -49,7 +49,7 @@ export function MatchHistoryRow({
   })
 
   return (
-    <div className={`border-l-2 bg-panel ${entry.win ? 'border-win' : 'border-loss'}`}>
+    <div className={`border-l-2 bg-panel ${entry.remake ? 'border-line-strong' : entry.win ? 'border-win' : 'border-loss'}`}>
       {/* Same wrap as the daily feed: on a phone the figures take a line of
           their own rather than squeezing the champion and the queue out. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-2">
@@ -66,6 +66,7 @@ export function MatchHistoryRow({
             {queueLabel(entry.queueGroup)}
             {positionLabel(entry.teamPosition) && ` · ${positionLabel(entry.teamPosition)}`}
             {entry.subteamPlacement && ` · #${entry.subteamPlacement}`}
+            {entry.remake && ' · Remake'}
           </div>
         </div>
 

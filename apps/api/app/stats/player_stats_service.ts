@@ -36,6 +36,8 @@ export type MatchHistoryEntry = {
   championName: string
   teamPosition: string | null
   win: boolean
+  /** Ended by the early vote after a leaver: `win` says nothing then. */
+  remake: boolean
   kills: number
   deaths: number
   assists: number
@@ -155,6 +157,7 @@ export class PlayerStatsService {
         'm.game_mode',
         'm.game_creation',
         'm.game_duration',
+        'm.remake',
         'a.game_name',
         'a.tag_line',
         'p.champion_id',
@@ -189,6 +192,7 @@ export class PlayerStatsService {
         championName: row.champion_name,
         teamPosition: row.team_position,
         win: row.win,
+        remake: row.remake,
         kills: row.kills,
         deaths: row.deaths,
         assists: row.assists,
