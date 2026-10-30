@@ -11,11 +11,13 @@ import {
   SignatureTile,
   WeekRhythmTile,
 } from '@/components/home/BentoTiles'
+import { DayBoard } from '@/components/home/DayBoard'
 import { GroupHero } from '@/components/home/GroupHero'
 import { Reveal } from '@/components/Reveal'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
+import { dayStandings } from '@/lib/day'
 import { useStaticData } from '@/lib/ddragon'
 import { memberColor } from '@/lib/format'
 
@@ -75,6 +77,8 @@ function Dashboard() {
   const allMatches = feed?.matches ?? []
   const shownMatches = showAll ? allMatches : allMatches.slice(0, FEED_PREVIEW)
   const hiddenMatches = allMatches.length - shownMatches.length
+
+  const standings = useMemo(() => dayStandings(allMatches), [allMatches])
 
   const totals = feed?.totals
   const totalGames = overview?.members.reduce((sum, m) => sum + m.totals.games, 0) ?? 0
@@ -215,6 +219,13 @@ function Dashboard() {
           </div>
         </div>
 
+        <DayBoard
+          standings={standings}
+          group={group}
+          scope={scope}
+          colorFor={colorFor}
+          staticData={staticData}
+        />
       </section>
 
       <section className="space-y-2">
