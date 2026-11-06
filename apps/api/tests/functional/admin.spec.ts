@@ -9,7 +9,7 @@ import { seedGroup } from '#tests/helpers'
 const CREDENTIALS = { email: 'admin@pasen.test', password: 'a-long-enough-password' }
 
 async function seedAdmin() {
-  return User.create(CREDENTIALS)
+  return User.create({ ...CREDENTIALS, role: 'admin' })
 }
 
 test.group('Admin API', (group) => {

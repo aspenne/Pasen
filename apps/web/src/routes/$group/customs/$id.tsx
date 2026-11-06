@@ -88,7 +88,7 @@ function CustomGamePage() {
           )}
         </div>
 
-        <CustomTitle game={game} group={group} editable={Boolean(session?.authenticated)} />
+        <CustomTitle game={game} group={group} editable={Boolean(session?.admin)} />
 
         <p className="tnum text-[13px] text-ink-muted">
           {game.mapName ?? game.gameMode}
@@ -118,7 +118,7 @@ function CustomGamePage() {
         </p>
       </header>
 
-      {session?.authenticated && <WinnerControl game={game} group={group} />}
+      {session?.admin && <WinnerControl game={game} group={group} />}
 
       <div className="grid gap-3 @3xl:grid-cols-2">
         {game.teams.map((team) => (

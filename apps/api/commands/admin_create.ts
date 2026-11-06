@@ -4,9 +4,9 @@ import type { CommandOptions } from '@adonisjs/core/types/ace'
 import User from '#models/user'
 
 /**
- * Creates or re-passwords the admin account. Kept as a command rather than a
- * sign-up page: the site has exactly one administrator and an open registration
- * form would be a way in, not a feature.
+ * Creates an admin account, or re-passwords one. The sign-up page only ever
+ * makes members, so the first admin - and a way back in for a locked-out one -
+ * has to come from the server itself.
  */
 export default class AdminCreate extends BaseCommand {
   static commandName = 'admin:create'
@@ -36,7 +36,7 @@ export default class AdminCreate extends BaseCommand {
       return
     }
 
-    const user = await User.updateOrCreate({ email: this.email }, { password })
+    const user = await User.updateOrCreate({ email: this.email }, { password, role: 'admin' })
 
     this.logger.success(`admin ${user.email} ready — sign in at /admin`)
   }

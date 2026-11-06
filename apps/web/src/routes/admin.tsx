@@ -5,10 +5,12 @@ import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { KeyRoundIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
 
+import { AccountForms } from '@/components/account/AccountForms'
 import { CaptureDevices } from '@/components/admin/CaptureDevices'
 import { CustomGames } from '@/components/admin/CustomGames'
 import { MainAccount } from '@/components/admin/MainAccount'
 import { PreviousNames } from '@/components/admin/PreviousNames'
+import { Users } from '@/components/admin/Users'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -63,10 +65,12 @@ function Admin() {
       <main className="mx-auto max-w-4xl px-4 py-6">
         {session.isPending ? (
           <Skeleton className="h-32 w-full" />
+        ) : session.data?.admin ? (
+          <Console self={session.data.email} />
         ) : session.data?.authenticated ? (
-          <Console />
+          <NotAnAdmin />
         ) : (
-          <SignIn />
+          <AccountForms />
         )}
       </main>
     </div>
@@ -90,64 +94,26 @@ function SignOut({ email }: { email: string | null }) {
   )
 }
 
-function SignIn() {
-  const queryClient = useQueryClient()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
-  const signIn = useMutation({
-    mutationFn: () => api.signIn(email, password),
-    onSuccess: () => queryClient.invalidateQueries(),
-    onError: () => toast.error('That email and password do not match.'),
-  })
-
+/** Signed in, but as a member: this page has nothing for them. */
+function NotAnAdmin() {
   return (
     <Card className="max-w-sm">
       <CardHeader>
-        <CardTitle className="text-[15px]">Sign in</CardTitle>
+        <CardTitle className="text-[15px]">This page is for admins</CardTitle>
+        <CardDescription>
+          Your account is a member’s. Ask an admin to give it admin rights.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <form
-          className="space-y-3"
-          onSubmit={(event: FormEvent) => {
-            event.preventDefault()
-            signIn.mutate()
-          }}
-        >
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoComplete="username"
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </div>
-
-          <Button type="submit" disabled={signIn.isPending} className="w-full">
-            {signIn.isPending ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/account">Your account</Link>
+        </Button>
       </CardContent>
     </Card>
   )
 }
 
-function Console() {
+function Console({ self }: { self: string | null }) {
   const status = useQuery({
     queryKey: ['admin-status'],
     queryFn: api.adminStatus,
@@ -162,6 +128,8 @@ function Console() {
     <div className="space-y-6">
       <RiotKeyCard status={status.data.riotKey} budget={status.data.budget} />
       <AddAccountCard accounts={status.data.accounts} />
+      {/* Above the accounts: a handful of rows, where thirty accounts would bury it. */}
+      <Users accounts={status.data.accounts} self={self} />
       <AccountsCard accounts={status.data.accounts} />
       <CustomGames group={DEFAULT_GROUP} />
       <CaptureDevices group={DEFAULT_GROUP} />

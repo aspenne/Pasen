@@ -44,14 +44,14 @@ function RoulettePage() {
   const { data: overview } = useQuery({
     queryKey: ['group', group, scope],
     queryFn: () => api.group(group, { scope }),
-    enabled: Boolean(session?.authenticated),
+    enabled: Boolean(session?.admin),
   })
 
   // The server's clock, as seen from here: the gap is measured on every poll.
   const offset = view ? Date.parse(view.serverTime) - roulette.dataUpdatedAt : 0
   const count = useRevealCount(view, offset)
 
-  const admin = Boolean(session?.authenticated)
+  const admin = Boolean(session?.admin)
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['roulette', group] })
   const failed = () => toast.error('Could not do that. Are you still signed in?')
 

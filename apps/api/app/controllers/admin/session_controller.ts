@@ -11,14 +11,26 @@ const credentials = vine.compile(
 )
 
 export default class SessionController {
-  /** Who is signed in, for the admin UI to decide what to render. */
+  /** Who is signed in and what they may do, for the site to decide what to render. */
   async show({ auth }: HttpContext) {
     // Read the user off the guard, not off `auth`: check() resolves it on the
     // guard instance, and `auth.user` is only populated by the middleware.
     const guard = auth.use('web')
     const authenticated = await guard.check()
 
-    return { authenticated, email: guard.user?.email ?? null }
+    const user = guard.user
+    if (user) await user.load('member')
+
+    return {
+      authenticated,
+      email: user?.email ?? null,
+      fullName: user?.fullName ?? null,
+      role: user?.role ?? null,
+      // What the site checks before it shows an admin control.
+      admin: user?.role === 'admin',
+      memberSlug: user?.member?.slug ?? null,
+      memberName: user?.member?.displayName ?? null,
+    }
   }
 
   async store({ request, response, auth }: HttpContext) {
@@ -33,7 +45,7 @@ export default class SessionController {
     const user = await User.verifyCredentials(email, password)
     await auth.use('web').login(user)
 
-    return response.created({ email: user.email })
+    return response.created({ email: user.email, role: user.role })
   }
 
   async destroy({ auth, response }: HttpContext) {

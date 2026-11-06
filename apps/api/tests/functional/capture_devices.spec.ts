@@ -26,7 +26,7 @@ test.group('Capture devices', (group) => {
 
   test('pairing hands the token over once, and keeps only its hash', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const paired = await client
       .post('/api/admin/groups/arigafion/devices')
@@ -47,7 +47,7 @@ test.group('Capture devices', (group) => {
 
   test('a paired PC can say who it is and send a game', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { token } = (
       await client.post('/api/admin/groups/arigafion/devices').json({ name: 'PC salon' }).loginAs(admin)
     ).body()
@@ -75,7 +75,7 @@ test.group('Capture devices', (group) => {
 
   test('refuses a missing, wrong or revoked token', async ({ client }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { token, id } = (
       await client.post('/api/admin/groups/arigafion/devices').json({ name: 'PC salon' }).loginAs(admin)
     ).body()
@@ -97,7 +97,7 @@ test.group('Capture devices', (group) => {
   /* The token is for sending customs, not for the rest of the admin. */
   test('a device token opens nothing behind the admin session', async ({ client }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { token } = (
       await client.post('/api/admin/groups/arigafion/devices').json({ name: 'PC salon' }).loginAs(admin)
     ).body()

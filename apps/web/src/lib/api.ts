@@ -559,6 +559,30 @@ export type ProfileCardStats = {
   bestChampion: { championName: string; games: number; winRate: number } | null
 }
 
+export type UserRole = 'member' | 'admin'
+
+/** Who is signed in, if anyone, and what they may do. */
+export type Session = {
+  authenticated: boolean
+  email: string | null
+  fullName: string | null
+  role: UserRole | null
+  /** What every admin control checks: a member is signed in but sees none. */
+  admin: boolean
+  memberSlug: string | null
+  memberName: string | null
+}
+
+export type AdminUser = {
+  id: number
+  email: string
+  fullName: string | null
+  role: UserRole
+  memberSlug: string | null
+  memberName: string | null
+  createdAt: string
+}
+
 export type AdminAccount = {
   id: number
   riotId: string
@@ -817,13 +841,22 @@ export const api = {
       body: JSON.stringify({ teams }),
     }),
 
-  session: () => apiFetch<{ authenticated: boolean; email: string | null }>('/api/admin/session'),
+  session: () => apiFetch<Session>('/api/admin/session'),
   signIn: (email: string, password: string) =>
-    apiFetch<{ email: string }>('/api/admin/session', {
+    apiFetch<{ email: string; role: UserRole }>('/api/admin/session', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
+  signUp: (payload: { email: string; password: string; fullName?: string }) =>
+    apiFetch<{ email: string; role: UserRole }>('/api/account', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   signOut: () => apiFetch<void>('/api/admin/session', { method: 'DELETE' }),
+
+  users: () => apiFetch<{ users: AdminUser[] }>('/api/admin/users'),
+  updateUser: (id: number, patch: { role?: UserRole; memberSlug?: string | null }) =>
+    apiFetch<AdminUser>(`/api/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
 
   adminStatus: () => apiFetch<AdminStatus>('/api/admin/status'),
   setRiotKey: (key: string) =>

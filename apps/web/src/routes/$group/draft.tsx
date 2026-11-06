@@ -95,7 +95,7 @@ function DraftPage() {
     onError: () => toast.error('Could not free that seat. Are you still signed in?'),
   })
 
-  const admin = Boolean(session?.authenticated)
+  const admin = Boolean(session?.admin)
   const open = Boolean(draft && !draft.finishedAt)
   const roster = rosterOf(roulette)
 

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as GroupRouteImport } from './routes/$group'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as GroupIndexRouteImport } from './routes/$group/index'
 import { Route as GroupDraftRouteImport } from './routes/$group/draft'
@@ -30,6 +31,11 @@ const IndexRoute = IndexRouteImport.update({
 const GroupRoute = GroupRouteImport.update({
   id: '/$group',
   path: '/$group',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -86,6 +92,7 @@ const GroupPlayersMemberRoute = GroupPlayersMemberRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$group': typeof GroupRouteWithChildren
+  '/account': typeof AccountRoute
   '/admin': typeof AdminRoute
   '/$group/draft': typeof GroupDraftRoute
   '/$group/fearless': typeof GroupFearlessRoute
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$group'
+    | '/account'
     | '/admin'
     | '/$group/draft'
     | '/$group/fearless'
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/admin'
     | '/$group/draft'
     | '/$group/fearless'
@@ -157,6 +168,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$group'
+    | '/account'
     | '/admin'
     | '/$group/draft'
     | '/$group/fearless'
@@ -172,6 +184,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GroupRoute: typeof GroupRouteWithChildren
+  AccountRoute: typeof AccountRoute
   AdminRoute: typeof AdminRoute
 }
 
@@ -189,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/$group'
       fullPath: '/$group'
       preLoaderRoute: typeof GroupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -293,6 +313,7 @@ const GroupRouteWithChildren = GroupRoute._addFileChildren(GroupRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GroupRoute: GroupRouteWithChildren,
+  AccountRoute: AccountRoute,
   AdminRoute: AdminRoute,
 }
 export const routeTree = rootRouteImport

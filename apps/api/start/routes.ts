@@ -20,6 +20,8 @@ const DraftsController = () => import('#controllers/drafts_controller')
 const AdminDraftsController = () => import('#controllers/admin/drafts_controller')
 const AdminRouletteController = () => import('#controllers/admin/roulette_controller')
 const RiotIdAliasesController = () => import('#controllers/admin/riot_id_aliases_controller')
+const AccountController = () => import('#controllers/account_controller')
+const UsersController = () => import('#controllers/admin/users_controller')
 
 /*
  * Registered twice on purpose. The bare path is what a container health check
@@ -77,13 +79,14 @@ router
     router.get('/static', [StaticController, 'index'])
 
     /*
-     * Signing in is public by necessity; everything else that writes is behind
-     * the session. The read endpoints above stay open - the site is meant to be
-     * shared.
+     * Signing in and signing up are public by necessity. A new account is a
+     * member's, and everything else that writes is behind an admin's session.
+     * The read endpoints above stay open - the site is meant to be shared.
      */
     router.get('/admin/session', [SessionController, 'show'])
     router.post('/admin/session', [SessionController, 'store'])
     router.delete('/admin/session', [SessionController, 'destroy'])
+    router.post('/account', [AccountController, 'store'])
 
     router
       .group(() => {
@@ -121,7 +124,10 @@ router
         router.put('/admin/groups/:slug/roulette/lobby', [AdminRouletteController, 'lobby'])
         router.delete('/admin/drafts/:id', [AdminDraftsController, 'destroy'])
         router.delete('/admin/drafts/:id/seats/:side', [AdminDraftsController, 'freeSeat'])
+
+        router.get('/admin/users', [UsersController, 'index'])
+        router.patch('/admin/users/:id', [UsersController, 'update']).where('id', /^\d+$/)
       })
-      .use(middleware.auth())
+      .use([middleware.auth(), middleware.admin()])
   })
   .prefix('/api')

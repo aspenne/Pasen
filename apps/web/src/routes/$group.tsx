@@ -111,11 +111,11 @@ function GroupLayout() {
           */}
           <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
             <nav className="flex gap-4 text-[12px]">
-              {groupNav(Boolean(session?.authenticated)).map((entry) =>
-                entry.to === '/admin' ? (
+              {groupNav(session).map((entry) =>
+                entry.to === '/admin' || entry.to === '/account' ? (
                   <Link
                     key={entry.label}
-                    to="/admin"
+                    to={entry.to}
                     className="tap inline-flex items-center justify-center text-accent hover:text-ink"
                   >
                     {entry.label}

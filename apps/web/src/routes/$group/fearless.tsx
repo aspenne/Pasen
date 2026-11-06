@@ -29,7 +29,7 @@ function FearlessPage() {
     refetchInterval: (query) => (query.state.data?.night.active ? 20_000 : false),
   })
 
-  const admin = Boolean(session?.authenticated)
+  const admin = Boolean(session?.admin)
   const timezone = overview?.timezone ?? 'Europe/Paris'
 
   if (isPending) {

@@ -115,7 +115,7 @@ test.group('Fearless nights · admin', (group) => {
 
   test('starting a night ends the one still open', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const first = await client.post('/api/admin/groups/arigafion/fearless').json({ label: 'Un' }).loginAs(admin)
     first.assertStatus(201)
@@ -130,7 +130,7 @@ test.group('Fearless nights · admin', (group) => {
 
   test('ends a night and renames it', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
 
     const response = await client
@@ -145,7 +145,7 @@ test.group('Fearless nights · admin', (group) => {
   test("excludes a game, and keeps only the group's own customs in the list", async ({ client, assert }) => {
     const { group } = await seedGroup()
     await seedChampions(2)
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const other = await Group.create({ slug: 'others', name: 'Others', timezone: 'Europe/Paris' })
     const foreign = await customFor(other, { startedMinutesAgo: 5, champions: ['Champ2'] })
 
@@ -168,7 +168,7 @@ test.group('Fearless nights · admin', (group) => {
   test('burns, frees and forgets a champion by hand', async ({ client, assert }) => {
     await seedGroup()
     await seedChampions(3)
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
 
     const burned = await client
@@ -193,7 +193,7 @@ test.group('Fearless nights · admin', (group) => {
   test('refuses a champion the site does not know', async ({ client }) => {
     await seedGroup()
     await seedChampions(1)
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
 
     const response = await client
