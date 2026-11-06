@@ -796,11 +796,11 @@ export const api = {
       headers: { 'x-draft-seat': token },
       body: JSON.stringify({ championId }),
     }),
-  lockDraft: (slug: string, id: number, token: string, championId: number, role: string | null) =>
+  lockDraft: (slug: string, id: number, token: string, championId: number) =>
     apiFetch<DraftView>(`/api/groups/${slug}/drafts/${id}/actions`, {
       method: 'POST',
       headers: { 'x-draft-seat': token },
-      body: JSON.stringify({ championId, role }),
+      body: JSON.stringify({ championId }),
     }),
   cancelDraft: (id: number) => apiFetch<void>(`/api/admin/drafts/${id}`, { method: 'DELETE' }),
   freeDraftSeat: (id: number, side: 'blue' | 'red') =>

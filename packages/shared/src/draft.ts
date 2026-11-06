@@ -26,7 +26,11 @@ export type DraftAction = {
   side: DraftSide
   kind: DraftKind
   championId: number
-  /** A pick's lane; null for a ban. */
+  /**
+   * The seat a pick fills, named by the lane of the player sitting there:
+   * picks fill a side's seats in order, whatever the champion plays. Null
+   * for a ban.
+   */
   role: DraftRole | null
 }
 
@@ -35,26 +39,28 @@ export function currentStep(actions: readonly DraftAction[]): number | null {
   return actions.length < DRAFT_STEPS.length ? actions.length : null
 }
 
-/** The first free lane the champion plays; else the first free lane; null when the side is full. */
-export function defaultRole(positions: readonly string[], taken: readonly string[]): DraftRole | null {
-  const free = DRAFT_ROLES.filter((role) => !taken.includes(role))
-  return free.find((role) => positions.includes(role)) ?? free[0] ?? null
+/**
+ * The seat a side's next pick fills: the first one still empty, top to
+ * bottom. The first pick goes to the first player, whoever the champion is
+ * for - the players sort out who plays it, as in a real champion select.
+ * Null when the side is full.
+ */
+export function nextSeat(taken: readonly string[]): DraftRole | null {
+  return DRAFT_ROLES.find((role) => !taken.includes(role)) ?? null
 }
 
-export type DraftRefusal = 'finished' | 'not-your-turn' | 'taken' | 'burned' | 'role-taken'
+export type DraftRefusal = 'finished' | 'not-your-turn' | 'taken' | 'burned'
 
 /**
  * Whether `side` may lock `championId` now: it is their turn, the champion is
  * not banned or picked yet in this draft, and not burned in the fearless
- * night. A pick also gets a lane - the one asked for if it is free.
+ * night. A pick also gets its seat, the side's next empty one.
  */
 export function validateAction(input: {
   actions: readonly DraftAction[]
   burned: ReadonlySet<number>
   side: DraftSide
   championId: number
-  positions: readonly string[]
-  role?: DraftRole | null
 }):
   | { ok: true; step: number; kind: DraftKind; role: DraftRole | null }
   | { ok: false; reason: DraftRefusal } {
@@ -70,7 +76,5 @@ export function validateAction(input: {
   const taken = input.actions
     .filter((action) => action.side === input.side && action.kind === 'pick' && action.role)
     .map((action) => action.role as string)
-  if (input.role && taken.includes(input.role)) return { ok: false, reason: 'role-taken' }
-  const role = input.role ?? defaultRole(input.positions, taken)
-  return { ok: true, step: index, kind: 'pick', role }
+  return { ok: true, step: index, kind: 'pick', role: nextSeat(taken) }
 }

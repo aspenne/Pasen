@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { DRAFT_STEPS, currentStep, defaultRole, validateAction, type DraftAction } from './draft.js'
+import { DRAFT_STEPS, currentStep, nextSeat, validateAction, type DraftAction } from './draft.js'
 
 function act(step: number, championId: number, role: DraftAction['role'] = null): DraftAction {
   return { step, side: DRAFT_STEPS[step].side, kind: DRAFT_STEPS[step].kind, championId, role }
@@ -24,17 +24,16 @@ describe('currentStep', () => {
   })
 })
 
-describe('defaultRole', () => {
-  it("takes the first free role the champion plays, else the first free one", () => {
-    expect(defaultRole(['MIDDLE', 'UTILITY'], ['MIDDLE'])).toBe('UTILITY')
-    expect(defaultRole(['TOP'], ['TOP'])).toBe('JUNGLE')
-    expect(defaultRole([], [])).toBe('TOP')
-    expect(defaultRole(['TOP'], ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'])).toBeNull()
+describe('nextSeat', () => {
+  it('is the first empty seat, top to bottom, and null once the side is full', () => {
+    expect(nextSeat([])).toBe('TOP')
+    expect(nextSeat(['TOP'])).toBe('JUNGLE')
+    expect(nextSeat(['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'])).toBeNull()
   })
 })
 
 describe('validateAction', () => {
-  const base = { actions: [] as DraftAction[], burned: new Set<number>(), positions: [] as string[] }
+  const base = { actions: [] as DraftAction[], burned: new Set<number>() }
 
   it('lets the side whose turn it is ban a free champion', () => {
     expect(validateAction({ ...base, side: 'blue', championId: 7 })).toEqual({ ok: true, kind: 'ban', step: 0, role: null })
@@ -48,15 +47,16 @@ describe('validateAction', () => {
     expect(validateAction({ ...base, actions: done, side: 'red', championId: 7 })).toEqual({ ok: false, reason: 'finished' })
   })
 
-  it('gives a pick a role: the one asked for if free, else the default', () => {
+  it('seats each pick in order, whatever the champion plays', () => {
     const bans = DRAFT_STEPS.slice(0, 6).map((_, i) => act(i, i + 100))
-    expect(validateAction({ ...base, actions: bans, side: 'blue', championId: 7, positions: ['MIDDLE'] })).toEqual({
-      ok: true, kind: 'pick', step: 6, role: 'MIDDLE',
+    // Blue's first pick goes to the first player, a support champion or not.
+    expect(validateAction({ ...base, actions: bans, side: 'blue', championId: 7 })).toEqual({
+      ok: true, kind: 'pick', step: 6, role: 'TOP',
     })
-    expect(validateAction({ ...base, actions: bans, side: 'blue', championId: 7, positions: ['MIDDLE'], role: 'BOTTOM' })).toEqual({
-      ok: true, kind: 'pick', step: 6, role: 'BOTTOM',
-    })
-    const withMid = [...bans, act(6, 50, 'MIDDLE'), act(7, 51, 'TOP'), act(8, 52, 'TOP')]
-    expect(validateAction({ ...base, actions: withMid, side: 'blue', championId: 7, role: 'MIDDLE' })).toEqual({ ok: false, reason: 'role-taken' })
+    // Red picks twice in a row: the first and second seats.
+    const afterBlue = [...bans, act(6, 50, 'TOP')]
+    expect(validateAction({ ...base, actions: afterBlue, side: 'red', championId: 7 })).toMatchObject({ role: 'TOP' })
+    const afterRed = [...afterBlue, act(7, 51, 'TOP')]
+    expect(validateAction({ ...base, actions: afterRed, side: 'red', championId: 8 })).toMatchObject({ role: 'JUNGLE' })
   })
 })

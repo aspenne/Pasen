@@ -58,15 +58,15 @@ describe('lockError', () => {
   it('says why a lock was refused', () => {
     expect(lockError(409)).toBe('Someone was quicker. The draft has moved on.')
     expect(lockError(401)).toBe('Your seat was freed. Take it again to keep playing.')
-    expect(lockError(422)).toBe('That champion is banned, picked or burned, or that lane is taken.')
+    expect(lockError(422)).toBe('That champion is banned, picked or burned.')
     expect(lockError(403)).toBe('It is not your turn.')
   })
 })
 
 describe('previewLane', () => {
-  it("shows the hovered champion in the lane it would take: its own if free, else the next free one", () => {
-    expect(previewLane(actions, 'blue', ['MIDDLE', 'UTILITY'])).toBe('UTILITY')
-    expect(previewLane(actions, 'red', ['MIDDLE'])).toBe('MIDDLE')
-    expect(previewLane(actions, 'red', [])).toBe('JUNGLE')
+  it('shows the hovered champion in the side’s next empty seat, whatever it plays', () => {
+    // Blue holds MIDDLE from an older draft: the first empty seat is still TOP.
+    expect(previewLane(actions, 'blue')).toBe('TOP')
+    expect(previewLane(actions, 'red')).toBe('JUNGLE')
   })
 })

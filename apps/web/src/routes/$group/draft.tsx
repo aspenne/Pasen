@@ -2,7 +2,7 @@ import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-rou
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { DRAFT_ROLES, type DraftRole, type DraftSide, type QueueScope } from '@pasen/shared'
+import { type DraftRole, type DraftSide, type QueueScope } from '@pasen/shared'
 
 import { RoleFilterBar } from '@/components/RoleFilterBar'
 import { api, ApiError, type DraftView, type StaticData } from '@/lib/api'
@@ -101,22 +101,14 @@ function DraftPage() {
 
   // The champion being considered, and the card it would fill, for everyone watching.
   const [selected, setSelected] = useState<number | null>(null)
-  const [lane, setLane] = useState<DraftRole | null>(null)
   useEffect(() => {
     setSelected(null)
-    setLane(null)
   }, [draft?.current?.step])
   const myTurn = Boolean(seat && draft?.current && draft.current.side === seat.side)
   const hovered = myTurn ? selected : (draft?.hover ?? null)
   const preview =
     draft?.current?.kind === 'pick' && hovered
-      ? {
-          side: draft.current.side,
-          championId: hovered,
-          lane:
-            (myTurn ? lane : null) ??
-            previewLane(draft.actions, draft.current.side, staticData?.champions[String(hovered)]?.positions ?? []),
-        }
+      ? { side: draft.current.side, championId: hovered, lane: previewLane(draft.actions, draft.current.side) }
       : null
 
   return (
@@ -153,16 +145,12 @@ function DraftPage() {
               group={group}
               staticData={staticData}
               selected={selected}
-              lane={lane}
               onSelect={(id) => {
                 setSelected(id)
-                setLane(null)
                 if (seat) api.hoverDraft(group, draft.id, seat.token, id).catch(() => {})
               }}
-              onLane={setLane}
               onLocked={(next) => {
                 setSelected(null)
-                setLane(null)
                 queryClient.setQueryData(['draft', group], next)
               }}
               onTake={(side) => take.mutate(side)}
@@ -345,9 +333,7 @@ function Center({
   group,
   staticData,
   selected,
-  lane,
   onSelect,
-  onLane,
   onLocked,
   onTake,
   onLeave,
@@ -361,9 +347,7 @@ function Center({
   group: string
   staticData: StaticData | undefined
   selected: number | null
-  lane: DraftRole | null
   onSelect: (id: number) => void
-  onLane: (lane: DraftRole) => void
   onLocked: (next: DraftView) => void
   onTake: (side: DraftSide) => void
   onLeave: () => void
@@ -387,16 +371,10 @@ function Center({
   const burned = new Set(draft.burned)
   const shown = searchChampions(champions, query).filter((c) => matchesRole(c.positions, roleFilter))
 
-  const picking = myTurn && draft.current?.kind === 'pick'
-  const takenLanes = draft.actions
-    .filter((a) => a.side === seat?.side && a.kind === 'pick' && a.role)
-    .map((a) => a.role as string)
-  const freeLanes = DRAFT_ROLES.filter((r) => !takenLanes.includes(r))
   const chosen = champions.find((c) => c.id === selected)
-  const laneShown = lane ?? (chosen && seat ? previewLane(draft.actions, seat.side, chosen.positions ?? []) : null)
 
   const lock = useMutation({
-    mutationFn: () => api.lockDraft(group, draft.id, seat!.token, selected!, picking ? laneShown : null),
+    mutationFn: () => api.lockDraft(group, draft.id, seat!.token, selected!),
     onSuccess: onLocked,
     onError: (error) => toast.error(lockError(error instanceof ApiError ? error.status : 422)),
   })
@@ -463,24 +441,6 @@ function Center({
           <span className="display min-w-0 flex-1 truncate text-[16px] font-semibold text-ink">
             {chosen ? chosen.name : `Choose a champion to ${draft.current!.kind}`}
           </span>
-          {picking && chosen && (
-            <div role="radiogroup" aria-label="Lane" className="flex gap-1">
-              {ROLES.filter((r) => freeLanes.includes(r.key)).map((r) => (
-                <button
-                  key={r.key}
-                  type="button"
-                  role="radio"
-                  aria-checked={laneShown === r.key}
-                  aria-label={r.label}
-                  title={r.label}
-                  onClick={() => onLane(r.key)}
-                  className={`tap p-1 ${laneShown === r.key ? 'bg-accent' : 'bg-panel-raised'}`}
-                >
-                  <img src={roleIcon(r.icon)} alt="" width={18} height={18} className={laneShown === r.key ? 'brightness-0' : ''} />
-                </button>
-              ))}
-            </div>
-          )}
           <Action primary disabled={!selected || lock.isPending} onClick={() => lock.mutate()}>
             Lock in
           </Action>

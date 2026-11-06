@@ -1,6 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
-import { DRAFT_ROLES } from '@pasen/shared'
 
 import Draft from '#models/draft'
 import Group from '#models/group'
@@ -8,12 +7,8 @@ import { DraftError, DraftService } from '#drafts/draft_service'
 
 const sideInput = vine.compile(vine.object({ side: vine.enum(['blue', 'red'] as const) }))
 const hoverInput = vine.compile(vine.object({ championId: vine.number().withoutDecimals().positive().nullable() }))
-const actionInput = vine.compile(
-  vine.object({
-    championId: vine.number().withoutDecimals().positive(),
-    role: vine.enum(DRAFT_ROLES).nullable().optional(),
-  })
-)
+// No lane: a pick takes the side's next seat, whatever the champion plays.
+const actionInput = vine.compile(vine.object({ championId: vine.number().withoutDecimals().positive() }))
 
 /**
  * The draft as everyone sees it, and the captains' moves. A seat token rides in
@@ -66,9 +61,9 @@ export default class DraftsController {
 
   async act(ctx: HttpContext) {
     const draft = await this.#draft(ctx)
-    const { championId, role } = await actionInput.validate(ctx.request.all())
+    const { championId } = await actionInput.validate(ctx.request.all())
     return this.#run(ctx, async (service) => {
-      await service.act(draft, ctx.request.header('x-draft-seat'), championId, role ?? null)
+      await service.act(draft, ctx.request.header('x-draft-seat'), championId)
       return ctx.response.created(await service.view(draft))
     })
   }
