@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DraftAction } from '@pasen/shared'
 
-import { bansOf, lockError, picksByRole, previewLane, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
+import { bansOf, justLocked, lockError, picksByRole, previewLane, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
 
 const actions: DraftAction[] = [
   { step: 0, side: 'blue', kind: 'ban', championId: 10, role: null },
@@ -68,5 +68,19 @@ describe('previewLane', () => {
     // Blue holds MIDDLE from an older draft: the first empty seat is still TOP.
     expect(previewLane(actions, 'blue')).toBe('TOP')
     expect(previewLane(actions, 'red')).toBe('JUNGLE')
+  })
+})
+
+describe('justLocked', () => {
+  const draft = { id: 4, actions }
+
+  it('is the newest action once a poll brings it in', () => {
+    expect(justLocked({ draftId: 4, count: 3 }, draft)).toEqual(actions[3])
+  })
+
+  it('is nothing on the first look, on a new draft, or when nothing moved', () => {
+    expect(justLocked(null, draft)).toBeNull()
+    expect(justLocked({ draftId: 3, count: 0 }, draft)).toBeNull()
+    expect(justLocked({ draftId: 4, count: 4 }, draft)).toBeNull()
   })
 })

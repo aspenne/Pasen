@@ -1,14 +1,17 @@
 import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { Volume2Icon, VolumeXIcon } from 'lucide-react'
 import { type DraftRole, type DraftSide, type QueueScope } from '@pasen/shared'
 
 import { RoleFilterBar } from '@/components/RoleFilterBar'
+import { useDraftSound } from '@/hooks/useDraftSound'
 import { api, ApiError, type DraftView, type StaticData } from '@/lib/api'
 import { championCentered, championIcon, useStaticData } from '@/lib/ddragon'
 import {
   bansOf,
+  justLocked,
   lockError,
   picksByRole,
   previewLane,
@@ -111,6 +114,21 @@ function DraftPage() {
       ? { side: draft.current.side, championId: hovered, lane: previewLane(draft.actions, draft.current.side) }
       : null
 
+  // The step that was just locked, for the second its card plays the lock-in.
+  const sound = useDraftSound()
+  const [fresh, setFresh] = useState<number | null>(null)
+  const seen = useRef<{ draftId: number; count: number } | null>(null)
+  useEffect(() => {
+    if (!draft) return
+    const locked = justLocked(seen.current, draft)
+    seen.current = { draftId: draft.id, count: draft.actions.length }
+    if (!locked) return
+    setFresh(locked.step)
+    sound.cue(locked.kind)
+    const timer = setTimeout(() => setFresh(null), 1200)
+    return () => clearTimeout(timer)
+  }, [draft?.id, draft?.actions.length])
+
   return (
     <div className="flex min-h-screen flex-col gap-3 p-3 lg:h-screen lg:p-4">
       <TopBar
@@ -124,6 +142,8 @@ function DraftPage() {
         onCreate={() => create.mutate()}
         onCancel={() => cancel.mutate()}
         creating={create.isPending}
+        sound={sound.on}
+        onSound={sound.toggle}
       />
 
       {!draft ? (
@@ -136,7 +156,7 @@ function DraftPage() {
         <>
           {/* On a phone: the pool first, then the two sides next to each other. */}
           <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 lg:grid-cols-[minmax(220px,24vw)_minmax(0,1fr)_minmax(220px,24vw)]">
-            <PickColumn side="blue" draft={draft} roster={roster.blue} staticData={staticData} preview={preview} />
+            <PickColumn side="blue" draft={draft} roster={roster.blue} staticData={staticData} preview={preview} fresh={fresh} />
             <Center
               draft={draft}
               seat={seat}
@@ -158,9 +178,9 @@ function DraftPage() {
               onFree={(side) => free.mutate(side)}
               seatBusy={take.isPending || leave.isPending}
             />
-            <PickColumn side="red" draft={draft} roster={roster.red} staticData={staticData} preview={preview} />
+            <PickColumn side="red" draft={draft} roster={roster.red} staticData={staticData} preview={preview} fresh={fresh} />
           </div>
-          <BanStrip draft={draft} staticData={staticData} />
+          <BanStrip draft={draft} staticData={staticData} fresh={fresh} />
         </>
       )}
     </div>
@@ -192,6 +212,8 @@ function TopBar({
   onCreate,
   onCancel,
   creating,
+  sound,
+  onSound,
 }: {
   group: string
   scope: QueueScope
@@ -203,6 +225,8 @@ function TopBar({
   onCreate: () => void
   onCancel: () => void
   creating: boolean
+  sound: boolean
+  onSound: () => void
 }) {
   const [now, setNow] = useState(() => Date.now())
   useEffect(() => {
@@ -256,6 +280,18 @@ function TopBar({
             </Action>
           )}
           {open && admin && <Action onClick={onCancel}>Cancel draft</Action>}
+          <button
+            type="button"
+            onClick={onSound}
+            aria-pressed={sound}
+            title={sound ? 'Turn the music off' : 'Turn the music on'}
+            className={`cut-tab tap inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] transition-colors ${
+              sound ? 'bg-accent-soft text-accent' : 'bg-panel-raised text-ink-muted hover:text-ink'
+            }`}
+          >
+            {sound ? <Volume2Icon className="size-3.5" aria-hidden /> : <VolumeXIcon className="size-3.5" aria-hidden />}
+            Music
+          </button>
         </div>
       </div>
 
@@ -274,12 +310,14 @@ function PickColumn({
   roster,
   staticData,
   preview,
+  fresh,
 }: {
   side: DraftSide
   draft: DraftView
   roster: Partial<Record<DraftRole, string>>
   staticData: StaticData | undefined
   preview: { side: DraftSide; championId: number; lane: DraftRole | null } | null
+  fresh: number | null
 }) {
   const picks = picksByRole(draft.actions, side)
   const picking = draft.current?.side === side && draft.current.kind === 'pick'
@@ -293,17 +331,25 @@ function PickColumn({
         const art = championId ? championCentered(championId) : null
         // Only the card the hovered champion would fill: every free lane saying it would be noise.
         const waiting = !locked && picking && preview?.side === side && preview.lane === role.key
+        const justPicked =
+          fresh !== null &&
+          draft.actions.some((a) => a.step === fresh && a.side === side && a.kind === 'pick' && a.role === role.key)
         return (
           <li
             key={role.key}
-            className={`relative min-h-[64px] overflow-hidden border bg-panel lg:min-h-[84px] ${waiting ? 'border-accent' : 'border-line'}`}
-            style={{ boxShadow: locked ? `inset 3px 0 0 ${SIDE_COLOR[side]}` : undefined }}
+            className={`relative min-h-[64px] overflow-hidden border bg-panel lg:min-h-[84px] ${waiting ? 'border-accent' : 'border-line'} ${
+              justPicked ? 'draft-pick-fresh' : ''
+            }`}
+            style={{
+              boxShadow: locked ? `inset 3px 0 0 ${SIDE_COLOR[side]}` : undefined,
+              ['--draft-side' as string]: SIDE_COLOR[side],
+            }}
           >
             {art && (
               <img
                 src={art}
                 alt=""
-                className={`absolute inset-0 size-full object-cover object-[center_22%] transition-opacity ${ghost ? 'opacity-35' : 'opacity-90'}`}
+                className={`draft-pick-art absolute inset-0 size-full object-cover object-[center_22%] transition-opacity ${ghost ? 'opacity-35' : 'opacity-90'}`}
               />
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-ground/90 via-ground/10 to-ground/40" />
@@ -498,7 +544,15 @@ function SeatBar({
   )
 }
 
-function BanStrip({ draft, staticData }: { draft: DraftView; staticData: StaticData | undefined }) {
+function BanStrip({
+  draft,
+  staticData,
+  fresh,
+}: {
+  draft: DraftView
+  staticData: StaticData | undefined
+  fresh: number | null
+}) {
   const turn = draft.current?.kind === 'ban' ? draft.current : null
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -509,6 +563,10 @@ function BanStrip({ draft, staticData }: { draft: DraftView; staticData: StaticD
           className={`flex gap-1.5 ${side === 'red' ? 'flex-row-reverse' : ''}`}
         >
           {bansOf(draft.actions, side).map((championId, index) => {
+            const justBanned =
+              fresh !== null &&
+              championId !== null &&
+              draft.actions.some((a) => a.step === fresh && a.kind === 'ban' && a.championId === championId)
             const champion = championId ? staticData?.champions[String(championId)] : undefined
             const src = champion ? championIcon(staticData?.version ?? null, champion.slug) : null
             const next = turn?.side === side && championId === null && index === bansOf(draft.actions, side).indexOf(null)
@@ -518,12 +576,12 @@ function BanStrip({ draft, staticData }: { draft: DraftView; staticData: StaticD
                 title={champion?.name}
                 className={`relative size-[clamp(44px,4.6vw,72px)] overflow-hidden border bg-panel ${
                   next ? 'border-accent' : 'border-line'
-                } ${index === 2 ? (side === 'blue' ? 'mr-3' : 'ml-3') : ''}`}
+                } ${index === 2 ? (side === 'blue' ? 'mr-3' : 'ml-3') : ''} ${justBanned ? 'draft-ban-fresh' : ''}`}
               >
                 {src && (
                   <>
-                    <img src={src} alt={champion?.name ?? ''} className="size-full opacity-55 grayscale" />
-                    <span aria-hidden className="absolute left-[-15%] top-1/2 h-[2px] w-[130%] -rotate-45 bg-ink/70" />
+                    <img src={src} alt={champion?.name ?? ''} className="draft-ban-icon size-full opacity-55 grayscale" />
+                    <span aria-hidden className="draft-ban-strike absolute left-[-15%] top-1/2 h-[2px] w-[130%] -rotate-45 bg-ink/70" />
                   </>
                 )}
               </li>

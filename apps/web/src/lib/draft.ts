@@ -75,3 +75,16 @@ export function previewLane(actions: readonly DraftAction[], side: DraftSide): D
   const taken = actions.filter((a) => a.side === side && a.kind === 'pick' && a.role).map((a) => a.role as string)
   return nextSeat(taken)
 }
+
+/**
+ * The action a fresh poll brought in, if any, so its card can play the
+ * lock-in. Nothing on the first look at a draft, or at a new one: those were
+ * locked before this page saw them, and opening the page is not a lock-in.
+ */
+export function justLocked(
+  seen: { draftId: number; count: number } | null,
+  draft: { id: number; actions: readonly DraftAction[] }
+): DraftAction | null {
+  if (!seen || seen.draftId !== draft.id || draft.actions.length <= seen.count) return null
+  return draft.actions.at(-1) ?? null
+}
