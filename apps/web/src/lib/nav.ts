@@ -4,7 +4,7 @@ export type NavEntry =
       label: string
       exact: boolean
     }
-  | { to: '/admin'; label: string; exact: boolean }
+  | { to: '/admin' | '/account'; label: string; exact: boolean }
 
 const PUBLIC: NavEntry[] = [
   { to: '/$group', label: 'Today', exact: true },
@@ -14,7 +14,12 @@ const PUBLIC: NavEntry[] = [
   { to: '/$group/les', label: 'LES', exact: false },
 ]
 
-/** The group's menu; signed in, it also leads back to the admin. */
-export function groupNav(authenticated: boolean): NavEntry[] {
-  return authenticated ? [...PUBLIC, { to: '/admin', label: 'Admin', exact: false }] : PUBLIC
+/**
+ * The group's menu, ending on the way in: the admin for an admin, their
+ * account for a member, and signing in for everyone else.
+ */
+export function groupNav(session?: { authenticated: boolean; admin: boolean }): NavEntry[] {
+  if (session?.admin) return [...PUBLIC, { to: '/admin', label: 'Admin', exact: false }]
+  if (session?.authenticated) return [...PUBLIC, { to: '/account', label: 'Account', exact: false }]
+  return [...PUBLIC, { to: '/account', label: 'Sign in', exact: false }]
 }

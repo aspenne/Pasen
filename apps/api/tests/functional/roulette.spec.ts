@@ -66,7 +66,7 @@ test.group('Role roulette', (group) => {
 
   test('draws on the current lobby, revealing a moment later', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const none = await client.post('/api/admin/groups/arigafion/roulette/draw').loginAs(admin)
     none.assertStatus(409)
@@ -89,7 +89,7 @@ test.group('Role roulette', (group) => {
 
   test('a new lobby clears the draw made on the previous one', async ({ client, assert }) => {
     const { token } = await paired()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     await client.post('/api/capture/lobby').header('authorization', `Bearer ${token}`).json(lobby(['a'], ['b']))
     await client.post('/api/admin/groups/arigafion/roulette/draw').loginAs(admin)
 
@@ -120,7 +120,7 @@ test.group('Role roulette · corrections', (group) => {
 
   test("the app's next poll does not undo the admin's correction", async ({ client, assert }) => {
     const { token } = await paired()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const send = () => client.post('/api/capture/lobby').header('authorization', `Bearer ${token}`).json(lobby(['a', 'b'], ['c']))
 
     await send()
@@ -144,7 +144,7 @@ test.group('Role roulette · hand-picked teams', (group) => {
 
   test('a member added by Riot ID gets their account, and so their card', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     await client
       .put('/api/admin/groups/arigafion/roulette/lobby')

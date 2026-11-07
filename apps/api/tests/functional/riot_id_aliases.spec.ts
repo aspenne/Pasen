@@ -26,7 +26,7 @@ test.group('Riot ID aliases', (group) => {
   test('a custom played under an old Riot ID still belongs to the member', async ({ client, assert }) => {
     const { account } = await seedGroup()
     await RiotAccountAlias.create({ riotAccountId: account.id, gameName: 'Old Patate', tagLine: 'OLD', source: 'riot' })
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const stored = await client
       .post('/api/admin/groups/arigafion/customs')
@@ -42,7 +42,7 @@ test.group('Riot ID aliases', (group) => {
   test('the roulette recognises a member typed in under an old Riot ID', async ({ client, assert }) => {
     const { account } = await seedGroup()
     await RiotAccountAlias.create({ riotAccountId: account.id, gameName: 'Old Patate', tagLine: 'OLD', source: 'manual' })
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     await client
       .put('/api/admin/groups/arigafion/roulette/lobby')
@@ -66,7 +66,7 @@ test.group('Riot ID aliases · admin', (group) => {
 
   test('adds one, lists it with the account, refuses a duplicate, and removes it', async ({ client, assert }) => {
     const { account } = await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const added = await client.post(`/api/admin/accounts/${account.id}/aliases`).json({ riotId: '  Old Patate#OLD ' }).loginAs(admin)
     added.assertStatus(201)

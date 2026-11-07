@@ -135,7 +135,7 @@ test.group('Drafts', (group) => {
 
   test('the admin frees a seat and cancels a draft', async ({ client, assert }) => {
     await setup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const { id } = (await client.post(BASE)).body()
     await client.post(`${BASE}/${id}/seats`).json({ side: 'red' })
 

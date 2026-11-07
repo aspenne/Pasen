@@ -39,7 +39,7 @@ test.group('Custom game uploads', (group) => {
 
   test('stores a capture and reports what it found in it', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const response = await client
       .post('/api/admin/groups/arigafion/customs')
@@ -66,7 +66,7 @@ test.group('Custom game uploads', (group) => {
 
   test('answers the same row rather than storing a capture twice', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const first = await client
       .post('/api/admin/groups/arigafion/customs')
@@ -91,7 +91,7 @@ test.group('Custom game uploads', (group) => {
     assert,
   }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     // No GameEnd: the capture was saved when the window closed.
     const stored = await client
       .post('/api/admin/groups/arigafion/customs')
@@ -113,7 +113,7 @@ test.group('Custom game uploads', (group) => {
 
   test('turns away a file that did not come from the agent', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     for (const bad of [{}, { allPlayers: [] }, { allPlayers: [{}], gameData: {} }, 'not json']) {
       const response = await client
@@ -128,7 +128,7 @@ test.group('Custom game uploads', (group) => {
 
   test('removes one that should not have been kept', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     const stored = await client
       .post('/api/admin/groups/arigafion/customs')
@@ -148,7 +148,7 @@ test.group('Custom games, read side', (group) => {
 
   test('serves an uploaded capture to anyone, resolved for the page', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const raw = JSON.parse(
       await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
     )
@@ -184,7 +184,7 @@ test.group('Custom games, deciding the winner', (group) => {
 
   async function upload(client: any) {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const raw = JSON.parse(
       await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
     )
@@ -254,7 +254,7 @@ test.group('Custom games, standings', (group) => {
 
   test('keeps practice against bots out, and says it did', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     await client
       .post('/api/admin/groups/arigafion/customs')
       .json({ capture: await fixture() })
@@ -268,7 +268,7 @@ test.group('Custom games, standings', (group) => {
 
   test('credits every human in an inhouse, on whichever side won', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
 
     // The same game with two friends on each side instead of bots.
     const raw = await fixture()
@@ -304,7 +304,7 @@ test.group('Custom games, dashboard', (group) => {
 
   test('builds the stats from a real capture turned into an inhouse', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const raw = JSON.parse(
       await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
     )
@@ -364,7 +364,7 @@ test.group('Custom games, in the queue filter', (group) => {
     assert,
   }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     await client.post('/api/admin/groups/arigafion/customs').json({ capture: await inhouse() }).loginAs(admin)
 
     const customs = (await client.get('/api/groups/arigafion?scope=custom')).body()
@@ -379,7 +379,7 @@ test.group('Custom games, in the queue filter', (group) => {
 
   test('practice against bots stays out of the match tables', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const raw = JSON.parse(
       await readFile(new URL('../fixtures/customs/vs_bots.json', import.meta.url), 'utf8')
     )
@@ -393,7 +393,7 @@ test.group('Custom games, in the queue filter', (group) => {
 
   test('deciding the winner rewrites the mirror, and deleting removes it', async ({ client, assert }) => {
     await seedGroup()
-    const admin = await User.create(CREDENTIALS)
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
     const stored = await client
       .post('/api/admin/groups/arigafion/customs')
       .json({ capture: await inhouse() })
