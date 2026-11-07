@@ -77,7 +77,7 @@ test.group('Drafts', (group) => {
     twice.assertStatus(422)
   })
 
-  test('plays a whole draft to the end, picks landing on roles', async ({ client, assert }) => {
+  test('plays a whole draft to the end, picks filling the seats in order', async ({ client, assert }) => {
     await setup()
     const { id } = (await client.post(BASE)).body()
     const tokens = {
@@ -95,8 +95,9 @@ test.group('Drafts', (group) => {
     const view = (await client.get(`${BASE}/current`)).body()
     assert.isNull(view.current)
     assert.isString(view.finishedAt)
+    // The first pick goes to the first player, whatever the champion plays.
     const bluePickRoles = view.actions.filter((a: any) => a.side === 'blue' && a.kind === 'pick').map((a: any) => a.role)
-    assert.sameMembers(bluePickRoles, ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'])
+    assert.deepEqual(bluePickRoles, ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'])
 
     // A finished draft makes way for the next one.
     ;(await client.post(BASE)).assertStatus(201)

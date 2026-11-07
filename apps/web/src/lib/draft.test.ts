@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { DraftAction } from '@pasen/shared'
 
-import { bansOf, lockError, picksByRole, previewLane, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
+import { bansOf, justLocked, lockError, picksByRole, previewLane, seatStillHeld, secondsLeft, turnLabel } from '@/lib/draft'
 
 const actions: DraftAction[] = [
   { step: 0, side: 'blue', kind: 'ban', championId: 10, role: null },
@@ -58,15 +58,29 @@ describe('lockError', () => {
   it('says why a lock was refused', () => {
     expect(lockError(409)).toBe('Someone was quicker. The draft has moved on.')
     expect(lockError(401)).toBe('Your seat was freed. Take it again to keep playing.')
-    expect(lockError(422)).toBe('That champion is banned, picked or burned, or that lane is taken.')
+    expect(lockError(422)).toBe('That champion is banned, picked or burned.')
     expect(lockError(403)).toBe('It is not your turn.')
   })
 })
 
 describe('previewLane', () => {
-  it("shows the hovered champion in the lane it would take: its own if free, else the next free one", () => {
-    expect(previewLane(actions, 'blue', ['MIDDLE', 'UTILITY'])).toBe('UTILITY')
-    expect(previewLane(actions, 'red', ['MIDDLE'])).toBe('MIDDLE')
-    expect(previewLane(actions, 'red', [])).toBe('JUNGLE')
+  it('shows the hovered champion in the side’s next empty seat, whatever it plays', () => {
+    // Blue holds MIDDLE from an older draft: the first empty seat is still TOP.
+    expect(previewLane(actions, 'blue')).toBe('TOP')
+    expect(previewLane(actions, 'red')).toBe('JUNGLE')
+  })
+})
+
+describe('justLocked', () => {
+  const draft = { id: 4, actions }
+
+  it('is the newest action once a poll brings it in', () => {
+    expect(justLocked({ draftId: 4, count: 3 }, draft)).toEqual(actions[3])
+  })
+
+  it('is nothing on the first look, on a new draft, or when nothing moved', () => {
+    expect(justLocked(null, draft)).toBeNull()
+    expect(justLocked({ draftId: 3, count: 0 }, draft)).toBeNull()
+    expect(justLocked({ draftId: 4, count: 4 }, draft)).toBeNull()
   })
 })

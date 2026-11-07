@@ -1,4 +1,4 @@
-import { DRAFT_ROLES, defaultRole, type DraftAction, type DraftRole, type DraftSide } from '@pasen/shared'
+import { DRAFT_ROLES, nextSeat, type DraftAction, type DraftRole, type DraftSide } from '@pasen/shared'
 
 /** The length of a turn on the clock. Shown only: nothing happens at zero. */
 export const TURN_SECONDS = 30
@@ -63,14 +63,28 @@ export function lockError(status: number): string {
   if (status === 409) return 'Someone was quicker. The draft has moved on.'
   if (status === 401) return 'Your seat was freed. Take it again to keep playing.'
   if (status === 403) return 'It is not your turn.'
-  return 'That champion is banned, picked or burned, or that lane is taken.'
+  return 'That champion is banned, picked or burned.'
 }
 
 /**
- * The lane a hovered champion would land in if locked now - the same default
- * the server applies - so every screen previews it in the same card.
+ * The seat a hovered champion would fill if locked now - the side's next
+ * empty one, as the server decides - so every screen previews it in the same
+ * card.
  */
-export function previewLane(actions: readonly DraftAction[], side: DraftSide, positions: readonly string[]): DraftRole | null {
+export function previewLane(actions: readonly DraftAction[], side: DraftSide): DraftRole | null {
   const taken = actions.filter((a) => a.side === side && a.kind === 'pick' && a.role).map((a) => a.role as string)
-  return defaultRole(positions, taken)
+  return nextSeat(taken)
+}
+
+/**
+ * The action a fresh poll brought in, if any, so its card can play the
+ * lock-in. Nothing on the first look at a draft, or at a new one: those were
+ * locked before this page saw them, and opening the page is not a lock-in.
+ */
+export function justLocked(
+  seen: { draftId: number; count: number } | null,
+  draft: { id: number; actions: readonly DraftAction[] }
+): DraftAction | null {
+  if (!seen || seen.draftId !== draft.id || draft.actions.length <= seen.count) return null
+  return draft.actions.at(-1) ?? null
 }

@@ -113,19 +113,16 @@ export class DraftService {
     await draft.save()
   }
 
-  async act(draft: Draft, token: string | undefined, championId: number, role: DraftRole | null) {
+  async act(draft: Draft, token: string | undefined, championId: number) {
     await draft.load('actions')
     const side = this.#playing(draft, token)
-    const champion = await StaticChampion.find(championId)
-    if (!champion) throw new DraftError(422, 'No champion with that id.')
+    if (!(await StaticChampion.find(championId))) throw new DraftError(422, 'No champion with that id.')
 
     const verdict = validateAction({
       actions: this.#actions(draft),
       burned: new Set(await this.#burned(draft)),
       side,
       championId,
-      positions: champion.positions ?? [],
-      role,
     })
     if (!verdict.ok) {
       throw new DraftError(verdict.reason === 'not-your-turn' ? 403 : verdict.reason === 'finished' ? 409 : 422, verdict.reason)
