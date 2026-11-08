@@ -920,10 +920,10 @@ export const api = {
       `/api/admin/customs/${id}`,
       { method: 'PATCH', body: JSON.stringify(patch) }
     ),
-  startFearless: (group: string, label?: string) =>
+  startFearless: (group: string, label?: string, since?: string) =>
     apiFetch<FearlessBoard>(`/api/admin/groups/${group}/fearless`, {
       method: 'POST',
-      body: JSON.stringify({ label: label || null }),
+      body: JSON.stringify({ label: label || null, since }),
     }),
   updateFearless: (
     id: number,

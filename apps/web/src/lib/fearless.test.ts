@@ -2,7 +2,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { api } from '@/lib/api'
 
-import { availability, foldName, searchChampions, type ChampionEntry } from '@/lib/fearless'
+import {
+  NIGHT_START_CHOICES,
+  availability,
+  foldName,
+  nightSince,
+  nightStartLabel,
+  searchChampions,
+  type ChampionEntry,
+} from '@/lib/fearless'
 
 const champions: ChampionEntry[] = [
   { id: 103, name: 'Ahri', slug: 'Ahri' },
@@ -77,5 +85,25 @@ describe('api.fearless', () => {
   it('answers null, not undefined, when the group never ran a night', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 204 })))
     await expect(api.fearless('arigafion')).resolves.toBeNull()
+  })
+})
+
+describe('nightSince', () => {
+  it('sends nothing for now, and the moment the night began otherwise', () => {
+    const now = Date.UTC(2026, 10, 8, 21, 0)
+    expect(nightSince(0, now)).toBeUndefined()
+    expect(nightSince(120, now)).toBe('2026-11-08T19:00:00.000Z')
+  })
+
+  it('names each choice for the select', () => {
+    expect(NIGHT_START_CHOICES.map(nightStartLabel)).toEqual([
+      'From now',
+      'From 30 min ago',
+      'From 1 h ago',
+      'From 2 h ago',
+      'From 3 h ago',
+      'From 4 h ago',
+      'From 5 h ago',
+    ])
   })
 })
