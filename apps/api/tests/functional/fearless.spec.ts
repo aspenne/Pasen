@@ -157,6 +157,68 @@ test.group('Fearless nights · admin', (group) => {
     }
   })
 
+  test('continues an earlier night, its burned champions still burned', async ({ client, assert }) => {
+    const { group } = await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    await seedChampions(3)
+    const earlier = await FearlessNight.create({
+      groupId: group.id,
+      label: 'first fearless',
+      startedAt: DateTime.now().minus({ days: 2 }),
+      endedAt: DateTime.now().minus({ days: 2 }).plus({ hours: 3 }),
+      excludedCustomIds: [],
+    })
+    await customFor(group, { startedMinutesAgo: 2 * 24 * 60 - 30, champions: ['Champ1', 'Champ2'] })
+
+    const response = await client
+      .post('/api/admin/groups/arigafion/fearless')
+      .json({ continues: earlier.id })
+      .loginAs(admin)
+    response.assertStatus(201)
+    assert.deepEqual(
+      response.body().burned.map((burn: { championId: number; source: string }) => [burn.championId, burn.source]),
+      [
+        [1, 'earlier'],
+        [2, 'earlier'],
+      ]
+    )
+    assert.include(response.body().continues, { id: earlier.id, label: 'first fearless', carried: 2 })
+
+    const unknown = await client.post('/api/admin/groups/arigafion/fearless').json({ continues: 9999 }).loginAs(admin)
+    unknown.assertStatus(422)
+  })
+
+  test('links a night already running to the one before it, and unlinks it', async ({ client, assert }) => {
+    const { group } = await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    await seedChampions(1)
+    await FearlessNight.create({
+      groupId: group.id,
+      label: 'first fearless',
+      startedAt: DateTime.now().minus({ days: 2 }),
+      endedAt: DateTime.now().minus({ days: 2 }).plus({ hours: 3 }),
+      excludedCustomIds: [],
+    })
+    await customFor(group, { startedMinutesAgo: 2 * 24 * 60 - 30, champions: ['Champ1'] })
+    const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
+
+    const linked = await client.patch(`/api/admin/fearless/${night.id}`).json({ continuesPrevious: true }).loginAs(admin)
+    assert.equal(linked.body().continues.label, 'first fearless')
+    assert.deepEqual(linked.body().burned, [{ championId: 1, source: 'earlier', by: [] }])
+
+    const unlinked = await client.patch(`/api/admin/fearless/${night.id}`).json({ continuesPrevious: false }).loginAs(admin)
+    assert.isNull(unlinked.body().continues)
+    assert.deepEqual(unlinked.body().burned, [])
+  })
+
+  test('has nothing to continue on a group’s first night', async ({ client }) => {
+    await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
+    const response = await client.patch(`/api/admin/fearless/${night.id}`).json({ continuesPrevious: true }).loginAs(admin)
+    response.assertStatus(422)
+  })
+
   test('brings the draft already running into the new night', async ({ client, assert }) => {
     const { group } = await seedGroup()
     const admin = await User.create({ ...CREDENTIALS, role: 'admin' })

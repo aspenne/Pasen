@@ -24,18 +24,35 @@ export function FearlessHeader({
   const [label, setLabel] = useState('')
   // Started late, after a game or two: those games burn their champions too.
   const [minutesAgo, setMinutesAgo] = useState(0)
+  // A series over several evenings: the next night keeps what the last one burned.
+  const [carryOn, setCarryOn] = useState(false)
   const save = (next: FearlessBoard) => queryClient.setQueryData(['fearless', group], next)
   const failed = () => toast.error('Could not save that. Are you still signed in?')
 
   const start = useMutation({
-    mutationFn: () => api.startFearless(group, label.trim() || undefined, nightSince(minutesAgo)),
+    mutationFn: () =>
+      api.startFearless(
+        group,
+        label.trim() || undefined,
+        nightSince(minutesAgo),
+        carryOn && board ? board.night.id : undefined
+      ),
     onSuccess: (next) => {
       save(next)
       setLabel('')
       setMinutesAgo(0)
+      setCarryOn(false)
       toast.success('Fearless night started.')
     },
     onError: failed,
+  })
+  const link = useMutation({
+    mutationFn: (continuesPrevious: boolean) => api.updateFearless(board!.night.id, { continuesPrevious }),
+    onSuccess: (next) => {
+      save(next)
+      toast.success(next.continues ? 'Carrying on from the previous night.' : 'This night stands on its own again.')
+    },
+    onError: () => toast.error('No earlier night to continue, or you are signed out.'),
   })
   const end = useMutation({
     mutationFn: () => api.updateFearless(board!.night.id, { ended: true }),
@@ -77,6 +94,12 @@ export function FearlessHeader({
         <p className="tnum text-[13px] text-ink-muted">
           Started {time(board.night.startedAt)}
           {board.night.active ? ` · closes by itself at ${time(board.night.endsAt)}` : ` · ended ${time(board.night.endsAt)}`}
+          {board.continues && (
+            <span className="block text-ink">
+              Continues {board.continues.label ?? `the night of ${time(board.continues.startedAt)}`}:{' '}
+              {board.continues.carried} {board.continues.carried === 1 ? 'champion' : 'champions'} still burned from it
+            </span>
+          )}
         </p>
       ) : (
         <p className="max-w-[60ch] text-[13px] text-ink-muted">
@@ -94,14 +117,25 @@ export function FearlessHeader({
       {admin && (
         <div className="flex flex-wrap items-center gap-2 bg-panel px-4 py-3">
           {board?.night.active ? (
-            <button
-              type="button"
-              disabled={end.isPending}
-              onClick={() => end.mutate()}
-              className="cut-tab tap display bg-panel-raised px-4 py-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted hover:text-ink disabled:opacity-60"
-            >
-              End the night
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={end.isPending}
+                onClick={() => end.mutate()}
+                className="cut-tab tap display bg-panel-raised px-4 py-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted hover:text-ink disabled:opacity-60"
+              >
+                End the night
+              </button>
+              {/* Started on its own when it should have carried on: fixable without starting over. */}
+              <button
+                type="button"
+                disabled={link.isPending}
+                onClick={() => link.mutate(!board.continues)}
+                className="cut-tab tap display bg-panel-raised px-4 py-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted hover:text-ink disabled:opacity-60"
+              >
+                {board.continues ? 'Stop continuing' : 'Continue the previous night'}
+              </button>
+            </>
           ) : (
             <>
               <input
@@ -125,6 +159,17 @@ export function FearlessHeader({
                   </option>
                 ))}
               </select>
+              {board && (
+                <label className="tap inline-flex items-center gap-2 text-[13px] text-ink-muted">
+                  <input
+                    type="checkbox"
+                    checked={carryOn}
+                    onChange={(event) => setCarryOn(event.target.checked)}
+                    className="accent-[var(--color-accent)]"
+                  />
+                  Continue {board.night.label ?? 'the last night'} ({board.burned.length} burned)
+                </label>
+              )}
               <button
                 type="button"
                 disabled={start.isPending}

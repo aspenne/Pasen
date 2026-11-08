@@ -652,12 +652,15 @@ export type FearlessGame = {
 
 export type FearlessBurn = {
   championId: number
-  source: 'played' | 'manual'
+  /** 'earlier': burned on the night this one continues. */
+  source: 'played' | 'manual' | 'earlier'
   by: { playerName: string; memberSlug: string | null; gameNumber: number }[]
 }
 
 export type FearlessBoard = {
   night: { id: number; label: string | null; startedAt: string; endsAt: string; active: boolean }
+  /** The earlier night this one continues, and how many champions it carried over. */
+  continues: { id: number; label: string | null; startedAt: string; carried: number } | null
   games: FearlessGame[]
   burned: FearlessBurn[]
   freed: number[]
@@ -920,14 +923,14 @@ export const api = {
       `/api/admin/customs/${id}`,
       { method: 'PATCH', body: JSON.stringify(patch) }
     ),
-  startFearless: (group: string, label?: string, since?: string) =>
+  startFearless: (group: string, label?: string, since?: string, continues?: number) =>
     apiFetch<FearlessBoard>(`/api/admin/groups/${group}/fearless`, {
       method: 'POST',
-      body: JSON.stringify({ label: label || null, since }),
+      body: JSON.stringify({ label: label || null, since, continues }),
     }),
   updateFearless: (
     id: number,
-    patch: { label?: string | null; ended?: true; excludedCustomIds?: number[] }
+    patch: { label?: string | null; ended?: true; excludedCustomIds?: number[]; continuesPrevious?: boolean }
   ) =>
     apiFetch<FearlessBoard>(`/api/admin/fearless/${id}`, {
       method: 'PATCH',

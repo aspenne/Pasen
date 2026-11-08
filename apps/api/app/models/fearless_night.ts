@@ -32,6 +32,10 @@ export default class FearlessNight extends BaseModel {
   })
   declare excludedCustomIds: number[]
 
+  /** The earlier night this one continues: its burned champions stay burned. */
+  @column()
+  declare continuesNightId: number | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
