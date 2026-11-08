@@ -50,6 +50,12 @@ function DraftPage() {
     queryFn: async () => (await api.currentDraft(group)) ?? null,
     refetchInterval: 1000,
   })
+  // Same key as the fearless page. Polled, so starting a night elsewhere clears the warning here.
+  const { data: fearless, isPending: fearlessPending } = useQuery({
+    queryKey: ['fearless', group],
+    queryFn: () => api.fearless(group),
+    refetchInterval: 10_000,
+  })
   const { data: roulette } = useQuery({
     queryKey: ['roulette', group],
     queryFn: () => api.roulette(group),
@@ -146,6 +152,11 @@ function DraftPage() {
         onSound={sound.toggle}
       />
 
+      {/* A running draft says what it was given; between drafts, what the next one would get. */}
+      {!fearlessPending && (open ? draft!.nightId === null : !fearless?.night.active) && (
+        <NoNight group={group} scope={scope} admin={admin} running={open} />
+      )}
+
       {!draft ? (
         <div className="flex flex-1 items-center justify-center">
           <p className="max-w-[46ch] text-center text-[14px] text-ink-muted">
@@ -199,6 +210,39 @@ function rosterOf(roulette: Awaited<ReturnType<typeof api.roulette>> | undefined
     })
   }
   return roster
+}
+
+/**
+ * Drafting with no fearless night running burns nothing: the champions of the
+ * evening's earlier games stay pickable. Said out loud, so nobody finds out two
+ * games in.
+ */
+function NoNight({
+  group,
+  scope,
+  admin,
+  running,
+}: {
+  group: string
+  scope: QueueScope
+  admin: boolean
+  running: boolean
+}) {
+  return (
+    <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1 border-l-2 border-accent bg-accent-soft/40 px-4 py-2 text-[13px] text-ink">
+      <span>
+        No fearless night is running: champions from earlier games{' '}
+        {running ? 'are not burned in this draft.' : 'will not be burned in the next draft.'}
+      </span>
+      {admin ? (
+        <Link to="/$group/fearless" params={{ group }} search={{ scope }} className="text-accent underline-offset-2 hover:underline">
+          Start one - games already played can count too
+        </Link>
+      ) : (
+        <span className="text-ink-muted">Ask an admin to start one.</span>
+      )}
+    </p>
+  )
 }
 
 function TopBar({

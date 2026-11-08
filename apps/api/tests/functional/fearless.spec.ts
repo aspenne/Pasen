@@ -3,6 +3,7 @@ import testUtils from '@adonisjs/core/services/test_utils'
 import { DateTime } from 'luxon'
 
 import CustomGame from '#models/custom_game'
+import Draft from '#models/draft'
 import FearlessNight from '#models/fearless_night'
 import Group from '#models/group'
 import User from '#models/user'
@@ -126,6 +127,45 @@ test.group('Fearless nights · admin', (group) => {
     assert.isNotNull(previous.endedAt)
     assert.isTrue(second.body().night.active)
     assert.isNull(second.body().night.label)
+  })
+
+  test('starts a night earlier, so the games already played burn too', async ({ client, assert }) => {
+    const { group } = await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    await seedChampions(2)
+    // Two games before anyone pressed Start.
+    await customFor(group, { startedMinutesAgo: 90, champions: ['Champ1'] })
+    await customFor(group, { startedMinutesAgo: 40, champions: ['Champ2'] })
+
+    const since = DateTime.now().minus({ hours: 2 }).toUTC().toISO()
+    const response = await client.post('/api/admin/groups/arigafion/fearless').json({ since }).loginAs(admin)
+    response.assertStatus(201)
+    assert.sameMembers(
+      response.body().burned.map((burn: { championId: number }) => burn.championId),
+      [1, 2]
+    )
+  })
+
+  test('refuses a night starting in the future or a whole night ago', async ({ client }) => {
+    await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    const at = (hours: number) => DateTime.now().plus({ hours }).toUTC().toISO()
+
+    for (const since of [at(1), at(-7), 'not a date']) {
+      const response = await client.post('/api/admin/groups/arigafion/fearless').json({ since }).loginAs(admin)
+      response.assertStatus(422)
+    }
+  })
+
+  test('brings the draft already running into the new night', async ({ client, assert }) => {
+    const { group } = await seedGroup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    const draft = await Draft.create({ groupId: group.id, fearlessNightId: null, stepStartedAt: DateTime.now() })
+
+    const { night } = (await client.post('/api/admin/groups/arigafion/fearless').json({}).loginAs(admin)).body()
+
+    await draft.refresh()
+    assert.equal(draft.fearlessNightId, night.id)
   })
 
   test('ends a night and renames it', async ({ client, assert }) => {

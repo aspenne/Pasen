@@ -39,3 +39,20 @@ export function availability(champion: ChampionEntry, burn: FearlessBurn | undef
   const plays = burn.by.map((play) => `${play.playerName} in game ${play.gameNumber}`).join(', ')
   return `${champion.name} is burned · played by ${plays}`
 }
+
+/**
+ * How far back a night can be started from the page, in minutes. The server
+ * allows up to five hours; the games of a night already under way still burn.
+ */
+export const NIGHT_START_CHOICES = [0, 30, 60, 120, 180, 240, 300] as const
+
+export function nightStartLabel(minutesAgo: number): string {
+  if (minutesAgo === 0) return 'From now'
+  if (minutesAgo < 60) return `From ${minutesAgo} min ago`
+  return `From ${minutesAgo / 60} h ago`
+}
+
+/** The start to send for a night begun `minutesAgo`; none for now, which the server takes as now. */
+export function nightSince(minutesAgo: number, now: number = Date.now()): string | undefined {
+  return minutesAgo === 0 ? undefined : new Date(now - minutesAgo * 60_000).toISOString()
+}

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 import { api, type FearlessBoard } from '@/lib/api'
+import { NIGHT_START_CHOICES, nightSince, nightStartLabel } from '@/lib/fearless'
 
 /**
  * Which night this is and whether it is still running, plus - for the admin -
@@ -21,14 +22,17 @@ export function FearlessHeader({
 }) {
   const queryClient = useQueryClient()
   const [label, setLabel] = useState('')
+  // Started late, after a game or two: those games burn their champions too.
+  const [minutesAgo, setMinutesAgo] = useState(0)
   const save = (next: FearlessBoard) => queryClient.setQueryData(['fearless', group], next)
   const failed = () => toast.error('Could not save that. Are you still signed in?')
 
   const start = useMutation({
-    mutationFn: () => api.startFearless(group, label.trim() || undefined),
+    mutationFn: () => api.startFearless(group, label.trim() || undefined, nightSince(minutesAgo)),
     onSuccess: (next) => {
       save(next)
       setLabel('')
+      setMinutesAgo(0)
       toast.success('Fearless night started.')
     },
     onError: failed,
@@ -108,6 +112,19 @@ export function FearlessHeader({
                 aria-label="Night name"
                 className="tap min-w-0 flex-1 border border-line bg-panel-raised px-3 py-1.5 text-[13px] text-ink placeholder:text-ink-dim"
               />
+              <select
+                value={minutesAgo}
+                onChange={(event) => setMinutesAgo(Number(event.target.value))}
+                aria-label="Count the games from"
+                title="Already played a game or two? Start the night earlier and their champions burn too."
+                className="tap border border-line bg-panel-raised px-2 py-1.5 text-[13px] text-ink"
+              >
+                {NIGHT_START_CHOICES.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {nightStartLabel(minutes)}
+                  </option>
+                ))}
+              </select>
               <button
                 type="button"
                 disabled={start.isPending}

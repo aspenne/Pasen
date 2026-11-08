@@ -1,10 +1,11 @@
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
 
+import Draft from '#models/draft'
 import FearlessNight from '#models/fearless_night'
 import Group from '#models/group'
 import { CustomGameReader } from '#customs/custom_game_reader'
-import { fearlessBoard, nightEndsAt, type FearlessBoard } from '#fearless/fearless_board'
+import { NIGHT_HOURS, fearlessBoard, nightEndsAt, type FearlessBoard } from '#fearless/fearless_board'
 
 /**
  * A game is dated by its start, and a night by when its games end. Reading
@@ -13,25 +14,54 @@ import { fearlessBoard, nightEndsAt, type FearlessBoard } from '#fearless/fearle
  */
 const LONGEST_GAME = { hours: 3 }
 
+/**
+ * How far back a night can be started. An hour short of a whole night, so a
+ * night started late still has an hour to run.
+ */
+const LATEST_BACKDATE = { hours: NIGHT_HOURS - 1 }
+
+export class InvalidNightStartError extends Error {}
+
 export class FearlessService {
   /** The group's most recent night, finished or not. */
   async latest(group: Group): Promise<FearlessNight | null> {
     return FearlessNight.query().where('group_id', group.id).orderBy('started_at', 'desc').first()
   }
 
-  /** Opens a night, ending whichever one was still open. */
-  async start(group: Group, label: string | null): Promise<FearlessNight> {
+  /**
+   * Opens a night, ending whichever one was still open.
+   *
+   * `since` starts it earlier, for when the group played a game or two before
+   * anyone pressed Start: those games then burn their champions like the rest.
+   * A draft already running without a night joins this one, so its captains
+   * see the burned champions without starting over.
+   */
+  async start(group: Group, label: string | null, since?: DateTime): Promise<FearlessNight> {
+    const now = DateTime.now()
+    const startedAt = since ?? now
+    if (startedAt > now) throw new InvalidNightStartError('A night cannot start in the future.')
+    if (startedAt < now.minus(LATEST_BACKDATE)) {
+      throw new InvalidNightStartError(`A night can start at most ${LATEST_BACKDATE.hours} hours ago.`)
+    }
+
     return db.transaction(async (trx) => {
-      const now = DateTime.now()
       await FearlessNight.query({ client: trx })
         .where('group_id', group.id)
         .whereNull('ended_at')
         .update({ ended_at: now.toUTC().toISO() })
 
-      return FearlessNight.create(
-        { groupId: group.id, label: label || null, startedAt: now, endedAt: null, excludedCustomIds: [] },
+      const night = await FearlessNight.create(
+        { groupId: group.id, label: label || null, startedAt, endedAt: null, excludedCustomIds: [] },
         { client: trx }
       )
+
+      await Draft.query({ client: trx })
+        .where('group_id', group.id)
+        .whereNull('finished_at')
+        .whereNull('fearless_night_id')
+        .update({ fearless_night_id: night.id })
+
+      return night
     })
   }
 
