@@ -36,6 +36,7 @@ export function searchChampions(champions: ChampionEntry[], query: string): Cham
 export function availability(champion: ChampionEntry, burn: FearlessBurn | undefined): string {
   if (!burn) return `${champion.name} is free`
   if (burn.source === 'manual') return `${champion.name} is burned · burned by hand`
+  if (burn.source === 'earlier') return `${champion.name} is burned · played on an earlier night`
   const plays = burn.by.map((play) => `${play.playerName} in game ${play.gameNumber}`).join(', ')
   return `${champion.name} is burned · played by ${plays}`
 }

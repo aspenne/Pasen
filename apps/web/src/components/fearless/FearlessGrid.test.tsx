@@ -19,6 +19,7 @@ const staticData = {
 
 const board: FearlessBoard = {
   night: { id: 1, label: null, startedAt: '2026-10-10T19:00:00Z', endsAt: '2026-10-11T01:00:00Z', active: true },
+  continues: null,
   games: [],
   burned: [{ championId: 103, source: 'played', by: [{ playerName: 'Nøah', memberSlug: null, gameNumber: 1 }] }],
   freed: [],

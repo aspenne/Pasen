@@ -43,13 +43,21 @@ export type FearlessGame = {
 
 export type FearlessBurn = {
   championId: number
-  /** 'manual' only when no game that counts used it. */
-  source: 'played' | 'manual'
+  /**
+   * 'played' when a game of this night used it; else 'manual' when burned by
+   * hand here; else 'earlier' when it comes from the night this one continues.
+   */
+  source: 'played' | 'manual' | 'earlier'
   by: { playerName: string; memberSlug: string | null; gameNumber: number }[]
 }
 
+/** A champion burned on the night this one continues. */
+export type CarriedBurn = { championId: number }
+
 export type FearlessBoard = {
   night: { id: number; label: string | null; startedAt: string; endsAt: string; active: boolean }
+  /** The earlier night this one continues, and how many champions it carried over. */
+  continues: { id: number; label: string | null; startedAt: string; carried: number } | null
   games: FearlessGame[]
   burned: FearlessBurn[]
   /** Champions freed by hand and not played since. */
@@ -70,7 +78,8 @@ export function fearlessBoard(
   night: NightInput,
   games: CustomGameView[],
   adjustments: AdjustmentInput[],
-  now: Date
+  now: Date,
+  continues: { id: number; label: string | null; startedAt: Date; burned: CarriedBurn[] } | null = null
 ): FearlessBoard {
   const endsAt = nightEndsAt(night)
   const excluded = new Set(night.excludedCustomIds)
@@ -120,7 +129,8 @@ export function fearlessBoard(
     }
   }
 
-  const champions = new Set([...plays.keys(), ...adjustmentOf.keys()])
+  const carried = new Set(continues?.burned.map((burn) => burn.championId) ?? [])
+  const champions = new Set([...plays.keys(), ...adjustmentOf.keys(), ...carried])
   const burned: FearlessBurn[] = []
   const freed: number[] = []
 
@@ -136,7 +146,10 @@ export function fearlessBoard(
     } else if (adjustment?.kind === 'burn') {
       burned.push({ championId, source: 'manual', by: [] })
     } else if (adjustment?.kind === 'free') {
+      // Freeing a champion carried over forgives the earlier night too.
       freed.push(championId)
+    } else if (carried.has(championId)) {
+      burned.push({ championId, source: 'earlier', by: [] })
     }
   }
 
@@ -148,6 +161,14 @@ export function fearlessBoard(
       endsAt: endsAt.toISOString(),
       active: now < endsAt,
     },
+    continues: continues
+      ? {
+          id: continues.id,
+          label: continues.label,
+          startedAt: continues.startedAt.toISOString(),
+          carried: continues.burned.length,
+        }
+      : null,
     games: rows.map(({ row }) => row),
     burned: burned.sort((a, b) => a.championId - b.championId),
     freed: freed.sort((a, b) => a - b),

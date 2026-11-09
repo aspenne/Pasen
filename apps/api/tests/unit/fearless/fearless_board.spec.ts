@@ -172,4 +172,26 @@ test.group('fearlessBoard', () => {
     assert.deepEqual(board.burned, [])
     assert.lengthOf(board.games[0].picks, 1)
   })
+
+  test('a night that continues another keeps its burned champions', ({ assert }) => {
+    const earlier = { id: 8, label: 'first fearless', startedAt: at(-3 * 24 * 60), burned: [{ championId: 4 }, { championId: 5 }] }
+    const board = fearlessBoard(night(), [game(1, 0, [player('A', 1), player('B', 4)])], [], at(60), earlier)
+
+    assert.deepEqual(burnedIds(board), [1, 4, 5])
+    // Played again tonight: tonight's game is what the page names.
+    assert.equal(board.burned.find((burn) => burn.championId === 4)!.source, 'played')
+    assert.deepEqual(board.burned.find((burn) => burn.championId === 5), { championId: 5, source: 'earlier', by: [] })
+    assert.deepEqual(board.continues, { id: 8, label: 'first fearless', startedAt: earlier.startedAt.toISOString(), carried: 2 })
+  })
+
+  test('freeing a champion carried over forgives the earlier night too', ({ assert }) => {
+    const earlier = { id: 8, label: null, startedAt: at(-60 * 24), burned: [{ championId: 5 }] }
+    const board = fearlessBoard(night(), [], [{ championId: 5, kind: 'free', decidedAt: at(5) }], at(10), earlier)
+    assert.deepEqual(board.burned, [])
+    assert.deepEqual(board.freed, [5])
+  })
+
+  test('a night on its own continues nothing', ({ assert }) => {
+    assert.isNull(fearlessBoard(night(), [], [], at(10)).continues)
+  })
 })

@@ -58,6 +58,12 @@ describe('availability', () => {
     expect(availability(ahri, undefined)).toBe('Ahri is free')
   })
 
+  it('says a champion is still burned from an earlier night', () => {
+    expect(availability(ahri, { championId: 103, source: 'earlier', by: [] })).toBe(
+      'Ahri is burned · played on an earlier night'
+    )
+  })
+
   it('says who played a burned champion, and when', () => {
     expect(
       availability(ahri, {
