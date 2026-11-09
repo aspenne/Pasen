@@ -126,18 +126,19 @@ export function FearlessHeader({
               >
                 End the night
               </button>
-              {/* Started on its own when it should have carried on: fixable without starting over. */}
-              <button
-                type="button"
-                disabled={link.isPending}
-                onClick={() => link.mutate(!board.continues)}
-                className="cut-tab tap display bg-panel-raised px-4 py-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted hover:text-ink disabled:opacity-60"
-              >
-                {board.continues ? 'Stop continuing' : 'Continue the previous night'}
-              </button>
+              <ContinueButton board={board} pending={link.isPending} onToggle={(next) => link.mutate(next)} />
             </>
           ) : (
             <>
+              {/* Even once over: the next night continues this one, so this one must hold the series. */}
+              {board && (
+                <div className="flex basis-full flex-wrap items-center gap-2 border-b border-line pb-2">
+                  <ContinueButton board={board} pending={link.isPending} onToggle={(next) => link.mutate(next)} />
+                  <span className="text-[11px] text-ink-dim">
+                    {board.continues ? 'This night carries on from the one before it.' : 'Link this night to the one before it.'}
+                  </span>
+                </div>
+              )}
               <input
                 value={label}
                 onChange={(event) => setLabel(event.target.value)}
@@ -184,5 +185,27 @@ export function FearlessHeader({
         </div>
       )}
     </header>
+  )
+}
+
+/** Started on its own when it should have carried on: fixable without starting over. */
+function ContinueButton({
+  board,
+  pending,
+  onToggle,
+}: {
+  board: FearlessBoard
+  pending: boolean
+  onToggle: (continuesPrevious: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => onToggle(!board.continues)}
+      className="cut-tab tap display bg-panel-raised px-4 py-1 text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted hover:text-ink disabled:opacity-60"
+    >
+      {board.continues ? 'Stop continuing' : 'Continue the previous night'}
+    </button>
   )
 }
