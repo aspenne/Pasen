@@ -66,6 +66,7 @@ router
     router.delete('/groups/:slug/drafts/:id/seats/:side', [DraftsController, 'leaveSeat']).where('id', /^\d+$/)
     router.put('/groups/:slug/drafts/:id/hover', [DraftsController, 'hover']).where('id', /^\d+$/)
     router.post('/groups/:slug/drafts/:id/actions', [DraftsController, 'act']).where('id', /^\d+$/)
+    router.post('/groups/:slug/drafts/:id/undo', [DraftsController, 'undo']).where('id', /^\d+$/)
 
     router.get('/members/:slug', [MembersController, 'show'])
     router.get('/members/:slug/matches', [MembersController, 'matches'])
@@ -124,6 +125,7 @@ router
         router.put('/admin/groups/:slug/roulette/lobby', [AdminRouletteController, 'lobby'])
         router.delete('/admin/drafts/:id', [AdminDraftsController, 'destroy'])
         router.delete('/admin/drafts/:id/seats/:side', [AdminDraftsController, 'freeSeat'])
+        router.post('/admin/drafts/:id/undo', [AdminDraftsController, 'undo'])
 
         router.get('/admin/users', [UsersController, 'index'])
         router.patch('/admin/users/:id', [UsersController, 'update']).where('id', /^\d+$/)

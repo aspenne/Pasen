@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 
 import { api, type FearlessBoard, type StaticData } from '@/lib/api'
 import { championIcon } from '@/lib/ddragon'
-import { availability, searchChampions, type ChampionEntry } from '@/lib/fearless'
+import { availability, quickCorrection, searchChampions, type ChampionEntry } from '@/lib/fearless'
 import { matchesRole, type RoleFilter } from '@/lib/roles'
 import { RoleFilterBar } from '@/components/RoleFilterBar'
 
@@ -32,6 +32,21 @@ export function FearlessGrid({
   const [hideBurned, setHideBurned] = useState(false)
   const [role, setRole] = useState<RoleFilter>('ALL')
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  // The admin fixing a wrong burn, or a missed one, a click per champion.
+  const [editing, setEditing] = useState(false)
+  const queryClient = useQueryClient()
+  const correct = useMutation({
+    mutationFn: ({ champion, kind }: { champion: ChampionEntry; kind: 'burn' | 'free' | 'forget' }) =>
+      kind === 'forget'
+        ? api.unadjustFearless(board.night.id, champion.id)
+        : api.adjustFearless(board.night.id, champion.id, kind),
+    onSuccess: (next, { champion }) => {
+      queryClient.setQueryData(['fearless', group], next)
+      const burned = next.burned.some((burn) => burn.championId === champion.id)
+      toast.success(`${champion.name} is ${burned ? 'burned' : 'free'} now.`)
+    },
+    onError: () => toast.error('Could not save that. Are you still signed in?'),
+  })
 
   const champions: ChampionEntry[] = useMemo(
     () =>
@@ -74,7 +89,28 @@ export function FearlessGrid({
         <span className="tnum text-[12px] text-ink-dim">
           {burnedCount} burned · {champions.length - burnedCount} free
         </span>
+        {admin && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(!editing)
+              setSelectedId(null)
+            }}
+            aria-pressed={editing}
+            className={`cut-tab tap display px-3 py-1 text-[12px] font-semibold uppercase tracking-[0.08em] transition-colors ${
+              editing ? 'bg-accent text-on-accent' : 'bg-panel-raised text-ink-muted hover:text-ink'
+            }`}
+          >
+            {editing ? 'Done' : 'Edit burns'}
+          </button>
+        )}
       </div>
+
+      {editing && (
+        <p className="border-l-2 border-accent bg-panel px-4 py-2 text-[12px] text-ink-muted">
+          Click a champion to burn it or free it. Each click is saved straight away.
+        </p>
+      )}
 
       <RoleFilterBar value={role} onChange={setRole} />
 
@@ -97,7 +133,12 @@ export function FearlessGrid({
             <li key={champion.id}>
               <button
                 type="button"
-                onClick={() => setSelectedId(champion.id === selectedId ? null : champion.id)}
+                disabled={editing && correct.isPending}
+                onClick={() =>
+                  editing
+                    ? correct.mutate({ champion, kind: quickCorrection(burn, freed.has(champion.id)) })
+                    : setSelectedId(champion.id === selectedId ? null : champion.id)
+                }
                 aria-pressed={champion.id === selectedId}
                 aria-label={`${champion.name}, ${burn ? 'burned' : 'free'}`}
                 title={availability(champion, burn)}
@@ -140,7 +181,7 @@ export function FearlessGrid({
 
       {shown.length === 0 && <p className="text-[13px] text-ink-dim">No champion matches “{query}”.</p>}
 
-      {selected && (
+      {selected && !editing && (
         <SelectedChampion
           champion={selected}
           board={board}

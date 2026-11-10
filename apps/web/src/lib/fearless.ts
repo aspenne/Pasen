@@ -57,3 +57,15 @@ export function nightStartLabel(minutesAgo: number): string {
 export function nightSince(minutesAgo: number, now: number = Date.now()): string | undefined {
   return minutesAgo === 0 ? undefined : new Date(now - minutesAgo * 60_000).toISOString()
 }
+
+/**
+ * What one click does in the edit mode: flips the champion between burned and
+ * free with the least correction. A burn made by hand is simply undone, and so
+ * is a free; a champion burned by a game is freed; a free one is burned.
+ */
+export function quickCorrection(burn: FearlessBurn | undefined, freed: boolean): 'burn' | 'free' | 'forget' {
+  if (burn?.source === 'manual') return 'forget'
+  if (burn) return 'free'
+  if (freed) return 'forget'
+  return 'burn'
+}

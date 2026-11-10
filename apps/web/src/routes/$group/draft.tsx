@@ -98,6 +98,23 @@ function DraftPage() {
     },
   })
   const cancel = useMutation({ mutationFn: () => api.cancelDraft(draft!.id), onSuccess: refresh, onError: failed })
+  // A misclick, taken back: the captain who locked it, or the admin.
+  const undo = useMutation({
+    mutationFn: (as: 'captain' | 'admin') =>
+      as === 'captain' ? api.undoDraft(group, draft!.id, seat!.token) : api.adminUndoDraft(draft!.id),
+    onSuccess: (next) => {
+      queryClient.setQueryData(['draft', group], next)
+      toast.success('Taken back. The turn is yours again.')
+    },
+    onError: (error) =>
+      toast.error(
+        error instanceof ApiError && error.status === 409
+          ? 'Too late: the draft moved on.'
+          : error instanceof ApiError && error.status === 403
+            ? 'Only the captain who locked it, or an admin, can take it back.'
+            : 'That did not go through.'
+      ),
+  })
   const free = useMutation({
     mutationFn: (side: DraftSide) => api.freeDraftSeat(draft!.id, side),
     onSuccess: refresh,
@@ -157,6 +174,17 @@ function DraftPage() {
         <NoNight group={group} scope={scope} admin={admin} running={open} />
       )}
 
+      {draft && (
+        <TakeBack
+          draft={draft}
+          seat={seat}
+          admin={admin}
+          staticData={staticData}
+          busy={undo.isPending}
+          onUndo={(as) => undo.mutate(as)}
+        />
+      )}
+
       {!draft ? (
         <div className="flex flex-1 items-center justify-center">
           <p className="max-w-[46ch] text-center text-[14px] text-ink-muted">
@@ -210,6 +238,49 @@ function rosterOf(roulette: Awaited<ReturnType<typeof api.roulette>> | undefined
     })
   }
   return roster
+}
+
+/**
+ * Locked the wrong champion? The captain who did can take it back until the
+ * other side plays; the admin can take back any last move, even the one that
+ * finished the draft.
+ */
+function TakeBack({
+  draft,
+  seat,
+  admin,
+  staticData,
+  busy,
+  onUndo,
+}: {
+  draft: DraftView
+  seat: Seat | null
+  admin: boolean
+  staticData: StaticData | undefined
+  busy: boolean
+  onUndo: (as: 'captain' | 'admin') => void
+}) {
+  const last = draft.actions.at(-1)
+  if (!last) return null
+  const mine = seat?.side === last.side
+  if (!mine && !admin) return null
+
+  const name = staticData?.champions[String(last.championId)]?.name ?? 'that champion'
+  return (
+    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-ink-muted">
+      <span>
+        {mine ? 'You' : SIDE_NAME[last.side]} {last.kind === 'ban' ? 'banned' : 'picked'} <span className="text-ink">{name}</span>.
+      </span>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => onUndo(mine ? 'captain' : 'admin')}
+        className="cut-tab tap bg-panel-raised px-3 py-1 text-[12px] text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+      >
+        ↶ Take it back
+      </button>
+    </p>
+  )
 }
 
 /**
