@@ -77,6 +77,48 @@ test.group('Drafts', (group) => {
     twice.assertStatus(422)
   })
 
+  test('lets the captain take back what they just locked, until the other side plays', async ({ client, assert }) => {
+    await setup()
+    const { id } = (await client.post(BASE)).body()
+    const blue = (await client.post(`${BASE}/${id}/seats`).json({ side: 'blue' })).body().token
+    const red = (await client.post(`${BASE}/${id}/seats`).json({ side: 'red' })).body().token
+
+    await client.post(`${BASE}/${id}/actions`).header('x-draft-seat', blue).json({ championId: 1 })
+    // Not red's to take back.
+    ;(await client.post(`${BASE}/${id}/undo`).header('x-draft-seat', red)).assertStatus(403)
+
+    const undone = await client.post(`${BASE}/${id}/undo`).header('x-draft-seat', blue)
+    undone.assertStatus(200)
+    assert.lengthOf(undone.body().actions, 0)
+    assert.equal(undone.body().current.side, 'blue')
+
+    // Blue bans again; once red has played, blue's ban is no longer the last move.
+    await client.post(`${BASE}/${id}/actions`).header('x-draft-seat', blue).json({ championId: 2 })
+    await client.post(`${BASE}/${id}/actions`).header('x-draft-seat', red).json({ championId: 3 })
+    ;(await client.post(`${BASE}/${id}/undo`).header('x-draft-seat', blue)).assertStatus(403)
+  })
+
+  test('lets the admin take back any last move, even the one that finished the draft', async ({ client, assert }) => {
+    await setup()
+    const admin = await User.create({ ...CREDENTIALS, role: 'admin' })
+    const { id } = (await client.post(BASE)).body()
+    const tokens = {
+      blue: (await client.post(`${BASE}/${id}/seats`).json({ side: 'blue' })).body().token,
+      red: (await client.post(`${BASE}/${id}/seats`).json({ side: 'red' })).body().token,
+    }
+    for (let champion = 1; champion <= 20; champion++) {
+      const { current } = (await client.get(`${BASE}/current`)).body()
+      await client.post(`${BASE}/${id}/actions`).header('x-draft-seat', tokens[current.side as 'blue' | 'red']).json({ championId: champion })
+    }
+
+    ;(await client.post(`/api/admin/drafts/${id}/undo`)).assertStatus(401)
+    const undone = await client.post(`/api/admin/drafts/${id}/undo`).loginAs(admin)
+    undone.assertStatus(200)
+    assert.lengthOf(undone.body().actions, 19)
+    assert.isNull(undone.body().finishedAt)
+    assert.equal(undone.body().current.step, 19)
+  })
+
   test('plays a whole draft to the end, picks filling the seats in order', async ({ client, assert }) => {
     await setup()
     const { id } = (await client.post(BASE)).body()

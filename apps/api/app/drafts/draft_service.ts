@@ -137,6 +137,47 @@ export class DraftService {
     }
   }
 
+  /**
+   * Takes back the last pick or ban: a misclick, caught in time. The captain
+   * who locked it can, the admin can (`by: 'admin'`), and only while it is
+   * still the last move - a lock that landed meanwhile wins, and nothing is
+   * undone under it.
+   */
+  async undoLast(draft: Draft, by: { token: string | undefined } | 'admin') {
+    await draft.load('actions')
+    const last = [...draft.actions].sort((a, b) => b.step - a.step)[0]
+    if (!last) throw new DraftError(409, 'Nothing to take back.')
+    if (by !== 'admin' && this.#sideOf(draft, by.token) !== last.side) {
+      throw new DraftError(403, 'Only the captain who locked it, or an admin, can take it back.')
+    }
+
+    try {
+      await db.transaction(async (trx) => {
+        const removed = await trx
+          .from('draft_actions')
+          .where('draft_id', draft.id)
+          .where('step', last.step)
+          .whereNotExists((later) =>
+            later.from('draft_actions as later').where('later.draft_id', draft.id).where('later.step', '>', last.step)
+          )
+          .delete()
+        if (Number(Array.isArray(removed) ? removed[0] : removed) === 0) {
+          throw new DraftError(409, 'The draft moved on meanwhile.')
+        }
+        draft.useTransaction(trx)
+        draft.hoverChampionId = null
+        draft.stepStartedAt = DateTime.now()
+        // Undoing the last pick reopens the draft.
+        draft.finishedAt = null
+        await draft.save()
+      })
+    } catch (error) {
+      // Reopening clashes with a draft someone started since: that one stands.
+      if (lostRace(error)) throw new DraftError(409, 'A new draft has already started.')
+      throw error
+    }
+  }
+
   async #record(
     draft: Draft,
     side: DraftSide,

@@ -830,6 +830,11 @@ export const api = {
       body: JSON.stringify({ championId }),
     }),
   cancelDraft: (id: number) => apiFetch<void>(`/api/admin/drafts/${id}`, { method: 'DELETE' }),
+  /** The captain takes back the pick or ban they just locked. */
+  undoDraft: (slug: string, id: number, token: string) =>
+    apiFetch<DraftView>(`/api/groups/${slug}/drafts/${id}/undo`, { method: 'POST', headers: { 'x-draft-seat': token } }),
+  /** The admin takes back the last pick or ban, whoever locked it. */
+  adminUndoDraft: (id: number) => apiFetch<DraftView>(`/api/admin/drafts/${id}/undo`, { method: 'POST' }),
   freeDraftSeat: (id: number, side: 'blue' | 'red') =>
     apiFetch<void>(`/api/admin/drafts/${id}/seats/${side}`, { method: 'DELETE' }),
   les: (slug: string) => apiFetch<LesBoard>(`/api/groups/${slug}/events/les`),

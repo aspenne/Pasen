@@ -8,6 +8,7 @@ import {
   foldName,
   nightSince,
   nightStartLabel,
+  quickCorrection,
   searchChampions,
   type ChampionEntry,
 } from '@/lib/fearless'
@@ -111,5 +112,20 @@ describe('nightSince', () => {
       'From 4 h ago',
       'From 5 h ago',
     ])
+  })
+})
+
+describe('quickCorrection', () => {
+  const played = { championId: 1, source: 'played' as const, by: [] }
+
+  it('frees what a game or an earlier night burned, and burns what is free', () => {
+    expect(quickCorrection(played, false)).toBe('free')
+    expect(quickCorrection({ ...played, source: 'earlier' }, false)).toBe('free')
+    expect(quickCorrection(undefined, false)).toBe('burn')
+  })
+
+  it('undoes a correction rather than stacking another one', () => {
+    expect(quickCorrection({ ...played, source: 'manual' }, false)).toBe('forget')
+    expect(quickCorrection(undefined, true)).toBe('forget')
   })
 })

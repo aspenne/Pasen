@@ -68,6 +68,15 @@ export default class DraftsController {
     })
   }
 
+  /** The captain takes back the pick or ban they just locked. */
+  async undo(ctx: HttpContext) {
+    const draft = await this.#draft(ctx)
+    return this.#run(ctx, async (service) => {
+      await service.undoLast(draft, { token: ctx.request.header('x-draft-seat') })
+      return ctx.response.ok(await service.view(draft))
+    })
+  }
+
   async #draft({ params }: HttpContext): Promise<Draft> {
     const group = await Group.findByOrFail('slug', params.slug)
     return Draft.query().where('group_id', group.id).where('id', params.id).firstOrFail()
