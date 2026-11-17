@@ -2,12 +2,11 @@ import { Link, createFileRoute, useParams, useSearch } from '@tanstack/react-rou
 import { useQuery } from '@tanstack/react-query'
 
 import { CustomDashboard } from '@/components/customs/CustomDashboard'
+import { CustomGameRow } from '@/components/customs/CustomGameRow'
 import { CustomLeaderboard } from '@/components/customs/CustomLeaderboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { useStaticData } from '@/lib/ddragon'
-import { customResult, customTitle } from '@/lib/customs'
-import { duration } from '@/lib/format'
 
 export const Route = createFileRoute('/$group/customs/')({ component: CustomsPage })
 
@@ -82,51 +81,16 @@ function CustomsPage() {
         </p>
       ) : (
         <ul className="space-y-2">
-          {data.games.map((game) => {
-            const result = customResult(game)
-            const humans = game.teams.flatMap((team) => team.players).filter((p) => !p.isBot)
-
-            return (
-              <li key={game.id}>
-                <Link
-                  to="/$group/customs/$id"
-                  params={{ group, id: String(game.id) }}
-                  search={{ scope }}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-1 bg-panel px-4 py-3 transition-colors hover:bg-panel-raised"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="display truncate text-[17px] font-semibold text-ink">
-                        {customTitle(game)}
-                      </span>
-                      {game.againstBots && (
-                        <span className="shrink-0 rounded-[3px] border border-line-strong px-1 text-[10px] uppercase tracking-[0.1em] text-ink-dim">
-                          vs bots
-                        </span>
-                      )}
-                    </div>
-                    <div className="truncate text-[12px] text-ink-dim">
-                      {new Date(game.playedAt).toLocaleString('en-GB', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: timezone,
-                      })}
-                      {' · '}
-                      {duration(game.duration)}
-                      {humans.length > 0 && ` · ${humans.map((p) => p.displayName ?? p.name).join(', ')}`}
-                    </div>
-                  </div>
-
-                  <span className={`display text-[13px] font-semibold uppercase tracking-[0.08em] ${result.tone}`}>
-                    {result.text}
-                  </span>
-                </Link>
-              </li>
-            )
-          })}
+          {data.games.map((game) => (
+            <CustomGameRow
+              key={game.id}
+              game={game}
+              group={group}
+              scope={scope}
+              timezone={timezone}
+              staticData={staticData}
+            />
+          ))}
         </ul>
       )}
     </div>
