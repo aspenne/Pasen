@@ -147,3 +147,8 @@ export type CurrentGameInfoDto = {
   participants: CurrentGameParticipantDto[]
   bannedChampions: { championId: number; teamId: number; pickTurn: number }[]
 }
+
+/** challenges-v1 player data, trimmed to what Pasen reads. */
+export type PlayerChallengesDto = {
+  challenges: { challengeId: number; value: number; level: string; percentile: number; achievedTime?: number }[]
+}

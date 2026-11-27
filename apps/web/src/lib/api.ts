@@ -236,6 +236,8 @@ export type GroupMember = {
   accentColor: string | null
   accounts: MemberAccount[]
   ranks: MemberRank[]
+  /** Riot's Arena God progress: different champions placed first with. Null until known. */
+  arenaGod: number | null
   totals: {
     games: number
     wins: number

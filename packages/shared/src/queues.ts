@@ -162,3 +162,10 @@ export function isStatsEligible(queueId: number, gameMode?: string): boolean {
 
 export const TEAM_SIDE_BLUE = 100
 export const TEAM_SIDE_RED = 200
+
+/**
+ * Riot's "Adapt to All Situations": first place in Arena with different
+ * champions. Reaching its Master threshold, 60, earns the Arena God title,
+ * which is the name everyone knows it by.
+ */
+export const ARENA_GOD = { challengeId: 602002, target: 60 } as const

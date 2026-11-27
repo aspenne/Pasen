@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import type { QueueScope } from '@pasen/shared'
+import { ARENA_GOD, type QueueScope } from '@pasen/shared'
 
 import { DecayNote } from '@/components/DecayNote'
 import type { GroupOverview } from '@/lib/api'
@@ -66,7 +66,7 @@ export function RosterRail({
                 </span>
                 <span className="shrink-0 text-right">
                   {scope === 'arena' ? (
-                    <span className="tnum text-[11.5px] text-win">{member.totals.firstPlaces} first</span>
+                    <ArenaStanding arenaGod={member.arenaGod} firsts={member.totals.firstPlaces} />
                   ) : scope === 'custom' ? (
                     <span className="tnum text-[11.5px] text-win">
                       {member.totals.wins} {member.totals.wins === 1 ? 'win' : 'wins'}
@@ -83,5 +83,29 @@ export function RosterRail({
         })}
       </ol>
     </section>
+  )
+}
+
+/**
+ * Riot's Arena God count - different champions placed first with, out of the
+ * 60 the title asks for - over the firsts this site has seen. The first is the
+ * account's whole history, the second only the games stored here.
+ */
+function ArenaStanding({ arenaGod, firsts }: { arenaGod: number | null; firsts: number }) {
+  const done = arenaGod !== null && arenaGod >= ARENA_GOD.target
+  return (
+    <>
+      {arenaGod !== null && (
+        <span
+          title={`Arena God: first place with ${arenaGod} different champions (${ARENA_GOD.target} for the title)`}
+          className={`tnum block text-[11.5px] ${done ? 'text-accent' : 'text-ink'}`}
+        >
+          {done ? 'Arena God' : `${arenaGod}/${ARENA_GOD.target}`}
+        </span>
+      )}
+      <span className={`tnum block text-win ${arenaGod !== null ? 'text-[10.5px]' : 'text-[11.5px]'}`}>
+        {firsts} first
+      </span>
+    </>
   )
 }

@@ -25,6 +25,13 @@ describe('rosterOrder', () => {
     ])
   })
 
+  it('ranks Arena by Arena God progress, then by firsts, the unknown last', () => {
+    const arena = (slug: string, arenaGod: number | null, firstPlaces: number) =>
+      ({ ...member(slug, null, 0, 'I', { firstPlaces }), arenaGod }) as Member
+    const members = [arena('unknown', null, 40), arena('few', 8, 30), arena('many', 31, 2), arena('tie', 8, 35)]
+    expect(rosterOrder(members, 'arena').map(({ member }) => member.slug)).toEqual(['many', 'tie', 'few', 'unknown'])
+  })
+
   it('ranks customs by wins', () => {
     const members = [member('a', null, 0, 'I', { wins: 2, winRate: 50 }), member('b', null, 0, 'I', { wins: 5, winRate: 40 })]
     expect(rosterOrder(members, 'custom').map(({ member }) => member.slug)).toEqual(['b', 'a'])

@@ -25,6 +25,12 @@ export type RiotRequest = {
   priority?: 'interactive' | 'background'
   /** How long this call may wait for rate-limit capacity before failing. */
   maxWaitMs?: number
+  /**
+   * A product the key may simply not include (challenges, say). A 401 or 403
+   * here means "not entitled to this", not "the key died": it must not pause
+   * the whole site, so it comes back as a plain RiotApiError.
+   */
+  optional?: boolean
   signal?: AbortSignal
 }
 
@@ -203,6 +209,10 @@ export class RiotGateway implements RiotRequester {
   async #classify(response: Response, request: RiotRequest): Promise<RiotApiError> {
     if (response.status === 404) {
       return new RiotNotFoundError(request.endpoint)
+    }
+
+    if ((response.status === 401 || response.status === 403) && request.optional) {
+      return new RiotApiError(response.status, request.endpoint, `Not entitled to ${request.endpoint}`)
     }
 
     if (response.status === 401 || response.status === 403) {
