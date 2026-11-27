@@ -1,5 +1,6 @@
 import type { RiotRequester } from '#riot/gateway'
 import { AccountEndpoint } from '#riot/endpoints/account'
+import { ChallengesEndpoint } from '#riot/endpoints/challenges'
 import { LeagueEndpoint } from '#riot/endpoints/league'
 import { MatchEndpoint } from '#riot/endpoints/match'
 import { SpectatorEndpoint } from '#riot/endpoints/spectator'
@@ -16,6 +17,7 @@ export class RiotClient {
   readonly league: LeagueEndpoint
   readonly match: MatchEndpoint
   readonly spectator: SpectatorEndpoint
+  readonly challenges: ChallengesEndpoint
 
   constructor(readonly gateway: RiotRequester) {
     this.account = new AccountEndpoint(gateway)
@@ -23,5 +25,6 @@ export class RiotClient {
     this.league = new LeagueEndpoint(gateway)
     this.match = new MatchEndpoint(gateway)
     this.spectator = new SpectatorEndpoint(gateway)
+    this.challenges = new ChallengesEndpoint(gateway)
   }
 }

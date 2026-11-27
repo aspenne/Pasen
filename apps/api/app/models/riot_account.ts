@@ -60,6 +60,13 @@ export default class RiotAccount extends BaseModel {
   @column.dateTime()
   declare lastSeenLiveAt: DateTime | null
 
+  /** Arena God progress: different champions placed first with, as Riot counts it. */
+  @column()
+  declare arenaGod: number | null
+
+  @column.dateTime()
+  declare arenaGodCheckedAt: DateTime | null
+
   @belongsTo(() => Member)
   declare member: BelongsTo<typeof Member>
 

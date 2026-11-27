@@ -15,7 +15,8 @@ export function rosterOrder(members: Member[], scope: QueueScope): { member: Mem
   const queueType = rankedQueueFor(scope)
   const standing = (member: Member) =>
     scope === 'arena'
-      ? member.totals.firstPlaces
+      ? // Riot's Arena God count first, the firsts seen here to split a tie; unknown last.
+        (member.arenaGod ?? -1) * 10_000 + member.totals.firstPlaces
       : scope === 'custom'
         ? member.totals.wins + member.totals.winRate / 1000
         : rankScore(member.ranks.find((rank) => rank.queueType === queueType))

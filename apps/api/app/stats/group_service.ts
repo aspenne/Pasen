@@ -31,6 +31,11 @@ export type GroupMemberOverview = {
   accentColor: string | null
   accounts: MemberAccount[]
   ranks: MemberRank[]
+  /**
+   * Riot's Arena God progress: different champions placed first with in
+   * Arena. The best of the member's accounts; null until Riot has been asked.
+   */
+  arenaGod: number | null
   totals: {
     games: number
     wins: number
@@ -79,6 +84,7 @@ export class GroupService {
           syncedFrom: account.syncedFrom?.toUTC().toISO() ?? null,
         })),
         ranks: ranks.get(member.id) ?? [],
+        arenaGod: arenaGodOf(member.riotAccounts),
         totals: totals.get(member.id) ?? {
           games: 0,
           wins: 0,
@@ -175,4 +181,10 @@ export class GroupService {
       })
     )
   }
+}
+
+/** The best Arena God count among a member's accounts, or null if none has one yet. */
+export function arenaGodOf(accounts: { arenaGod: number | null }[]): number | null {
+  const known = accounts.map((account) => account.arenaGod).filter((value): value is number => value !== null)
+  return known.length === 0 ? null : Math.max(...known)
 }

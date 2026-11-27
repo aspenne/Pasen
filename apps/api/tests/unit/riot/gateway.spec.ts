@@ -152,6 +152,25 @@ test.group('RiotGateway', (group) => {
     assert.isNotNull(status.invalidSince)
   })
 
+  test('keeps the key alive when an optional product refuses it', async ({ assert }) => {
+    const { gateway } = await buildGateway([{ status: 403 }])
+
+    await assert.rejects(
+      () =>
+        gateway.request({
+          host: { kind: 'platform', platform: 'euw1' },
+          path: '/lol/challenges/v1/player-data/abc',
+          endpoint: 'challenges-v1.playerData',
+          optional: true,
+        }),
+      /Not entitled to challenges-v1.playerData/
+    )
+
+    // A key without challenges still reads matches: nothing should pause.
+    const status = await new RiotKeyProvider({ connection: redis.connection() }).status()
+    assert.isNull(status.invalidSince)
+  })
+
   test('waits out retry-after on 429, then succeeds', async ({ assert }) => {
     const { gateway, fetch, clock } = await buildGateway([
       { status: 429, headers: { 'retry-after': '2' } },

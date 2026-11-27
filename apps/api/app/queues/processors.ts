@@ -11,6 +11,7 @@ import { HOT_WINDOW_HOURS, selectLivePollTargets } from '#ingestion/live_poll_se
 import { PuuidRekeyService } from '#ingestion/puuid_rekey_service'
 import { RiotIdRefreshService } from '#ingestion/riot_id_refresh_service'
 import { RankService } from '#ingestion/rank_service'
+import { ArenaGodService } from '#ingestion/arena_god_service'
 import {
   decayAnnouncement,
   pentakillAnnouncement,
@@ -33,6 +34,9 @@ import { ChampionRoleService } from '#static_data/champion_roles'
  * budget while it runs, and a long one would starve live polling.
  */
 const BACKFILL_FETCHES_PER_STEP = 25
+
+/** How stale Arena God progress may get before the hourly pass reads it again. */
+const ARENA_GOD_RECHECK = { hours: 6 }
 
 function trackedAccounts() {
   return RiotAccount.query().orderBy('id')
@@ -119,6 +123,7 @@ export async function processRecentSyncAccount(job: Job<RecentSyncAccountPayload
 
   if (outcome.ingested > 0) {
     await snapshotRank(account)
+    await refreshArenaGod(account)
     await announceFrom(account)
   }
 }
@@ -129,6 +134,11 @@ export async function processRankSnapshot(): Promise<void> {
 
   for (const account of await trackedAccounts()) {
     await snapshotRank(account, service, discord)
+    // Riot moves it only after an Arena game, which the post-game sync catches;
+    // this is the slow catch-up for accounts nobody has looked at in a while.
+    if (!account.arenaGodCheckedAt || account.arenaGodCheckedAt < DateTime.now().minus(ARENA_GOD_RECHECK)) {
+      await refreshArenaGod(account)
+    }
   }
 
   await announceDecay(discord)
@@ -179,6 +189,21 @@ async function snapshotRank(
  * One query for every account at once: the countdown is cheap to derive but not
  * cheap to derive twenty-six times.
  */
+/**
+ * Arena God progress, read after a game and on the slow pass. Like the rank
+ * snapshot, a failure here must not cost the game itself, so it is logged and
+ * left for the next pass.
+ */
+async function refreshArenaGod(account: RiotAccount): Promise<void> {
+  try {
+    const result = await new ArenaGodService(riot()).refresh(account)
+    if (result === 'not-entitled') logger.warn({ account: account.riotId }, 'the Riot key cannot read challenges')
+  } catch (error) {
+    if (error instanceof RiotKeyRejectedError) throw error
+    logger.warn({ account: account.riotId, error }, 'arena god refresh failed')
+  }
+}
+
 async function announceDecay(discord: DiscordService): Promise<void> {
   if (!(await discord.webhookUrl())) return
 
