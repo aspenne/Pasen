@@ -100,7 +100,8 @@ function ArenaStanding({ arenaGod, firsts }: { arenaGod: number | null; firsts: 
           title={`Arena God: first place with ${arenaGod} different champions (${ARENA_GOD.target} for the title)`}
           className={`tnum block text-[11.5px] ${done ? 'text-accent' : 'text-ink'}`}
         >
-          {done ? 'Arena God' : `${arenaGod}/${ARENA_GOD.target}`}
+          {/* The count keeps climbing past the title, and the number is what people compare. */}
+          {done ? `${arenaGod} · God` : `${arenaGod}/${ARENA_GOD.target}`}
         </span>
       )}
       <span className={`tnum block text-win ${arenaGod !== null ? 'text-[10.5px]' : 'text-[11.5px]'}`}>
